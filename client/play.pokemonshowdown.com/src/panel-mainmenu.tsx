@@ -38,6 +38,7 @@ export class MainMenuRoom extends PSRoom {
 			group?: string,
 			customgroup?: string,
 			rooms?: { [roomid: string]: { isPrivate?: true, p1?: string, p2?: string } },
+			friended?: boolean,
 		},
 	} = {};
 	roomsCache: {
@@ -124,6 +125,10 @@ export class MainMenuRoom extends PSRoom {
 			).then(res => {
 				if (!res?.username) {
 					PS.user.initializing = false;
+					// CobblemonShowdown : affiche « Choisir un pseudo » tout de suite, et retire
+					// les équipes d'un compte dont la session a expiré
+					PS.user.update(null);
+					if (res && !res.loggedin) PS.teams.clearAccountTeams();
 					return;
 				}
 				// | , ; are not valid characters in names
@@ -146,7 +151,7 @@ export class MainMenuRoom extends PSRoom {
 			}
 			void Dex.loadTextData().then(() => PS.updateTranslatedText());
 			PS.user.setName(fullName, named, avatar);
-			PS.teams.loadRemoteTeams();
+			if (named) PS.teams.syncAccount();
 			return true;
 		} case 'updatechallenges': {
 			const [, challengesBuf] = args;
@@ -192,7 +197,7 @@ export class MainMenuRoom extends PSRoom {
 			return true;
 		}
 		}
-		const lobby = PS.rooms['lobby'];
+		const lobby = PS.rooms['lobby'] || PS.rooms['discussion'];
 		if (lobby) lobby.receiveBatch([args]);
 		return true;
 	}
@@ -418,6 +423,7 @@ export class MainMenuRoom extends PSRoom {
 				this.userdetailsCache[userid] = response;
 			} else {
 				response.status ||= '';
+				response.friended ||= false;
 				Object.assign(userdetails, response);
 			}
 			if (userid === PS.user.userid) {
@@ -766,19 +772,18 @@ class MainMenuPanel extends PSRoomPanel<MainMenuRoom> {
 					<div class="menugroup">
 						<p><a class={"mainmenu1 mainmenu" + onlineButton} href="rooms">{TL`Chat rooms`}</a></p>
 						{PS.server.id !== 'showdown' && (
-							<p><a class={"mainmenu2 mainmenu" + onlineButton} href="lobby">{TL`Lobby chat`}</a></p>
+							<p><a class={"mainmenu2 mainmenu" + onlineButton} href="discussion">{TL`Discussion`}</a></p>
 						)}
 					</div>
 				</div>
 				<div class="mainmenu-footer">
 					<div class="bgcredit">{this.renderBackgroundCredit()}</div>
 					<small>
+						{/* CobblemonShowdown : le code source doit rester accessible aux joueurs (licence AGPL) */}
 						<a href={`//${Config.routes.dex}/`} target="_blank">{TL`Pokédex`}</a> | {}
-						<a href={`//${Config.routes.replays}/`} target="_blank">{TL`Replays`}</a> | {}
-						<a href="//smogon.com/forums/" target="_blank">{TL`Forum`}</a> | {}
-						<a href={`//${Config.routes.root}/rules`} target="_blank">{TL`Rules`}</a> | {}
-						<a href={`//${Config.routes.root}/credits`} target="_blank">{TL`Credits`}</a> | {}
-						<a href={`//${Config.routes.root}/privacy`} target="_blank">{TL`Privacy`}</a>
+						<a href="https://cobblemon.com/" target="_blank">Cobblemon</a> | {}
+						<a href="https://github.com/Bliinnd/CobblemonShowdown" target="_blank">{TL`Source code`}</a> | {}
+						<a href="//pokemonshowdown.com/credits" target="_blank">{TL`Credits`}</a>
 					</small>
 					<CCPAIntercept />
 				</div>
@@ -1021,7 +1026,8 @@ export class TeamForm extends preact.Component<{
 		if (window.BattleFormats) {
 			this.format ||= this.props.defaultFormat || '';
 			if (!this.format) {
-				this.format = `gen${Dex.gen}randombattle`;
+				// CobblemonShowdown : format proposé par défaut
+				this.format = 'gen9cobblemonou';
 
 				const starredPrefs = PS.prefs.starredformats || {};
 				// .reverse() because the newest starred format should be the default one

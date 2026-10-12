@@ -802,6 +802,7 @@ export class TeamEditorState extends PSModel {
 				this.update();
 			}).catch(() => {
 				TeamEditorState.sampleSets[formatid] = null;
+				this.update();
 			});
 		}
 	}
@@ -1771,7 +1772,7 @@ class TeamTextbox extends preact.Component<{
 			<span class="detailcell">
 				<label>{TL`Shiny`}</label>{set.shiny ? 'Yes' : '\u2014'}
 			</span>
-			{editor.gen === 9 && !editor.format.isChampions ? (
+			{editor.gen === 9 && !editor.format.isChampions && !editor.format.isCobblemon ? (
 				<span class="detailcell">
 					<label>{TL`Tera`}</label><PSIcon type={set.teraType || species.requiredTeraType || species.types[0]} />
 				</span>
@@ -2965,7 +2966,7 @@ class TeamEditorForm extends preact.Component<{
 										src={`${Dex.resourcePrefix}sprites/misc/shiny.png`} width={18} height={18} alt="Yes" style="margin-top: -2px"
 									/> : '\u2014'}
 								</span>}
-								{editor.gen === 9 && !editor.format.isChampions && <span class="detailcell">
+								{editor.gen === 9 && !editor.format.isChampions && !editor.format.isCobblemon && <span class="detailcell">
 									<label>{TL`Tera`}</label> {}
 									<PSIcon type={set.teraType || species.requiredTeraType || species.types[0]} new={!editor.narrow} tera />
 								</span>}
@@ -4028,7 +4029,7 @@ class DetailsForm extends preact.Component<{
 						))}
 					</select></label>
 				</p>}
-				{editor.gen === 9 && !editor.format.isChampions && <p>
+				{editor.gen === 9 && !editor.format.isChampions && !editor.format.isCobblemon && <p>
 					<label class="label" title={TL`Tera Type`}>
 						{TL.label(TL`Tera Type`)}{}
 						{species.requiredTeraType && editor.format.formeLegality === 'normal' ? (
@@ -4049,7 +4050,7 @@ class DetailsForm extends preact.Component<{
 					</label>
 				</p>}
 				{species.cosmeticFormes && <div>
-					<p><strong>{TL.label(TL`Form`)}</strong></p>
+					<p><strong>{TL.label(TL("Form", "like forme"))}</strong></p>
 					<div style="display:flex;flex-wrap:wrap;gap:6px;max-width:400px;">
 						{(() => {
 							const baseId = toID(species.baseSpecies);

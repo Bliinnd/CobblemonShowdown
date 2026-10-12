@@ -20,6 +20,7 @@ import {
 import * as tables from './tables.ts';
 import { SQL } from './database.ts';
 import IPTools from './ip-tools.ts';
+import { cobblemonTeamActions } from './cobblemon-teams.ts';
 
 const require = module.createRequire(import.meta.url);
 
@@ -185,6 +186,9 @@ export const actions: { [k: string]: QueryHandler } = {
 		const challenge = params.challstr || params.challenge || "";
 		if (!challenge) throw new ActionError(`Invalid challenge string argument.`);
 		const assertion = await this.session.getAssertion(userid, challengekeyid, user, challenge);
+		// CobblemonShowdown : comme après une connexion, le cookie de session garde le joueur
+		// connecté (sinon il est déconnecté au rechargement et ses équipes ne sont pas enregistrées).
+		await this.session.setSid();
 		return {
 			assertion,
 			actionsuccess: !assertion.startsWith(';'),
@@ -1369,6 +1373,9 @@ export const actions: { [k: string]: QueryHandler } = {
 		};
 	},
 };
+
+// CobblemonShowdown : équipes sauvegardées sur le compte.
+Object.assign(actions, cobblemonTeamActions);
 
 if (Config.actions) {
 	Object.assign(actions, Config.actions);

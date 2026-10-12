@@ -100,7 +100,7 @@ export class PSRouter {
 		const panelState = (PS.leftPanelWidth && PS.baseRoom ?
 			PS.leftPanel.id + '..' + PS.rightPanel!.id :
 			room.id);
-		const newTitle = roomid === '' ? 'Showdown!' : `${room.getTitle()} - Showdown!`;
+		const newTitle = roomid === '' ? 'CobblemonShowdown' : `${room.getTitle()} - CobblemonShowdown`;
 		let changed: boolean | null = (roomid !== this.roomid);
 
 		this.roomid = roomid;
@@ -867,7 +867,7 @@ export class PSView extends preact.Component {
 		let buf = ' ';
 		const leftRoom = PS.rooms[rooms[index - 1]];
 		if (leftRoom) buf += `\u2190 ${leftRoom.title}`;
-		buf += (PS.arrowKeysUsed || isMiniRoom ? " | " : " (use arrow keys) ");
+		buf += (PS.arrowKeysUsed || isMiniRoom ? " | " : ` ${TL`(use arrow keys)`} `);
 		const rightRoom = PS.rooms[rooms[index + 1]];
 		if (rightRoom) buf += `${rightRoom.title} \u2192`;
 		return buf;

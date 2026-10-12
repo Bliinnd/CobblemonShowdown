@@ -17,7 +17,8 @@ const ADD_FORMAT_FOLDER_VALUE = '+';
 const ADD_FOLDER_VALUE = '++';
 
 class TeambuilderRoom extends PSRoom {
-	readonly DEFAULT_FORMAT = Dex.modid;
+	// CobblemonShowdown : les nouvelles équipes sont en Cobblemon OU.
+	readonly DEFAULT_FORMAT = 'gen9cobblemonou' as ID;
 
 	/**
 	 * - `""` - all
@@ -214,7 +215,7 @@ class TeambuilderRoom extends PSRoom {
 			const format = this.curFolder && !this.curFolder.endsWith('/') ? this.curFolder as ID : this.DEFAULT_FORMAT;
 			const folder = this.curFolder.endsWith('/') ? this.curFolder.slice(0, -1) : '';
 			return {
-				name: `${isBox ? "Box" : "Untitled"} ${PS.teams.list.length + 1}`,
+				name: `${isBox ? TL`Box` : TL`Untitled`} ${PS.teams.list.length + 1}`,
 				format,
 				folder,
 				packedTeam: '',

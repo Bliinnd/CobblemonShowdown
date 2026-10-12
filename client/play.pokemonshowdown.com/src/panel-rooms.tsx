@@ -48,6 +48,10 @@ class RoomsPanel extends PSRoomPanel {
 	static readonly location = 'right';
 	static readonly icon = <i class="fa fa-plus rooms-plus" aria-hidden></i>;
 	static readonly title = "Chat Rooms";
+	static getTitle() {
+		// CobblemonShowdown : titre de l'onglet dans la langue du site.
+		return TL`Chat rooms`;
+	}
 	hidden = false;
 	search = '';
 	section = '';

@@ -326,21 +326,21 @@ class PSPrefs extends PSStreamModel<string | null> {
 	}
 	doAutojoin() {
 		let autojoin = PS.prefs.autojoin;
-		if (autojoin) {
-			if (typeof autojoin === 'string') {
-				autojoin = { showdown: autojoin };
-			}
-			let rooms = autojoin[PS.server.id] || '';
-			for (let title of rooms.split(",")) {
-				const id = /[^a-z0-9-]/.test(title) ? toID(title) as any as RoomID : title as RoomID;
-				PS.addRoom({ id, title, connected: 'pending', autofocus: false });
-			}
-			const cmd = `/autojoin ${rooms}`;
-			// Don't jam up the queue with duplicate autojoin requests.
-			// Sending multiple autojoins is a server error.
-			if (PS.connection?.queue.includes(cmd)) return;
-			PS.send(cmd);
+		if (typeof autojoin === 'string') {
+			autojoin = { showdown: autojoin };
 		}
+		let rooms = autojoin?.[PS.server.id] || '';
+		for (let title of rooms.split(",")) {
+			if (!title) continue;
+			const id = /[^a-z0-9-]/.test(title) ? toID(title) as any as RoomID : title as RoomID;
+			PS.addRoom({ id, title, connected: 'pending', autofocus: false });
+		}
+		// CobblemonShowdown : comme l'ancien client, on envoie toujours /autojoin, pour que
+		// le serveur fasse rejoindre à chacun ses salons automatiques (Discussion).
+		const cmd = `/autojoin ${rooms}`;
+		// Don't jam up the queue with duplicate autojoin requests.
+		// Sending multiple autojoins is a server error.
+		if (!PS.connection?.queue.includes(cmd)) PS.send(cmd);
 
 		for (const roomid in PS.rooms) {
 			const room = PS.rooms[roomid]!;
@@ -404,10 +404,22 @@ class PSTeams extends PSStreamModel<'team' | 'format'> {
 	byKey: { [key: string]: Team | undefined } = {};
 	deletedTeams: [Team, number][] = [];
 	uploading: Team | null = null;
+	/**
+	 * CobblemonShowdown : les équipes sont sauvegardées sur le compte du joueur
+	 * (serveur de comptes, actions `cobblemonloadteams`/`cobblemonsaveteams`) ;
+	 * le navigateur n'en garde qu'une copie. `accountOwner` est le compte dont
+	 * les équipes sont affichées, ou null pour les équipes d'un invité.
+	 */
+	accountOwner: ID | null = null;
+	/** Des modifications attendent d'être envoyées au compte. */
+	accountDirty = false;
+	accountSaveTimer: ReturnType<typeof setTimeout> | null = null;
+	accountErrorShown = false;
 	constructor() {
 		super();
 		try {
 			this.unpackAll(localStorage.getItem('showdown_teams'));
+			this.accountOwner = (localStorage.getItem('cobblemon_teams_owner') || null) as ID | null;
 		} catch {}
 	}
 	teambuilderFormat(format: string): ID {
@@ -491,10 +503,106 @@ class PSTeams extends PSStreamModel<'team' | 'format'> {
 		)).join('\n');
 	}
 	save() {
+		this.saveLocal();
+		this.scheduleAccountSave();
+	}
+	saveLocal() {
 		try {
 			localStorage.setItem('showdown_teams', this.packAll(this.list));
 		} catch {}
 		this.update('team');
+	}
+	setAccountOwner(userid: ID | null) {
+		this.accountOwner = userid;
+		try {
+			if (userid) {
+				localStorage.setItem('cobblemon_teams_owner', userid);
+			} else {
+				localStorage.removeItem('cobblemon_teams_owner');
+			}
+		} catch {}
+	}
+	replaceAll(buffer: string) {
+		this.byKey = {};
+		this.deletedTeams = [];
+		this.unpackAll(buffer);
+	}
+	/**
+	 * Récupère les équipes du compte connecté. Les équipes faites en invité
+	 * sont ajoutées au compte à la première connexion.
+	 */
+	syncAccount() {
+		PSLoginServer.query('cobblemonloadteams').then(data => {
+			if (!data) return; // serveur injoignable : on garde la copie locale
+			if (data.actionerror) {
+				return PS.alert(TL`Error loading uploaded teams: ${data.actionerror}`);
+			}
+			if (!data.loggedIn) {
+				this.clearAccountTeams();
+				return;
+			}
+			const userid = data.loggedIn as ID;
+			const accountTeams: string | null = data.teams;
+			if (this.accountOwner === userid) {
+				if (this.accountDirty || accountTeams === null) {
+					void this.flushAccountSave();
+				} else if (accountTeams !== this.packAll(this.list)) {
+					this.replaceAll(accountTeams);
+					this.saveLocal();
+				}
+				return;
+			}
+			let needsUpload = false;
+			if (this.accountOwner) {
+				// Équipes d'un autre compte : remplacées par celles de ce compte.
+				this.replaceAll(accountTeams || '');
+			} else {
+				const accountLines = accountTeams ? accountTeams.split('\n') : [];
+				const guestLines = this.list.length ? this.packAll(this.list).split('\n') : [];
+				const newLines = guestLines.filter(line => !accountLines.includes(line));
+				this.replaceAll([...accountLines, ...newLines].join('\n'));
+				needsUpload = !!newLines.length;
+			}
+			this.setAccountOwner(userid);
+			this.accountDirty = false;
+			this.saveLocal();
+			if (needsUpload) void this.flushAccountSave();
+		});
+	}
+	scheduleAccountSave() {
+		if (!this.accountOwner) return;
+		this.accountDirty = true;
+		if (this.accountSaveTimer) clearTimeout(this.accountSaveTimer);
+		this.accountSaveTimer = setTimeout(() => void this.flushAccountSave(), 1000);
+	}
+	/** Envoie tout de suite les équipes au compte. */
+	flushAccountSave(): Promise<void> {
+		if (this.accountSaveTimer) clearTimeout(this.accountSaveTimer);
+		this.accountSaveTimer = null;
+		if (!this.accountOwner) return Promise.resolve();
+		this.accountDirty = true;
+		const teams = this.packAll(this.list);
+		return PSLoginServer.query('cobblemonsaveteams', { teams }).then(data => {
+			if (data?.success) {
+				if (this.packAll(this.list) === teams) this.accountDirty = false;
+				this.accountErrorShown = false;
+				return;
+			}
+			if (this.accountErrorShown) return;
+			this.accountErrorShown = true;
+			const error = data?.actionerror || TL`The login server did not respond.`;
+			PS.alert(TL`Your teams could not be saved to your account: ${error}`);
+		});
+	}
+	/** Déconnexion : les équipes du compte ne restent pas dans le navigateur. */
+	clearAccountTeams() {
+		if (!this.accountOwner) return;
+		if (this.accountSaveTimer) clearTimeout(this.accountSaveTimer);
+		this.accountSaveTimer = null;
+		this.accountDirty = false;
+		this.setAccountOwner(null);
+		this.replaceAll('');
+		this.saveLocal();
 	}
 	unpackLine(line: string): Team | null {
 		const pipeIndex = line.indexOf('|');
@@ -746,6 +854,8 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 				const username = data.curuser.username;
 				this.registered = { name: username, userid: toID(username) };
 				this.handleAssertion(name, data.assertion);
+				// CobblemonShowdown : récupère les équipes du compte
+				PS.teams.syncAccount();
 			} else {
 				// wrong password
 				if (special.needsGoogle) {
@@ -768,7 +878,8 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 			PS.join('login' as RoomID, { args: update });
 		}
 	}
-	handleAssertion(name: string, assertion?: string | null) {
+	/** @param newlyRegistered the name was just registered (the server needs it to accept the new account) */
+	handleAssertion(name: string, assertion?: string | null, newlyRegistered = false) {
 		if (!assertion) {
 			PS.alert(TL`Error logging in.`);
 			return;
@@ -794,14 +905,17 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 		} else if (assertion.includes('\n') || !assertion) {
 			PS.alert(TL`Something is interfering with our connection to the login server.`);
 		} else {
-			PS.send(`/trn ${name},0,${assertion}`);
+			PS.send(`/trn ${name},${newlyRegistered ? 1 : 0},${assertion}`);
 			this.update({ success: true });
 		}
 	}
 	logOut() {
-		PSLoginServer.query(
-			'logout', { userid: this.userid }
-		);
+		// CobblemonShowdown : dernières modifications envoyées au compte avant la déconnexion
+		const userid = this.userid;
+		void PS.teams.flushAccountSave().then(() => PSLoginServer.query(
+			'logout', { userid }
+		));
+		PS.teams.clearAccountTeams();
 		PS.send(`/logout`);
 		PS.connection?.disconnect();
 
@@ -2032,6 +2146,8 @@ export const PS = new class extends PSModel {
 	 * width/height-dependent layout breakpoint changes.
 	 */
 	leftPanelWidth: number | null = 0;
+	/** CobblemonShowdown : /lobby (alias de Discussion) était ouvert, Discussion doit prendre sa place */
+	focusDiscussionOnInit = false;
 	mainmenu: MainMenuRoom = null!;
 	layoutViewportWidth = 0;
 
@@ -2327,7 +2443,9 @@ export const PS = new class extends PSModel {
 						id: roomid2,
 						type,
 						connected: 'init',
-						autofocus: roomid !== 'staff' && roomid !== 'upperstaff',
+						// CobblemonShowdown : sur mobile, Discussion reste un onglet au lieu de cacher l'accueil.
+						autofocus: roomid !== 'staff' && roomid !== 'upperstaff' &&
+							(roomid !== 'discussion' || !!this.leftPanelWidth || this.focusDiscussionOnInit),
 						// probably the only use for `autoclosePopups: false`.
 						// (the server sometimes sends a popup error message and a new room at the same time)
 						autoclosePopups: false,
@@ -2350,6 +2468,15 @@ export const PS = new class extends PSModel {
 						}
 					}
 					room.connected = true;
+					// CobblemonShowdown : comme le Lobby de l'ancien client, Discussion s'affiche
+					// à droite à chaque visite quand il y a la place (pas sur mobile).
+					if (roomid2 === 'discussion' && this.leftPanelWidth && this.rightPanel === this.rooms['rooms']) {
+						this.rightPanel = room;
+					}
+					if (roomid2 === 'discussion' && this.focusDiscussionOnInit) {
+						this.focusDiscussionOnInit = false;
+						if (this.room !== room) this.focusRoom(room.id);
+					}
 				}
 				this.updateAutojoin();
 				this.update();
@@ -2357,6 +2484,14 @@ export const PS = new class extends PSModel {
 			} case 'deinit': {
 				room = PS.rooms[roomid2];
 				if (room) {
+					// CobblemonShowdown : le serveur ferme « lobby » pour ouvrir Discussion à la place.
+					if (roomid2 === 'lobby' && this.room === room) {
+						if (this.rooms['discussion']?.connected === true) {
+							this.focusRoom('discussion' as RoomID);
+						} else {
+							this.focusDiscussionOnInit = true;
+						}
+					}
 					room.connected = false;
 					if (room.connectMode !== 'deleted') this.removeRoom(room);
 					this.updateAutojoin();
@@ -3093,6 +3228,8 @@ export const PS = new class extends PSModel {
 			if (!room) return;
 			if (room.type !== 'chat' || room.pmTarget) continue;
 			autojoins.push(room.id.includes('-') ? room.id : (room.title || room.id));
+			// CobblemonShowdown : le serveur refuse /autojoin au-delà de 16 salons
+			if (autojoins.length >= 16) break;
 			if (room.id === 'staff' || room.id === 'upperstaff' || (PS.server.id !== 'showdown' && room.id === 'lobby')) continue;
 			autojoinCount++;
 			if (autojoinCount >= 15) break;

@@ -31,6 +31,12 @@ try {
 	);
 }
 
+// CobblemonShowdown : le client se construit à partir du serveur de ce dépôt.
+if (!fs.existsSync('caches/pokemon-showdown')) {
+	fs.mkdirSync('caches', {recursive: true});
+	fs.symlinkSync('../../server', 'caches/pokemon-showdown', 'dir');
+}
+
 var options = {cwd: __dirname, stdio: 'inherit'};
 var full = '';
 
