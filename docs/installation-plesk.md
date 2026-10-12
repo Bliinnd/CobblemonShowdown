@@ -51,7 +51,7 @@ Puis, dans **Custom environment variables**, ajoutez :
 | `DB_NAME` | le nom de la base créée à l'étape 1 |
 | `DB_USER` | l'utilisateur de la base |
 | `DB_PASSWORD` | son mot de passe |
-| `ADMINS` | votre pseudo sur le site (facultatif) |
+| `ADMINS` | `Bliinnd` : le ou les pseudos administrateurs, séparés par des virgules (Bliinnd si la variable est absente) |
 
 Si les ports 8000 ou 9000 sont déjà utilisés sur le serveur, ajoutez aussi
 `SIM_PORT` et `LOGIN_PORT` avec deux ports libres.
@@ -82,6 +82,23 @@ Pour que le site reste démarré même sans visiteur, ajoutez dans
 passenger_min_instances 1;
 ```
 
+## 6. Devenir administrateur
+
+1. Juste après la première mise en ligne, ouvrez le site, cliquez sur
+   **Choisir un pseudo**, tapez `Bliinnd`, puis inscrivez-vous avec un mot de
+   passe. Faites-le tout de suite : tant que le pseudo n'est pas inscrit,
+   quelqu'un d'autre pourrait le prendre.
+2. **Node.js → Restart App**.
+
+Au redémarrage, les pseudos de `ADMINS` déjà inscrits reçoivent le rang
+**Administrateur (~)** de Pokémon Showdown. Ils ont tous les droits, dans tous
+les salons. Les autres rangs se donnent depuis le chat, avec les mêmes commandes
+que sur Showdown (par exemple `/globalpromote pseudo, @` pour un modérateur,
+`/roomowner pseudo` dans un salon pour lui en confier la gestion).
+
+Tous les visiteurs rejoignent automatiquement le salon **Discussion**. Les
+invités peuvent lire ; il faut un pseudo pour écrire.
+
 ## Mettre à jour le site
 
 1. **Git → Pull Updates** (puis **Deploy** si le déploiement est manuel).
@@ -99,3 +116,9 @@ passenger_min_instances 1;
   exactement au domaine affiché dans le navigateur, et que le HTTPS est actif.
 - Le dossier `data/` contient les clés de connexion du site : ne le supprimez pas
   et ne le partagez pas. Les comptes et les équipes sont dans la base de données.
+- Les salons et les rangs sont dans `server/config/` (`chatrooms.json`,
+  `usergroups.csv`), les listes d'amis dans `server/databases/friends.db` : ne
+  supprimez pas ces fichiers non plus. Pensez à les sauvegarder avec `data/`.
+- Pas de rang Administrateur après le redémarrage : vérifiez que le pseudo est
+  bien inscrit sur le site et écrit de la même façon dans `ADMINS`, puis
+  redémarrez à nouveau.

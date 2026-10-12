@@ -50,6 +50,32 @@ export class UserRoom extends PSRoom {
 	}
 }
 
+/** CobblemonShowdown : le serveur préfixe les statuts par « (Busy) » ou « (Idle) » en anglais. */
+function awayLabelText(status: string) {
+	return status.replace(/^\(Busy\)/, TL`(Busy)`).replace(/^\(Idle\)/, TL`(Idle)`);
+}
+
+/** CobblemonShowdown : le serveur envoie les noms des rangs en anglais, ex. « Administrator (~) ». */
+function groupNameText(name: string | undefined) {
+	const [, rank, symbol] = /^(.*?)( \(.\))?$/.exec(name || '') || [];
+	if (!rank) return name;
+	const translated = {
+		Administrator: TL`Administrator`,
+		'Room Owner': TL`Room Owner`,
+		Host: TL`Host`,
+		Moderator: TL`Moderator`,
+		Driver: TL`Driver`,
+		Bot: TL`Bot`,
+		Player: TL`Player`,
+		Voice: TL`Voice`,
+		'Prize Winner': TL`Prize Winner`,
+		Whitelist: TL`Whitelist`,
+		Locked: TL`Locked`,
+		Muted: TL`Muted`,
+	}[rank] || rank;
+	return translated + (symbol || '');
+}
+
 export class StatusEditor extends preact.Component {
 	declare state: { addingStatus?: boolean, statusChanged?: boolean };
 	fetchStatus() {
@@ -63,7 +89,7 @@ export class StatusEditor extends preact.Component {
 	}
 	statusLabel() {
 		const status = PS.mainmenu.userdetailsCache[PS.user.userid]?.status || '';
-		return /^!?(\((?:Busy|Idle)\))/.exec(status)?.[1] || '';
+		return awayLabelText(/^!?(\((?:Busy|Idle)\))/.exec(status)?.[1] || '');
 	}
 	statusInput() {
 		return this.base!.querySelector<HTMLTextAreaElement>('textarea[name=statustext]');
@@ -168,11 +194,11 @@ class UserPanel extends PSRoomPanel<UserRoom> {
 		const hideInteraction = room.id.startsWith('viewuser-');
 
 		const group = PS.server.getGroup(room.name);
-		let groupName: preact.ComponentChild = group.name || null;
+		let groupName: preact.ComponentChild = groupNameText(group.name) || null;
 
 		const globalGroup = PS.server.getGroup(user.group);
-		let globalGroupName: preact.ComponentChild = globalGroup.name && TL`Global ${globalGroup.name}` || null;
-		if (globalGroup.name === groupName) groupName = null;
+		let globalGroupName: preact.ComponentChild = globalGroup.name && TL`Global ${groupNameText(globalGroup.name)}` || null;
+		if (globalGroup.name === group.name) groupName = null;
 		let customGroup = toID(user.customgroup) !== toID(globalGroupName || groupName) ? user.customgroup : '';
 
 		if (group.type === 'punishment') {
@@ -289,7 +315,7 @@ class UserPanel extends PSRoomPanel<UserRoom> {
 			{isSelf && !hideInteraction ? (
 				<StatusEditor />
 			) : status ? (
-				<div class="userstatus">{status}</div>
+				<div class="userstatus">{awayLabelText(status)}</div>
 			) : null}
 			{groupName && <div class="usergroup roomgroup">{groupName}</div>}
 			{globalGroupName && <div class="usergroup globalgroup">{globalGroupName}</div>}
@@ -345,6 +371,18 @@ const USER_PUNISHMENTS = {
 	namelock: { label: 'Namelock', duration: '2 days', scope: 'global' },
 } as const;
 type UserPunishment = keyof typeof USER_PUNISHMENTS;
+/** CobblemonShowdown : textes des sanctions dans la langue du site. */
+function punishmentText(punishment: UserPunishment) {
+	return {
+		mute: { label: TL`Mute`, duration: TL`7 minutes` },
+		hourmute: { label: TL`Hourmute`, duration: TL`1 hour` },
+		ban: { label: TL`Ban`, duration: TL`2 days` },
+		weekban: { label: TL`Weekban`, duration: TL`1 week` },
+		lock: { label: TL`Lock`, duration: TL`2 days` },
+		weeklock: { label: TL`Weeklock`, duration: TL`1 week` },
+		namelock: { label: TL`Namelock`, duration: TL`2 days` },
+	}[punishment];
+}
 
 class UserOptionsPanel extends PSRoomPanel {
 	static readonly id = 'useroptions';
@@ -388,10 +426,11 @@ class UserOptionsPanel extends PSRoomPanel {
 
 		const { targetUser, targetRoom } = this.getTargets();
 		const action = USER_PUNISHMENTS[punishment];
-		const scope = action.scope === 'room' ? ` in ${targetRoom?.title || '???'}` : '';
+		const text = punishmentText(punishment);
+		const scope = action.scope === 'room' ? TL` in ${targetRoom?.title || '???'}` : '';
 		PS.prompt(
-			`${action.label} ${targetUser}${scope} for ${action.duration}?`,
-			{ okButton: action.label, parentElem: button, label: "Reason (optional):" }
+			TL`${text.label} ${targetUser}${scope} for ${text.duration}?`,
+			{ okButton: text.label, parentElem: button, label: TL.label(TL`Reason (optional)`) }
 		).then(reason => {
 			if (reason === null) return;
 			reason = reason.trim();
@@ -417,9 +456,15 @@ class UserOptionsPanel extends PSRoomPanel {
 
 		return <PSPanelWrapper room={room} width={280}><div class="pad buttonmenu">
 			<p>
-				<button data-cmd={`/dm ${targetUser}, /friend add ${targetUser}`} class="button">
-					{TL`[Add friend]`}
-				</button>
+				{PS.mainmenu.userdetailsCache[targetUser]?.friended ? (
+					<button data-cmd={`/dm ${targetUser}, /friend remove ${targetUser}`} class="button">
+						{TL`[Remove friend]`}
+					</button>
+				) : (
+					<button data-cmd={`/dm ${targetUser}, /friend add ${targetUser}`} class="button">
+						{TL`[Add friend]`}
+					</button>
+				)}
 			</p>
 			<p>
 				{this.isIgnoringUser(targetUser) ? (
@@ -438,7 +483,7 @@ class UserOptionsPanel extends PSRoomPanel {
 				</button>
 			</p>
 			{(canMute || canBan) && <fieldset class="fieldset">
-				<legend>Moderate in {targetRoom?.title}</legend>
+				<legend>{TL`Moderate in ${targetRoom?.title}`}</legend>
 				{canMute && <p>
 					<button
 						class="button button-first" value="mute" onClick={this.openPunishment}
@@ -476,7 +521,7 @@ class UserOptionsPanel extends PSRoomPanel {
 				</p>
 			</fieldset>}
 			{canLock && <fieldset class="fieldset">
-				<legend>Global moderation</legend>
+				<legend>{TL`Global moderation`}</legend>
 				<p>
 					<button
 						class="button button-first" value="lock" onClick={this.openPunishment}
@@ -1044,7 +1089,7 @@ class AvatarsPanel extends PSRoomPanel {
 		}
 
 		return <PSPanelWrapper room={room} width={1210}><div class="pad">
-			<label class="optlabel"><strong>Choose an avatar or </strong>
+			<label class="optlabel"><strong>{TL`Choose an avatar or`} </strong>
 				<button class="button" data-cmd="/close"> {TL`[Cancel]`}</button>
 			</label>
 			<div class="avatarlist">
@@ -1249,7 +1294,9 @@ class RegisterPanel extends PSRoomPanel {
 			if (data?.curuser?.loggedin) {
 				let name = data.curuser.username;
 				PS.user.registered = { name, userid: toID(name) };
-				if (data?.assertion) PS.user.handleAssertion(name, data?.assertion);
+				// CobblemonShowdown : comme l'ancien client, on signale au serveur que le pseudo vient
+				// d'être inscrit, sinon il garde le joueur comme non inscrit jusqu'à la reconnexion.
+				if (data?.assertion) PS.user.handleAssertion(name, data?.assertion, true);
 				// CobblemonShowdown : les équipes faites en invité sont ajoutées au nouveau compte
 				PS.teams.syncAccount();
 				this.close();

@@ -26,6 +26,8 @@ function loadSettings() {
 	const siteHost = (env.SITE_HOST || 'localhost').trim().toLowerCase();
 	const hostname = siteHost.split(':')[0];
 	const dataDir = path.resolve(ROOT, env.DATA_DIR || 'data');
+	// Sans réglage ADMINS, Bliinnd (le propriétaire du site) est administrateur.
+	const adminNames = (env.ADMINS ?? 'Bliinnd').split(',').map(name => name.trim()).filter(name => /[a-z0-9]/i.test(name));
 	return {
 		root: ROOT,
 		dataDir,
@@ -46,8 +48,8 @@ function loadSettings() {
 			user: env.DB_USER || 'cobblemon',
 			password: env.DB_PASSWORD || '',
 		},
-		/** Pseudos (séparés par des virgules) qui ont les droits d'administration. */
-		admins: (env.ADMINS || '').split(',').map(name => name.toLowerCase().replace(/[^a-z0-9]+/g, '')).filter(Boolean),
+		/** Pseudos (séparés par des virgules) qui reçoivent le rang Administrateur (~) une fois inscrits. */
+		adminNames,
 		/** Développement uniquement : sert le site en HTTPS avec un certificat auto-signé. */
 		devHttps: env.DEV_HTTPS === '1',
 	};

@@ -38,6 +38,7 @@ export class MainMenuRoom extends PSRoom {
 			group?: string,
 			customgroup?: string,
 			rooms?: { [roomid: string]: { isPrivate?: true, p1?: string, p2?: string } },
+			friended?: boolean,
 		},
 	} = {};
 	roomsCache: {
@@ -196,7 +197,7 @@ export class MainMenuRoom extends PSRoom {
 			return true;
 		}
 		}
-		const lobby = PS.rooms['lobby'];
+		const lobby = PS.rooms['lobby'] || PS.rooms['discussion'];
 		if (lobby) lobby.receiveBatch([args]);
 		return true;
 	}
@@ -422,6 +423,7 @@ export class MainMenuRoom extends PSRoom {
 				this.userdetailsCache[userid] = response;
 			} else {
 				response.status ||= '';
+				response.friended ||= false;
 				Object.assign(userdetails, response);
 			}
 			if (userid === PS.user.userid) {
@@ -770,7 +772,7 @@ class MainMenuPanel extends PSRoomPanel<MainMenuRoom> {
 					<div class="menugroup">
 						<p><a class={"mainmenu1 mainmenu" + onlineButton} href="rooms">{TL`Chat rooms`}</a></p>
 						{PS.server.id !== 'showdown' && (
-							<p><a class={"mainmenu2 mainmenu" + onlineButton} href="lobby">{TL`Lobby chat`}</a></p>
+							<p><a class={"mainmenu2 mainmenu" + onlineButton} href="discussion">{TL`Discussion`}</a></p>
 						)}
 					</div>
 				</div>

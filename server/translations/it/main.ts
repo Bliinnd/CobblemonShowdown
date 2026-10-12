@@ -235,5 +235,113 @@ export const translations: TranslationCatalog = {
 	"You are not blocking friend requests.": null, // NEEDS TRANSLATION
 	"You are currently allowing friend notifications.": null, // NEEDS TRANSLATION
 	"Your friend notifications are disabled.": null, // NEEDS TRANSLATION
+	"Online": null, // NEEDS TRANSLATION
+	"Idle": null, // NEEDS TRANSLATION
+	"Busy": null, // NEEDS TRANSLATION
+	"Offline": null, // NEEDS TRANSLATION
+	"<code>/friend list</code> - View current friends.": null, // NEEDS TRANSLATION
+	"<code>/friend add [name]</code> OR <code>/friend [name]</code> - Send a friend request to [name], if you don't have them added.": null, // NEEDS TRANSLATION
+	"<code>/friend remove [username]</code> OR <code>/unfriend [username]</code>  - Unfriend the user.": null, // NEEDS TRANSLATION
+	"<code>/friend accept [username]</code> - Accepts the friend request from [username], if it exists.": null, // NEEDS TRANSLATION
+	"<code>/friend reject [username]</code> - Rejects the friend request from [username], if it exists.": null, // NEEDS TRANSLATION
+	"<code>/friend toggle [off/on]</code> - Enable or disable receiving of friend requests.": null, // NEEDS TRANSLATION
+	"<code>/friend hidenotifications</code> OR <code>hidenotifs</code> - Opts out of receiving friend notifications.": null, // NEEDS TRANSLATION
+	"<code>/friend viewnotifications</code> OR <code>viewnotifs</code> - Opts into view friend notifications.": null, // NEEDS TRANSLATION
+	"<code>/friend listdisplay [on/off]</code> - Opts [in/out] of letting others view your friends list.": null, // NEEDS TRANSLATION
+	"<code>/friend viewlist [user]</code> - View the given [user]'s friend list, if they're allowing others to see.": null, // NEEDS TRANSLATION
+	"<code>/friends sharebattles [on|off]</code> - Allow or disallow your friends from seeing your ongoing battles.": null, // NEEDS TRANSLATION
+	"You have {COUNT} friend requests pending!": null, // NEEDS TRANSLATION
+	"View requests": null, // NEEDS TRANSLATION
+	"Your friend {FRIEND} has just connected!": null, // NEEDS TRANSLATION
+	"Add friend:": null, // NEEDS TRANSLATION
+	"Add": null, // NEEDS TRANSLATION
+	"Your friends:": null, // NEEDS TRANSLATION
+	"You currently have no friends added.": null, // NEEDS TRANSLATION
+	"To add a friend, use <code>/friend add [username]</code>.": null, // NEEDS TRANSLATION
+	"{USER}'s friends:": null, // NEEDS TRANSLATION
+	"This user has no friends added.": null, // NEEDS TRANSLATION
+	"Status: {STATUS}": null, // NEEDS TRANSLATION
+	"On an alternate account": null, // NEEDS TRANSLATION
+	"Last seen: {TIME} ({AGO})": null, // NEEDS TRANSLATION
+	"The friends list feature is currently disabled.": null, // NEEDS TRANSLATION
+	"To use the friends list, you must be logged in to a registered account.": null, // NEEDS TRANSLATION
+	"You are locked, and so cannot use the friends feature.": null, // NEEDS TRANSLATION
+	"You are currently unable to use the friends feature.": null, // NEEDS TRANSLATION
+	"Specify a user.": null, // NEEDS TRANSLATION
+	"You sent a friend request to {USER}!": null, // NEEDS TRANSLATION
+	"Removed friend {TARGET}.": null, // NEEDS TRANSLATION
+	"You accepted a friend request from {TARGET}.": null, // NEEDS TRANSLATION
+	"{USER} accepted your friend request!": null, // NEEDS TRANSLATION
+	"You have no friend request pending from {TARGET}.": null, // NEEDS TRANSLATION
+	"You denied a friend request from {TARGET}.": null, // NEEDS TRANSLATION
+	"You have no pending friend request to {TARGET}.": null, // NEEDS TRANSLATION
+	"You removed your friend request to {TARGET}.": null, // NEEDS TRANSLATION
+	"You are already allowing friend notifications.": null, // NEEDS TRANSLATION
+	"You will now receive friend notifications.": null, // NEEDS TRANSLATION
+	"Invalid setting.": null, // NEEDS TRANSLATION
+	"You are now hiding your login times from your friends.": null, // NEEDS TRANSLATION
+	"You are now allowing your friends to see your login times.": null, // NEEDS TRANSLATION
+	"You are currently displaying your friends list.": null, // NEEDS TRANSLATION
+	"You are currently hiding your friends list.": null, // NEEDS TRANSLATION
+	"You invalidated each entry in the friends database cache.": null, // NEEDS TRANSLATION
+	"You are now allowing your friends to see your ongoing battles.": null, // NEEDS TRANSLATION
+	"You are now hiding your ongoing battles from your friends.": null, // NEEDS TRANSLATION
+	"Invalid setting '{TARGET}'. Provide 'on' or 'off'.": null, // NEEDS TRANSLATION
+	"/friends sharebattles [on|off] - Allow or disallow your friends from seeing your ongoing battles.": null, // NEEDS TRANSLATION
+	"More commands...": null, // NEEDS TRANSLATION
+	"[Friends] Sent": null, // NEEDS TRANSLATION
+	"You have no outgoing friend requests pending.": null, // NEEDS TRANSLATION
+	"You have 1 outgoing friend request pending.": null, // NEEDS TRANSLATION
+	"You have {COUNT} outgoing friend requests pending.": null, // NEEDS TRANSLATION
+	"(maximum reached)": null, // NEEDS TRANSLATION
+	"[Friends] Received": null, // NEEDS TRANSLATION
+	"You have no pending friend requests.": null, // NEEDS TRANSLATION
+	"You have 1 incoming friend request pending.": null, // NEEDS TRANSLATION
+	"You have {COUNT} incoming friend requests pending.": null, // NEEDS TRANSLATION
+	"Use /friends list to view your own list.": null, // NEEDS TRANSLATION
+	"{TARGET}'s friends list is not public or they do not have one.": null, // NEEDS TRANSLATION
+	"[Friends List] {TARGET}": null, // NEEDS TRANSLATION
+	"[Friends] Help": null, // NEEDS TRANSLATION
+	"/friend OR /friends OR /friendslist:": null, // NEEDS TRANSLATION
+	"[Friends] Settings": null, // NEEDS TRANSLATION
+	"Friends Settings:": null, // NEEDS TRANSLATION
+	"Enable": null, // NEEDS TRANSLATION
+	"Disable": null, // NEEDS TRANSLATION
+	"Notify me when my friends come online:": null, // NEEDS TRANSLATION
+	"Receive friend requests:": null, // NEEDS TRANSLATION
+	"Allow others to see your list:": null, // NEEDS TRANSLATION
+	"Hide": null, // NEEDS TRANSLATION
+	"Allow": null, // NEEDS TRANSLATION
+	"Allow friends to see my login times:": null, // NEEDS TRANSLATION
+	"Allow friends to see my hidden battles on the spectator list:": null, // NEEDS TRANSLATION
+	"Block PMs except from friends (and staff):": null, // NEEDS TRANSLATION
+	"Block challenges except from friends (and staff):": null, // NEEDS TRANSLATION
+	"[Friends] Spectating": null, // NEEDS TRANSLATION
+	"Spectate your friends:": null, // NEEDS TRANSLATION
+	"Use the <a roomid=\"view-friends-settings\">settings page</a> to disallow your friends from seeing your hidden battles on this page.": null, // NEEDS TRANSLATION
+	"Use the <a roomid=\"view-friends-settings\">settings page</a> to allow your friends to see your hidden battles on this page.": null, // NEEDS TRANSLATION
+	"You have no friends to spectate.": null, // NEEDS TRANSLATION
+	"None of your friends are currently around to spectate.": null, // NEEDS TRANSLATION
+	"None of your friends are currently in a battle.": null, // NEEDS TRANSLATION
+	"Rated: {RATING}": null, // NEEDS TRANSLATION
+	"(with {FRIEND})": null, // NEEDS TRANSLATION
+	"[Friends] All Friends": null, // NEEDS TRANSLATION
+	"Sorry! The database process crashed. We've been notified and will fix this.": null, // NEEDS TRANSLATION
+	"You are at the maximum number of friends.": null, // NEEDS TRANSLATION
+	"You are already friends with {USER}.": null, // NEEDS TRANSLATION
+	"You have already sent a friend request to {USER}.": null, // NEEDS TRANSLATION
+	"{USER} has already sent you a friend request. Use \"/friends view received\" to accept it.": null, // NEEDS TRANSLATION
+	"You already have {MAX} pending friend requests. Use \"/friends view sent\" to see your outgoing requests and \"/friends view received\" to see your incoming requests.": null, // NEEDS TRANSLATION
+	"Note: If this request is accepted, your friend will be notified when you come online, and you will be notified when they do, unless you opt out of receiving them.": null, // NEEDS TRANSLATION
+	"{USER} sent you a friend request!": null, // NEEDS TRANSLATION
+	"(You can also stop this user from sending you friend requests with <code>/ignore</code>)": null, // NEEDS TRANSLATION
+	"You can't friend yourself.": null, // NEEDS TRANSLATION
+	"{USER} is not a registered account, and cannot be friended.": null, // NEEDS TRANSLATION
+	"{USER} is blocking friend requests.": null, // NEEDS TRANSLATION
+	"This user is blocking PMs, and cannot be friended right now.": null, // NEEDS TRANSLATION
+	"Invalid sender username.": null, // NEEDS TRANSLATION
+	"Invalid receiver username.": null, // NEEDS TRANSLATION
+	"Invalid usernames supplied.": null, // NEEDS TRANSLATION
+	"You do not have {USER} friended.": null, // NEEDS TRANSLATION
 
 };

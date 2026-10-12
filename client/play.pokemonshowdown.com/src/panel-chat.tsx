@@ -203,7 +203,7 @@ export class ChatRoom extends PSRoom {
 			}
 			if (lines[i].startsWith('|raw|<div class="infobox"> You joined ')) {
 				const timestamp = BattleLog.renderTimestamp(Date.now() / 1000, PS.prefs.timestamps?.chatrooms);
-				reconnectMessage = `|raw|<div class="infobox">${timestamp}You reconnected to ${lines[i].slice(38)}`;
+				reconnectMessage = `|raw|<div class="infobox">${timestamp}${TL`You reconnected to`} ${lines[i].slice(38)}`;
 				cutOffEnd = i;
 				if (!lines[i - 1]) cutOffEnd = i - 1;
 			}
@@ -868,30 +868,15 @@ export class ChatRoom extends PSRoom {
 	formatJoinLeave(preList: string[], action: 'joined' | 'left') {
 		if (!preList.length) return '';
 
-		let message = '';
-		let list: string[] = [];
-		let named: { [key: string]: boolean } = {};
-		for (let item of preList) {
-			if (!named[item]) list.push(item);
-			named[item] = true;
+		// CobblemonShowdown : messages traduits (ils étaient écrits en anglais en dur).
+		const list = preList.filter((name, i) => preList.indexOf(name) === i).map(name => BattleLog.escapeHTML(name));
+		let message = list[0];
+		if (list.length > 5) {
+			message = TL`${list.slice(0, 5).join(', ')} and ${list.length - 5} others`;
+		} else if (list.length > 1) {
+			message = TL`${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`;
 		}
-		for (let j = 0; j < list.length; j++) {
-			if (j >= 5) {
-				message += `, and ${(list.length - 5)} others`;
-				break;
-			}
-			if (j > 0) {
-				if (j === 1 && list.length === 2) {
-					message += ' and ';
-				} else if (j === list.length - 1) {
-					message += ', and ';
-				} else {
-					message += ', ';
-				}
-			}
-			message += BattleLog.escapeHTML(list[j]);
-		}
-		return `${message} ${action}`;
+		return action === 'joined' ? TL`${message} joined` : TL`${message} left`;
 	}
 
 	override destroy() {

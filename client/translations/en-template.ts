@@ -92,6 +92,7 @@ export const translations: TranslationCatalog = {
 	" ({PARENTHETICAL})": null,
 	"The login server did not respond.": null,
 	"Your teams could not be saved to your account: {error}": null,
+	"(use arrow keys)": null,
 
 	// #endregion Generic UI
 
@@ -251,6 +252,38 @@ export const translations: TranslationCatalog = {
 	"Password (confirm)": null,
 	"An Electric-type mouse that is the mascot of the Pokémon franchise.": null,
 	"What is this Pokémon?": null,
+	"(Busy)": null,
+	"(Idle)": null,
+	"Administrator": null,
+	"Room Owner": null,
+	"Host": null,
+	"Moderator": null,
+	"Driver": null,
+	"Bot": null,
+	"Player": null,
+	"Voice": null,
+	"Prize Winner": null,
+	"Whitelist": null,
+	"Locked": null,
+	"Muted": null,
+	"Mute": null,
+	"7 minutes": null,
+	"Hourmute": null,
+	"1 hour": null,
+	"Ban": null,
+	"2 days": null,
+	"Weekban": null,
+	"1 week": null,
+	"Lock": null,
+	"Weeklock": null,
+	"Namelock": null,
+	" in {ROOM}": null,
+	"{PUNISHMENT} {USER}{SCOPE} for {DURATION}?": null,
+	"Reason (optional)": null,
+	"[Remove friend]": null,
+	"Moderate in {ROOM}": null,
+	"Global moderation": null,
+	"Choose an avatar or": null,
 
 	// #endregion Popups
 
@@ -267,7 +300,7 @@ export const translations: TranslationCatalog = {
 	// TRANSLATORS: Games includes help tickets and similar interactive experiences that aren't exactly games
 	"You are in:": null,
 	"Info & Resources": null,
-	"Lobby chat": null,
+	"Lobby chat": null, // NOT USED
 
 	// TRANSLATORS: Challenge/Search UI
 	// technically used in more than the Main Menu, but it might as well be here
@@ -290,6 +323,7 @@ export const translations: TranslationCatalog = {
 	"You're already searching for a {FORMAT} battle...": null,
 	"You need to go into the Teambuilder and build a team for this format.": null,
 	"Source code": null,
+	"Discussion": null,
 
 	// #endregion Main Menu
 
@@ -538,6 +572,9 @@ export const translations: TranslationCatalog = {
 	"You are not a player in this battle": null,
 	"Can only be used in a DM.": null,
 	"Please wait 5 seconds before challenging again.": null,
+	"You joined": null,
+	"You reconnected to": null,
+	"{NAMES} and {COUNT} others": null,
 
 	// #endregion Chat
 

@@ -326,21 +326,21 @@ class PSPrefs extends PSStreamModel<string | null> {
 	}
 	doAutojoin() {
 		let autojoin = PS.prefs.autojoin;
-		if (autojoin) {
-			if (typeof autojoin === 'string') {
-				autojoin = { showdown: autojoin };
-			}
-			let rooms = autojoin[PS.server.id] || '';
-			for (let title of rooms.split(",")) {
-				const id = /[^a-z0-9-]/.test(title) ? toID(title) as any as RoomID : title as RoomID;
-				PS.addRoom({ id, title, connected: 'pending', autofocus: false });
-			}
-			const cmd = `/autojoin ${rooms}`;
-			// Don't jam up the queue with duplicate autojoin requests.
-			// Sending multiple autojoins is a server error.
-			if (PS.connection?.queue.includes(cmd)) return;
-			PS.send(cmd);
+		if (typeof autojoin === 'string') {
+			autojoin = { showdown: autojoin };
 		}
+		let rooms = autojoin?.[PS.server.id] || '';
+		for (let title of rooms.split(",")) {
+			if (!title) continue;
+			const id = /[^a-z0-9-]/.test(title) ? toID(title) as any as RoomID : title as RoomID;
+			PS.addRoom({ id, title, connected: 'pending', autofocus: false });
+		}
+		// CobblemonShowdown : comme l'ancien client, on envoie toujours /autojoin, pour que
+		// le serveur fasse rejoindre à chacun ses salons automatiques (Discussion).
+		const cmd = `/autojoin ${rooms}`;
+		// Don't jam up the queue with duplicate autojoin requests.
+		// Sending multiple autojoins is a server error.
+		if (!PS.connection?.queue.includes(cmd)) PS.send(cmd);
 
 		for (const roomid in PS.rooms) {
 			const room = PS.rooms[roomid]!;
@@ -878,7 +878,8 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 			PS.join('login' as RoomID, { args: update });
 		}
 	}
-	handleAssertion(name: string, assertion?: string | null) {
+	/** @param newlyRegistered the name was just registered (the server needs it to accept the new account) */
+	handleAssertion(name: string, assertion?: string | null, newlyRegistered = false) {
 		if (!assertion) {
 			PS.alert(TL`Error logging in.`);
 			return;
@@ -904,7 +905,7 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 		} else if (assertion.includes('\n') || !assertion) {
 			PS.alert(TL`Something is interfering with our connection to the login server.`);
 		} else {
-			PS.send(`/trn ${name},0,${assertion}`);
+			PS.send(`/trn ${name},${newlyRegistered ? 1 : 0},${assertion}`);
 			this.update({ success: true });
 		}
 	}
@@ -2440,7 +2441,9 @@ export const PS = new class extends PSModel {
 						id: roomid2,
 						type,
 						connected: 'init',
-						autofocus: roomid !== 'staff' && roomid !== 'upperstaff',
+						// CobblemonShowdown : sur mobile, Discussion reste un onglet au lieu de cacher l'accueil.
+						autofocus: roomid !== 'staff' && roomid !== 'upperstaff' &&
+							(roomid !== 'discussion' || !!this.leftPanelWidth),
 						// probably the only use for `autoclosePopups: false`.
 						// (the server sometimes sends a popup error message and a new room at the same time)
 						autoclosePopups: false,
@@ -2463,6 +2466,11 @@ export const PS = new class extends PSModel {
 						}
 					}
 					room.connected = true;
+					// CobblemonShowdown : comme le Lobby de l'ancien client, Discussion s'affiche
+					// à droite à chaque visite quand il y a la place (pas sur mobile).
+					if (roomid2 === 'discussion' && this.leftPanelWidth && this.rightPanel === this.rooms['rooms']) {
+						this.rightPanel = room;
+					}
 				}
 				this.updateAutojoin();
 				this.update();
@@ -3206,7 +3214,8 @@ export const PS = new class extends PSModel {
 			if (!room) return;
 			if (room.type !== 'chat' || room.pmTarget) continue;
 			autojoins.push(room.id.includes('-') ? room.id : (room.title || room.id));
-			if (room.id === 'staff' || room.id === 'upperstaff' || (PS.server.id !== 'showdown' && room.id === 'lobby')) continue;
+			if (room.id === 'staff' || room.id === 'upperstaff') continue;
+			if (PS.server.id !== 'showdown' && (room.id === 'lobby' || room.id === 'discussion')) continue;
 			autojoinCount++;
 			if (autojoinCount >= 15) break;
 		}

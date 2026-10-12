@@ -34,10 +34,17 @@ function writeServerConfig(settings, keys) {
 			dex: 'dex.pokemonshowdown.com',
 			replays: settings.siteHost,
 		})};`,
-		// Ne pas donner d'accès administrateur à l'équipe de Pokémon Showdown.
+		// Pas d'accès « système » : les administrateurs ont le rang ~ (voir app/admins.js).
 		`exports.backdoor = false;`,
 		`exports.repl = false;`,
+		// Les commandes qui exécutent du code sur le serveur (>>, /eval, /bash...) sont
+		// désactivées : derrière Plesk, tous les joueurs peuvent sembler venir de 127.0.0.1.
+		`exports.consoleips = [];`,
 		`exports.crashguardemail = null;`,
+		// Pas d'annonce « combat lancé » dans le salon Discussion.
+		`exports.reportbattles = false;`,
+		// Liste d'amis de Showdown (base SQLite intégrée à Node, server/databases/friends.db).
+		`exports.usesqlitefriends = 'unlocked';`,
 		'',
 	].join('\n'));
 }
@@ -66,7 +73,7 @@ function writeLoginServerConfig(settings, keys) {
 		`exports.pspath = ${js(path.join(settings.root, 'server/dist/sim'))};`,
 		`exports.cssdir = ${js(path.join(settings.dataDir, 'customcss') + '/')};`,
 		`exports.cors = [];`,
-		`exports.sysops = ${js(settings.admins)};`,
+		`exports.sysops = [];`,
 		`exports.privatekey = ${js(keys.privateKey)};`,
 		`exports.challengekeyid = ${LOGIN_KEY_ID};`,
 		`exports.port = ${settings.loginPort};`,

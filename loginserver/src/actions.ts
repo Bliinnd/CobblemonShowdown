@@ -186,6 +186,9 @@ export const actions: { [k: string]: QueryHandler } = {
 		const challenge = params.challstr || params.challenge || "";
 		if (!challenge) throw new ActionError(`Invalid challenge string argument.`);
 		const assertion = await this.session.getAssertion(userid, challengekeyid, user, challenge);
+		// CobblemonShowdown : comme après une connexion, le cookie de session garde le joueur
+		// connecté (sinon il est déconnecté au rechargement et ses équipes ne sont pas enregistrées).
+		await this.session.setSid();
 		return {
 			assertion,
 			actionsuccess: !assertion.startsWith(';'),

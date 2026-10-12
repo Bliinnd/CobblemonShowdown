@@ -6,7 +6,7 @@
  */
 
 import { Config, PS } from "./client-main";
-import { TL } from "./battle-dex";
+import { Dex, TL } from "./battle-dex";
 
 declare const SockJS: any;
 declare const POKEMON_SHOWDOWN_TESTCLIENT_KEY: string | undefined;
@@ -205,6 +205,9 @@ export class PSConnection {
 		this.lastReceiveTime = Date.now();
 
 		if (PS.prefs.avatar) PS.send(`/avatar ${PS.prefs.avatar},1`);
+		// CobblemonShowdown : le serveur répond dans la langue du site (français par défaut).
+		const language = Dex.text.findLanguage(Dex.text.getLanguage())?.legacyId;
+		if (language) PS.send(`/noreply /language ${language}`);
 		const queue = this.queue;
 		this.queue = [];
 		for (const msg of queue) this.send(msg);
