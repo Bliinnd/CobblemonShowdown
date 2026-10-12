@@ -145,7 +145,8 @@ export class FriendsDatabase {
 		const file = fileName || process.env.filename || DEFAULT_FILE;
 		const exists = FS(file).existsSync() || file === ':memory:';
 		const { DatabaseSync } = require('node:sqlite') as typeof sqlite;
-		const database = new DatabaseSync(file);
+		// Attend jusqu'à 5 s qu'un autre processus libère la base au lieu d'échouer aussitôt.
+		const database = new DatabaseSync(file, { timeout: 5000 });
 		if (!exists) {
 			database.exec(FS('databases/schemas/friends.sql').readSync());
 		} else {
@@ -386,17 +387,20 @@ function makeTransaction(database: sqlite.DatabaseSync, fn: (input: any[]) => Da
 	return (input: any[]) => {
 		const nested = database.isTransaction;
 		database.exec(nested ? `SAVEPOINT friends_transaction` : `BEGIN`);
-		let result;
 		try {
-			result = fn(input);
+			const result = fn(input);
+			database.exec(nested ? `RELEASE friends_transaction` : `COMMIT`);
+			return result;
 		} catch (e) {
-			try {
-				database.exec(nested ? `ROLLBACK TO friends_transaction; RELEASE friends_transaction` : `ROLLBACK`);
-			} catch {}
+			// Annule aussi quand c'est le COMMIT qui échoue (base occupée), sinon la transaction
+			// resterait ouverte et bloquerait les suivantes.
+			if (database.isTransaction) {
+				try {
+					database.exec(nested ? `ROLLBACK TO friends_transaction; RELEASE friends_transaction` : `ROLLBACK`);
+				} catch {}
+			}
 			throw e;
 		}
-		database.exec(nested ? `RELEASE friends_transaction` : `COMMIT`);
-		return result;
 	};
 }
 

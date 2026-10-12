@@ -29,7 +29,7 @@ function writeAtomic(file, content) {
 	fs.renameSync(tmp, file);
 }
 
-async function findRegisteredNames(settings, userids) {
+async function findRegisteredAccounts(settings, userids) {
 	const mysql = require(path.join(settings.root, 'loginserver/node_modules/mysql2/promise'));
 	const connection = await mysql.createConnection({
 		host: settings.db.host,
@@ -40,11 +40,17 @@ async function findRegisteredNames(settings, userids) {
 	});
 	try {
 		const [rows] = await connection.query(
-			'SELECT userid, username FROM ntbb_users WHERE userid IN (?) AND banstate < 100', [userids]
+			'SELECT userid, username, registertime, ip FROM ntbb_users WHERE userid IN (?) AND banstate < 100', [userids]
 		);
-		const names = new Map();
-		for (const row of rows) names.set(String(row.userid), String(row.username));
-		return names;
+		const accounts = new Map();
+		for (const row of rows) {
+			accounts.set(String(row.userid), {
+				username: String(row.username),
+				registered: Number(row.registertime) > 0 ? new Date(Number(row.registertime) * 1000).toISOString() : '?',
+				ip: String(row.ip || '?'),
+			});
+		}
+		return accounts;
 	} finally {
 		await connection.end();
 	}
@@ -56,23 +62,33 @@ async function seedAdmins(settings) {
 	const pending = settings.adminNames.filter(name => !done.has(toID(name)));
 	if (!pending.length) return;
 
-	const registered = await findRegisteredNames(settings, pending.map(toID));
+	const registered = await findRegisteredAccounts(settings, pending.map(toID));
 	const groupsFile = path.join(settings.root, 'server/config/usergroups.csv');
 	const lines = fs.existsSync(groupsFile) ? fs.readFileSync(groupsFile, 'utf8').split('\n').filter(Boolean) : [];
 	const ranked = new Set(lines.map(line => toID(line.split(',')[0])));
 	let changed = false;
 	for (const name of pending) {
 		const userid = toID(name);
-		const username = registered.get(userid);
-		if (!username) {
+		const account = registered.get(userid);
+		if (!account) {
 			console.log(`Administrateurs : « ${name} » n'est pas encore inscrit. Inscrivez ce pseudo sur le site, ` +
 				`puis redémarrez l'application pour lui donner le rang Administrateur.`);
 			continue;
 		}
 		if (!ranked.has(userid)) {
+			// Le fichier est un CSV lu par le serveur : pas de virgule ni de retour à la ligne dans le nom.
+			const cleanName = account.username.replace(/[,|\r\n]/g, '').trim();
+			const username = toID(cleanName) === userid ? cleanName : userid;
 			lines.push(`${username},${ADMIN_SYMBOL},`);
+			ranked.add(userid);
 			changed = true;
-			console.log(`Administrateurs : « ${username} » est maintenant Administrateur (~).`);
+			// Inscription et adresse IP du compte, pour vérifier que c'est bien le bon.
+			const message = `Administrateurs : « ${username} » est maintenant Administrateur (~) ` +
+				`(compte inscrit le ${account.registered}, adresse IP ${account.ip}).`;
+			console.log(message);
+			const logs = path.join(settings.dataDir, 'logs');
+			fs.mkdirSync(logs, { recursive: true });
+			fs.appendFileSync(path.join(logs, 'admins.log'), `${new Date().toISOString()} ${message}\n`);
 		}
 		done.add(userid);
 	}

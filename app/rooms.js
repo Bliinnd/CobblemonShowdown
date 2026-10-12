@@ -43,10 +43,12 @@ function ensureChatRooms(settings) {
 		rooms.push({ title: 'Staff', auth: {}, creationTime: Date.now(), isPrivate: 'hidden', modjoin: '%', autojoin: true });
 	}
 
-	let room = rooms.find(entry => toID(entry.title) === toID(MAIN_ROOM));
+	const mainID = toID(MAIN_ROOM);
+	let room = rooms.find(entry => toID(entry.title) === mainID) ||
+		rooms.find(entry => Array.isArray(entry.aliases) && entry.aliases.map(toID).includes(mainID));
 	if (!room) {
-		// Les sites déjà installés avaient le Lobby de Showdown : il devient Discussion,
-		// en gardant ses modérateurs, sa présentation et ses bannissements.
+		// Les sites déjà installés avaient le Lobby de Showdown : il devient Discussion, en gardant
+		// ses modérateurs et sa présentation (les bannissements du Lobby ne sont pas repris).
 		room = rooms.find(entry => toID(entry.title) === 'lobby');
 		if (room) {
 			room.title = MAIN_ROOM;
@@ -58,7 +60,9 @@ function ensureChatRooms(settings) {
 		room.section = 'official';
 		room.language = 'french';
 		// Les anciens liens et favoris vers /lobby mènent à Discussion.
-		if (!rooms.some(entry => toID(entry.title) === 'lobby')) {
+		const lobbyTaken = rooms.some(entry => toID(entry.title) === 'lobby' ||
+			(entry !== room && Array.isArray(entry.aliases) && entry.aliases.map(toID).includes('lobby')));
+		if (!lobbyTaken) {
 			room.aliases = [...new Set([...(room.aliases || []), 'lobby'])];
 		}
 	}

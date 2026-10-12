@@ -575,6 +575,9 @@ export const translations: TranslationCatalog = {
 	"You joined": "Vous avez rejoint",
 	"You reconnected to": "Vous êtes reconnecté à",
 	"{NAMES} and {COUNT} others": "{NAMES} et {COUNT} autres",
+	"You reconnected.": "Vous êtes reconnecté.",
+	"Note: Scrollback doesn't go all the way back to when you disconnected.": "Remarque : l'historique ne remonte pas jusqu'au moment de votre déconnexion.",
+	"You disconnected.": "Vous avez été déconnecté.",
 
 	// #endregion Chat
 

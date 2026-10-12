@@ -101,6 +101,12 @@ invités peuvent lire ; il faut un pseudo pour écrire.
 
 ## Mettre à jour le site
 
+Si le site tournait déjà avant l'arrivée des rangs (variable `ADMINS`), inscrivez
+d'abord le pseudo `Bliinnd` sur le site s'il ne l'est pas encore : sinon
+quelqu'un d'autre pourrait le prendre et devenir administrateur au redémarrage.
+Le journal `data/logs/admins.log` indique la date d'inscription et l'adresse IP
+du compte promu, pour vérifier que c'est bien le vôtre.
+
 1. **Git → Pull Updates** (puis **Deploy** si le déploiement est manuel).
 2. **Node.js → Run script → `build`**.
 3. **Node.js → Restart App**.

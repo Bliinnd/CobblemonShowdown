@@ -1687,7 +1687,8 @@ export class BattleLog {
 		// Try using Intl API if it exists
 		if ((window as any).Intl?.DateTimeFormat) {
 			// CobblemonShowdown : dates dans la langue du site plutôt que celle du navigateur.
-			formattedTime = new Intl.DateTimeFormat(Dex.text.getLanguage(), {
+			// (« en-afd », le mode poisson d'avril, n'est pas une vraie langue pour Intl)
+			formattedTime = new Intl.DateTimeFormat(Dex.text.getLanguage().replace(/-afd$/, ''), {
 				month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric',
 			}).format(parsedTime);
 		} else {

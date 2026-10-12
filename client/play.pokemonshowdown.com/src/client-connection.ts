@@ -204,10 +204,14 @@ export class PSConnection {
 		this.nextRetryTime = 0;
 		this.lastReceiveTime = Date.now();
 
-		if (PS.prefs.avatar) PS.send(`/avatar ${PS.prefs.avatar},1`);
 		// CobblemonShowdown : le serveur répond dans la langue du site (français par défaut).
+		// Avatar et langue partent dans un seul message, pour ne pas remplir la file d'attente
+		// anti-spam du serveur avant la connexion au compte.
+		const settings: { avatar?: string, language?: string } = {};
+		if (PS.prefs.avatar) settings.avatar = `${PS.prefs.avatar},1`;
 		const language = Dex.text.findLanguage(Dex.text.getLanguage())?.legacyId;
-		if (language) PS.send(`/noreply /language ${language}`);
+		if (language) settings.language = language;
+		if (settings.avatar || settings.language) PS.send(`/updatesettings ${JSON.stringify(settings)}`);
 		const queue = this.queue;
 		this.queue = [];
 		for (const msg of queue) this.send(msg);

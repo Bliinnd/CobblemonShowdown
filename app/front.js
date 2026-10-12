@@ -28,6 +28,8 @@ const TYPES = {
 	'.png': 'image/png',
 	'.gif': 'image/gif',
 	'.jpg': 'image/jpeg',
+	'.jpeg': 'image/jpeg',
+	'.webp': 'image/webp',
 	'.svg': 'image/svg+xml',
 	'.ico': 'image/x-icon',
 	'.woff': 'font/woff',
@@ -65,7 +67,7 @@ const EXTERNAL_RESOURCES = /^\/((sprites|audio)\/|data\/pokedex-mini(-bw)?\.js$)
 const EXTERNAL_HOST = 'https://play.pokemonshowdown.com';
 
 /** Avatars personnalisés (/addavatar, /personalavatar) : fichiers de server/config/avatars/. */
-const AVATAR_FILE = /^[a-z0-9-]+\.(png|gif|jpg)$/;
+const AVATAR_FILE = /^(?!.*\.\.)[a-z0-9-][a-z0-9.-]*\.(png|gif|jpe?g|webp)$/;
 
 function forwardedHeaders(req) {
 	// Une adresse IPv4 reçue sur une socket IPv6 (« ::ffff:1.2.3.4 ») est transmise sous sa forme IPv4.

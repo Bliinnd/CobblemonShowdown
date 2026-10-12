@@ -190,7 +190,7 @@ export class ChatRoom extends PSRoom {
 		let cutOffEnd = lines.length;
 		const cutOffTime = PS.connection?.lastMessageTimeBeforeReconnect || 0;
 		const cutOffExactLine = this.lastMessage ? '|' + this.lastMessage?.join('|') : null;
-		let reconnectMessage = '|raw|<div class="infobox">You reconnected.</div>';
+		let reconnectMessage = `|raw|<div class="infobox">${TL`You reconnected.`}</div>`;
 		for (let i = 0; i < lines.length; i++) {
 			if (lines[i].startsWith('|users|')) {
 				this.add(lines[i]);
@@ -210,13 +210,13 @@ export class ChatRoom extends PSRoom {
 		}
 		lines = lines.slice(cutOffStart, cutOffEnd);
 		if (lines[0]?.startsWith('|init|')) {
-			lines[0] = `||Note: Scrollback doesn't go all the way back to when you disconnected.`;
+			lines[0] = `||${TL`Note: Scrollback doesn't go all the way back to when you disconnected.`}`;
 		}
 
 		if (lines.length) {
 			const timestamp = BattleLog.renderTimestamp(cutOffTime, PS.prefs.timestamps?.chatrooms);
 			this.receiveBatch([
-				[`raw`, `<div class="infobox">${timestamp}You disconnected.</div>`],
+				[`raw`, `<div class="infobox">${timestamp}${TL`You disconnected.`}</div>`],
 				...lines.map(line => BattleTextParser.parseLine(line)),
 				BattleTextParser.parseLine(reconnectMessage),
 			]);

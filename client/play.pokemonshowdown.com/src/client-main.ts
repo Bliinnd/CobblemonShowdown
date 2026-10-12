@@ -2146,6 +2146,8 @@ export const PS = new class extends PSModel {
 	 * width/height-dependent layout breakpoint changes.
 	 */
 	leftPanelWidth: number | null = 0;
+	/** CobblemonShowdown : /lobby (alias de Discussion) était ouvert, Discussion doit prendre sa place */
+	focusDiscussionOnInit = false;
 	mainmenu: MainMenuRoom = null!;
 	layoutViewportWidth = 0;
 
@@ -2443,7 +2445,7 @@ export const PS = new class extends PSModel {
 						connected: 'init',
 						// CobblemonShowdown : sur mobile, Discussion reste un onglet au lieu de cacher l'accueil.
 						autofocus: roomid !== 'staff' && roomid !== 'upperstaff' &&
-							(roomid !== 'discussion' || !!this.leftPanelWidth),
+							(roomid !== 'discussion' || !!this.leftPanelWidth || this.focusDiscussionOnInit),
 						// probably the only use for `autoclosePopups: false`.
 						// (the server sometimes sends a popup error message and a new room at the same time)
 						autoclosePopups: false,
@@ -2471,6 +2473,10 @@ export const PS = new class extends PSModel {
 					if (roomid2 === 'discussion' && this.leftPanelWidth && this.rightPanel === this.rooms['rooms']) {
 						this.rightPanel = room;
 					}
+					if (roomid2 === 'discussion' && this.focusDiscussionOnInit) {
+						this.focusDiscussionOnInit = false;
+						if (this.room !== room) this.focusRoom(room.id);
+					}
 				}
 				this.updateAutojoin();
 				this.update();
@@ -2478,6 +2484,14 @@ export const PS = new class extends PSModel {
 			} case 'deinit': {
 				room = PS.rooms[roomid2];
 				if (room) {
+					// CobblemonShowdown : le serveur ferme « lobby » pour ouvrir Discussion à la place.
+					if (roomid2 === 'lobby' && this.room === room) {
+						if (this.rooms['discussion']?.connected === true) {
+							this.focusRoom('discussion' as RoomID);
+						} else {
+							this.focusDiscussionOnInit = true;
+						}
+					}
 					room.connected = false;
 					if (room.connectMode !== 'deleted') this.removeRoom(room);
 					this.updateAutojoin();
@@ -3214,8 +3228,9 @@ export const PS = new class extends PSModel {
 			if (!room) return;
 			if (room.type !== 'chat' || room.pmTarget) continue;
 			autojoins.push(room.id.includes('-') ? room.id : (room.title || room.id));
-			if (room.id === 'staff' || room.id === 'upperstaff') continue;
-			if (PS.server.id !== 'showdown' && (room.id === 'lobby' || room.id === 'discussion')) continue;
+			// CobblemonShowdown : le serveur refuse /autojoin au-delà de 16 salons
+			if (autojoins.length >= 16) break;
+			if (room.id === 'staff' || room.id === 'upperstaff' || (PS.server.id !== 'showdown' && room.id === 'lobby')) continue;
 			autojoinCount++;
 			if (autojoinCount >= 15) break;
 		}
