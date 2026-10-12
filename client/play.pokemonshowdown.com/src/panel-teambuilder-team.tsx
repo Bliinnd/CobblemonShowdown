@@ -333,10 +333,14 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 					<button class="button" data-href={`teamstorage-${team.key}`}>
 						<i class="fa fa-plug"></i> {TL`Disconnected (wrong account?)`}
 					</button>
-				) : (
-					<button class="button" data-href={`teamstorage-${team.key}`}>
-						<i class="fa fa-laptop"></i> {TL`Local`}
+				) : PS.teams.accountOwner ? (
+					<button class="button disabled" aria-disabled title={TL`This team is saved to your account.`}>
+						<i class="fa fa-cloud"></i> {TL`Account`}
 					</button>
+				) : (
+					<a class="button" href="login" title={TL`Log in to save your teams to your account.`}>
+						<i class="fa fa-laptop"></i> {TL`Local`}
+					</a>
 				)}
 				<div style={room.width < 550 ? "margin-top:8px" : "float:right"}><button
 					name="format" value={team.format} data-selecttype="teambuilder"
@@ -346,7 +350,7 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 					{team.format.length <= 4 && <em>{TL`(uncategorized)`}</em>}
 				</button></div>
 				<label class="label teamname">
-					Team name:{}
+					{TL.label(TL`Team name`)}{}
 					<input
 						class="textbox" type="text" defaultValue={team.name}
 						onInput={this.handleRename} onChange={this.handleRename} onKeyUp={this.handleRename}
@@ -361,7 +365,8 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 				{!!(team.packedTeam && team.format.length > 4) && <p>
 					<button data-cmd="/validate" class="button"><i class="fa fa-check"></i> {TL`[Validate]`}</button>
 				</p>}
-				{!!(team.packedTeam || team.uploaded) && <p class="infobox" style="padding: 5px 8px">
+				{/* CobblemonShowdown : pas de mise en ligne d'équipes (elles sont déjà sur le compte) */}
+				{!!team.uploaded && <p class="infobox" style="padding: 5px 8px">
 					{team.uploadedPackedTeam && !team.uploaded ? <>
 						{TL`Uploading...`}
 					</> : team.uploaded ? <>

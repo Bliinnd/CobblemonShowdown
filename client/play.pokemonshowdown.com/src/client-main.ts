@@ -404,10 +404,22 @@ class PSTeams extends PSStreamModel<'team' | 'format'> {
 	byKey: { [key: string]: Team | undefined } = {};
 	deletedTeams: [Team, number][] = [];
 	uploading: Team | null = null;
+	/**
+	 * CobblemonShowdown : les équipes sont sauvegardées sur le compte du joueur
+	 * (serveur de comptes, actions `cobblemonloadteams`/`cobblemonsaveteams`) ;
+	 * le navigateur n'en garde qu'une copie. `accountOwner` est le compte dont
+	 * les équipes sont affichées, ou null pour les équipes d'un invité.
+	 */
+	accountOwner: ID | null = null;
+	/** Des modifications attendent d'être envoyées au compte. */
+	accountDirty = false;
+	accountSaveTimer: ReturnType<typeof setTimeout> | null = null;
+	accountErrorShown = false;
 	constructor() {
 		super();
 		try {
 			this.unpackAll(localStorage.getItem('showdown_teams'));
+			this.accountOwner = (localStorage.getItem('cobblemon_teams_owner') || null) as ID | null;
 		} catch {}
 	}
 	teambuilderFormat(format: string): ID {
@@ -491,10 +503,106 @@ class PSTeams extends PSStreamModel<'team' | 'format'> {
 		)).join('\n');
 	}
 	save() {
+		this.saveLocal();
+		this.scheduleAccountSave();
+	}
+	saveLocal() {
 		try {
 			localStorage.setItem('showdown_teams', this.packAll(this.list));
 		} catch {}
 		this.update('team');
+	}
+	setAccountOwner(userid: ID | null) {
+		this.accountOwner = userid;
+		try {
+			if (userid) {
+				localStorage.setItem('cobblemon_teams_owner', userid);
+			} else {
+				localStorage.removeItem('cobblemon_teams_owner');
+			}
+		} catch {}
+	}
+	replaceAll(buffer: string) {
+		this.byKey = {};
+		this.deletedTeams = [];
+		this.unpackAll(buffer);
+	}
+	/**
+	 * Récupère les équipes du compte connecté. Les équipes faites en invité
+	 * sont ajoutées au compte à la première connexion.
+	 */
+	syncAccount() {
+		PSLoginServer.query('cobblemonloadteams').then(data => {
+			if (!data) return; // serveur injoignable : on garde la copie locale
+			if (data.actionerror) {
+				return PS.alert(TL`Error loading uploaded teams: ${data.actionerror}`);
+			}
+			if (!data.loggedIn) {
+				this.clearAccountTeams();
+				return;
+			}
+			const userid = data.loggedIn as ID;
+			const accountTeams: string | null = data.teams;
+			if (this.accountOwner === userid) {
+				if (this.accountDirty || accountTeams === null) {
+					void this.flushAccountSave();
+				} else if (accountTeams !== this.packAll(this.list)) {
+					this.replaceAll(accountTeams);
+					this.saveLocal();
+				}
+				return;
+			}
+			let needsUpload = false;
+			if (this.accountOwner) {
+				// Équipes d'un autre compte : remplacées par celles de ce compte.
+				this.replaceAll(accountTeams || '');
+			} else {
+				const accountLines = accountTeams ? accountTeams.split('\n') : [];
+				const guestLines = this.list.length ? this.packAll(this.list).split('\n') : [];
+				const newLines = guestLines.filter(line => !accountLines.includes(line));
+				this.replaceAll([...accountLines, ...newLines].join('\n'));
+				needsUpload = !!newLines.length;
+			}
+			this.setAccountOwner(userid);
+			this.accountDirty = false;
+			this.saveLocal();
+			if (needsUpload) void this.flushAccountSave();
+		});
+	}
+	scheduleAccountSave() {
+		if (!this.accountOwner) return;
+		this.accountDirty = true;
+		if (this.accountSaveTimer) clearTimeout(this.accountSaveTimer);
+		this.accountSaveTimer = setTimeout(() => void this.flushAccountSave(), 1000);
+	}
+	/** Envoie tout de suite les équipes au compte. */
+	flushAccountSave(): Promise<void> {
+		if (this.accountSaveTimer) clearTimeout(this.accountSaveTimer);
+		this.accountSaveTimer = null;
+		if (!this.accountOwner) return Promise.resolve();
+		this.accountDirty = true;
+		const teams = this.packAll(this.list);
+		return PSLoginServer.query('cobblemonsaveteams', { teams }).then(data => {
+			if (data?.success) {
+				if (this.packAll(this.list) === teams) this.accountDirty = false;
+				this.accountErrorShown = false;
+				return;
+			}
+			if (this.accountErrorShown) return;
+			this.accountErrorShown = true;
+			const error = data?.actionerror || TL`The login server did not respond.`;
+			PS.alert(TL`Your teams could not be saved to your account: ${error}`);
+		});
+	}
+	/** Déconnexion : les équipes du compte ne restent pas dans le navigateur. */
+	clearAccountTeams() {
+		if (!this.accountOwner) return;
+		if (this.accountSaveTimer) clearTimeout(this.accountSaveTimer);
+		this.accountSaveTimer = null;
+		this.accountDirty = false;
+		this.setAccountOwner(null);
+		this.replaceAll('');
+		this.saveLocal();
 	}
 	unpackLine(line: string): Team | null {
 		const pipeIndex = line.indexOf('|');
@@ -746,6 +854,8 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 				const username = data.curuser.username;
 				this.registered = { name: username, userid: toID(username) };
 				this.handleAssertion(name, data.assertion);
+				// CobblemonShowdown : récupère les équipes du compte
+				PS.teams.syncAccount();
 			} else {
 				// wrong password
 				if (special.needsGoogle) {
@@ -799,9 +909,12 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 		}
 	}
 	logOut() {
-		PSLoginServer.query(
-			'logout', { userid: this.userid }
-		);
+		// CobblemonShowdown : dernières modifications envoyées au compte avant la déconnexion
+		const userid = this.userid;
+		void PS.teams.flushAccountSave().then(() => PSLoginServer.query(
+			'logout', { userid }
+		));
+		PS.teams.clearAccountTeams();
 		PS.send(`/logout`);
 		PS.connection?.disconnect();
 

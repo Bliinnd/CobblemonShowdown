@@ -19,6 +19,87 @@ The column value will be ignored for repeat sections.
 
 export const Formats: import('../sim/dex-formats').FormatList = [
 
+	// Cobblemon
+	///////////////////////////////////////////////////////////////////
+	// Pokémon et attaques du mod Cobblemon 1.8.2 (données : data/mods/cobblemon).
+	// Pas de téracristallisation. Les egg moves sont interdits par défaut
+	// (règle "Cobblemon No Egg Moves") et autorisés dans les formats "+ Egg Moves".
+
+	{
+		section: "Cobblemon",
+	},
+	{
+		name: "[Gen 9] Cobblemon OU",
+		desc: `Pokémon pleinement évolués de Cobblemon (plus Porygon2 et Leveinard), sans légendaires, fabuleux, Ultra-Chimères ni Paradoxe. Pas de méga-évolution ni de capacité Z.`,
+		mod: 'cobblemon',
+		ruleset: [
+			'Standard', 'Evasion Abilities Clause', 'Sleep Moves Clause', '!Sleep Clause Mod',
+			'Terastal Clause', 'Cobblemon No Egg Moves',
+		],
+		banlist: [
+			// "Uber" regroupe les légendaires, fabuleux, Ultra-Chimères, Paradoxe et les bannis ci-dessous ;
+			// "NFE" et "LC" regroupent les Pokémon qui peuvent encore évoluer.
+			'Uber', 'NFE', 'LC', 'AG',
+			'Dragapult', 'Dracovish', 'Kingambit', 'Gliscor', 'Palafin', 'Sneasler', 'Annihilape', 'Espathra',
+			'Arena Trap', 'Moody', 'Shadow Tag', 'King\'s Rock', 'Razor Fang', 'Baton Pass', 'Last Respects', 'Shed Tail',
+		],
+	},
+	{
+		name: "[Gen 9] Cobblemon Monotype",
+		desc: `Les règles de Cobblemon OU, avec une équipe d'un seul type.`,
+		mod: 'cobblemon',
+		ruleset: ['[Gen 9] Cobblemon OU', 'Same Type Clause'],
+	},
+	{
+		name: "[Gen 9] Cobblemon LC",
+		desc: `Little Cup : Pokémon de premier stade capables d'évoluer, au niveau 5. Banlist : celles de la LC 8G et 9G réunies.`,
+		mod: 'cobblemon',
+		ruleset: ['Little Cup', 'Standard', 'Terastal Clause', 'Cobblemon No Egg Moves'],
+		banlist: [
+			'Basculin-White-Striped', 'Corsola-Galar', 'Cutiefly', 'Diglett-Base', 'Drifloon', 'Dunsparce', 'Duraludon',
+			'Flittle', 'Gastly', 'Girafarig', 'Gligar', 'Gothita', 'Magby', 'Meditite', 'Misdreavus', 'Murkrow', 'Porygon',
+			'Qwilfish-Hisui', 'Rufflet', 'Scraggy', 'Scyther', 'Shellder', 'Sneasel', 'Sneasel-Hisui', 'Snivy', 'Stantler',
+			'Swirlix', 'Tangela', 'Torchic', 'Voltorb-Hisui', 'Vullaby', 'Vulpix', 'Vulpix-Alola', 'Woobat', 'Yanma',
+			'Zigzagoon-Base', 'Chlorophyll', 'Moody', 'Heat Rock', 'Baton Pass', 'Sticky Web',
+		],
+	},
+	{
+		name: "[Gen 9] Cobblemon National Dex",
+		desc: `Règles et banlist National Dex OU de Smogon, sans téracristallisation. Méga-évolutions (y compris les nouvelles), capacités Z et Pokémon de Pokémon Champions autorisés.`,
+		mod: 'cobblemon',
+		ruleset: ['Standard NatDex', 'Terastal Clause', 'Cobblemon No Egg Moves', 'Cobblemon New Megas'],
+		banlist: [
+			'ND Uber', 'ND AG', 'Arena Trap', 'Moody', 'Power Construct', 'Shadow Tag', 'King\'s Rock',
+			'Quick Claw', 'Razor Fang', 'Assist', 'Baton Pass', 'Last Respects', 'Shed Tail',
+		],
+	},
+
+	// Variantes avec egg moves autorisés.
+	{
+		name: "[Gen 9] Cobblemon OU + Egg Moves",
+		desc: `Cobblemon OU, avec les egg moves autorisés.`,
+		mod: 'cobblemon',
+		ruleset: ['[Gen 9] Cobblemon OU', '!Cobblemon No Egg Moves'],
+	},
+	{
+		name: "[Gen 9] Cobblemon Monotype + Egg Moves",
+		desc: `Cobblemon Monotype, avec les egg moves autorisés.`,
+		mod: 'cobblemon',
+		ruleset: ['[Gen 9] Cobblemon Monotype', '!Cobblemon No Egg Moves'],
+	},
+	{
+		name: "[Gen 9] Cobblemon LC + Egg Moves",
+		desc: `Cobblemon LC, avec les egg moves autorisés.`,
+		mod: 'cobblemon',
+		ruleset: ['[Gen 9] Cobblemon LC', '!Cobblemon No Egg Moves'],
+	},
+	{
+		name: "[Gen 9] Cobblemon National Dex + Egg Moves",
+		desc: `Cobblemon National Dex, avec les egg moves autorisés.`,
+		mod: 'cobblemon',
+		ruleset: ['[Gen 9] Cobblemon National Dex', '!Cobblemon No Egg Moves'],
+	},
+
 	// S/V Singles
 	///////////////////////////////////////////////////////////////////
 
@@ -6071,3 +6152,15 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		ruleset: ['HP Percentage Mod', 'Cancel Mod', 'Desync Clause Mod', 'Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100'],
 	},
 ];
+
+// CobblemonShowdown : seuls les formats de la section "Cobblemon" sont proposés
+// aux joueurs. Les formats officiels de Showdown restent définis (outils et tests
+// de Showdown) mais n'apparaissent plus dans les listes.
+{
+	let section = '';
+	for (const format of Formats as AnyObject[]) {
+		if (format.section) section = format.section;
+		if (!format.name || section === 'Cobblemon') continue;
+		Object.assign(format, { searchShow: false, challengeShow: false, tournamentShow: false });
+	}
+}
