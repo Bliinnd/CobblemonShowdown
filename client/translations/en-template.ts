@@ -90,6 +90,8 @@ export const translations: TranslationCatalog = {
 	// TRANSLATORS: appends a parenthetical to a value, e.g. "Ability: ? (Levitate, Heatproof)"
 	// TRANSLATORS: note the leading space (fullwidth parens probably don't want one)
 	" ({PARENTHETICAL})": null,
+	"The login server did not respond.": null,
+	"Your teams could not be saved to your account: {error}": null,
 
 	// #endregion Generic UI
 
@@ -276,17 +278,18 @@ export const translations: TranslationCatalog = {
 	"Searching in {NUMBER}...": null,
 	"Searching...": null,
 	"Pokédex": null,
-	"Replays": null,
-	"Forum": null,
-	"Rules": null,
+	"Replays": null, // NOT USED
+	"Forum": null, // NOT USED
+	"Rules": null, // NOT USED
 	"Credits": null,
-	"Privacy": null,
+	"Privacy": null, // NOT USED
 	"background by {ARTIST}": null,
 
 	// TRANSLATORS: errors
 	"Wait for this countdown to finish first...": null,
 	"You're already searching for a {FORMAT} battle...": null,
 	"You need to go into the Teambuilder and build a team for this format.": null,
+	"Source code": null,
 
 	// #endregion Main Menu
 
@@ -660,6 +663,11 @@ export const translations: TranslationCatalog = {
 	"Your file \"{FILENAME}\" is not a valid team.": null,
 	"Hidden Power Type": null,
 	"Tera Type": null,
+	"This team is saved to your account.": null,
+	"Log in to save your teams to your account.": null,
+	"Box": null,
+	"Untitled": null,
+	"Team name": null,
 
 	// #endregion Teambuilder
 

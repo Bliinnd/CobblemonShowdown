@@ -1,6 +1,7 @@
 // Note: These are the rules that formats use
 
 import type { Learnset } from "../sim/dex-species";
+import { NEW_MEGA_STONES } from "./mods/cobblemon/new-mega-stones";
 
 // The list of formats is stored in config/formats.js
 export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
@@ -3266,6 +3267,49 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			}
 			const speciesMods = [...this.ruleTable.keys()].map(r => this.dex.data.Rulesets[r]).filter(r => r?.onModifySpecies);
 			if (!speciesMods.length) throw new Error('This format has no rules that modify base stats.');
+		},
+	},
+
+	// Cobblemon
+	// ====================================================================
+
+	cobblemonnewmegas: {
+		effectType: 'ValidatorRule',
+		name: 'Cobblemon New Megas',
+		desc: "Autorise les méga-gemmes des nouvelles méga-évolutions (Légendes Pokémon : Z-A, Pokémon Champions).",
+		unbanlist: NEW_MEGA_STONES,
+	},
+	cobblemonnoeggmoves: {
+		effectType: 'ValidatorRule',
+		name: 'Cobblemon No Egg Moves',
+		desc: "Interdit les attaques qui ne s'apprennent que par reproduction (egg moves), absentes de Cobblemon pour le moment.",
+		onValidateSet(set) {
+			const species = this.dex.species.get(set.species);
+			const problems = [];
+			for (const moveName of set.moves) {
+				const move = this.dex.moves.get(moveName);
+				if (!move.exists) continue;
+				let onlyEgg = false;
+				let current: Species | null = species;
+				const seen = new Set<string>();
+				while (current && !seen.has(current.id)) {
+					seen.add(current.id);
+					const sources = this.dex.species.getLearnsetData(current.id).learnset?.[move.id];
+					if (sources?.length) {
+						if (sources.some(source => source.charAt(1) !== 'E')) {
+							onlyEgg = false;
+							break;
+						}
+						onlyEgg = true;
+					}
+					current = this.dex.species.learnsetParent(current, true);
+				}
+				if (onlyEgg) {
+					problems.push(`${set.name || set.species} ne peut apprendre ${move.name} que par reproduction ` +
+						`(egg move), désactivé dans ce format : choisissez le format "+ Egg Moves" pour l'autoriser.`);
+				}
+			}
+			return problems;
 		},
 	},
 };

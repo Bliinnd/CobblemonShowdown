@@ -716,7 +716,6 @@ class OptionsPanel extends PSRoomPanel {
 		const singlePanel = TL`Single panel`;
 		const verticalTabs = TL`Vertical tabs`;
 		const automaticLanguage = Dex.text.findLanguage(Dex.text.getBrowserLanguage())?.name;
-		const defaultClient = /(?:^|;\s*)preactalpha=1(?:;|$)/.test(document.cookie) ? 'new' : 'old';
 		return <PSPanelWrapper room={room} width={380}><div class="pad">
 			<p style="padding-left:50px">
 				<img
@@ -749,23 +748,7 @@ class OptionsPanel extends PSRoomPanel {
 					</select>
 				</label>
 			</p>
-			<hr />
-			<div class="construction">
-				<p>
-					This is the new client.
-				</p>
-				<label class="label" style="width:auto">{TL.label(TL`Default`)}<select
-					name="defaultclient" class="select" onChange={this.setDefaultClient} value={defaultClient}
-				>
-					<option value="old">Old client</option>
-					<option value="new">New client</option>
-				</select></label>
-				<p>
-					<a class="button" href="/oldclient" style="font-weight: normal">
-						{defaultClient === 'old' ? "Back to old client" : "Use old client temporarily"}
-					</a>
-				</p>
-			</div>
+			{/* CobblemonShowdown : pas d'ancien client */}
 			<hr />
 			<h3>{TL`Appearance`}</h3>
 			<p>
@@ -1267,6 +1250,8 @@ class RegisterPanel extends PSRoomPanel {
 				let name = data.curuser.username;
 				PS.user.registered = { name, userid: toID(name) };
 				if (data?.assertion) PS.user.handleAssertion(name, data?.assertion);
+				// CobblemonShowdown : les équipes faites en invité sont ajoutées au nouveau compte
+				PS.teams.syncAccount();
 				this.close();
 				PS.alert(TL`You have been successfully registered.`);
 			}

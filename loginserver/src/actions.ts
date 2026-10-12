@@ -20,6 +20,7 @@ import {
 import * as tables from './tables.ts';
 import { SQL } from './database.ts';
 import IPTools from './ip-tools.ts';
+import { cobblemonTeamActions } from './cobblemon-teams.ts';
 
 const require = module.createRequire(import.meta.url);
 
@@ -1369,6 +1370,9 @@ export const actions: { [k: string]: QueryHandler } = {
 		};
 	},
 };
+
+// CobblemonShowdown : équipes sauvegardées sur le compte.
+Object.assign(actions, cobblemonTeamActions);
 
 if (Config.actions) {
 	Object.assign(actions, Config.actions);

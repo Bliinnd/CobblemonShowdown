@@ -596,20 +596,12 @@ export const Dex = new class implements ModdedDex {
 			return lang;
 		},
 		getBrowserLanguage() {
-			if (typeof navigator === 'undefined') return 'en';
-			const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
-			for (let language of languages) {
-				language = language.toLowerCase().replace(/_/g, '-');
-				if (language === 'zh' || language.startsWith('zh-')) {
-					return /(?:^|-)(?:hant|tw|hk|mo)(?:-|$)/.test(language) ? 'zh-tw' : 'zh-cn';
-				}
-				const baseLanguage = language.split('-')[0];
-				if (baseLanguage in TEXT_LANGUAGE_TABLE) return baseLanguage;
-			}
-			return 'en';
+			// CobblemonShowdown : le site est en français par défaut (anglais au choix dans les options)
+			return 'fr';
 		},
 		languages() {
-			return TEXT_LANGUAGES;
+			// CobblemonShowdown : l'interface n'est traduite qu'en français
+			return TEXT_LANGUAGES.filter(language => ['fr', 'en'].includes(language.code));
 		},
 		findLanguage(lang: string) {
 			return TEXT_LANGUAGE_TABLE[lang.toLowerCase()] || TEXT_LANGUAGE_TABLE[toID(lang)] || null;
@@ -1288,8 +1280,10 @@ export class ModdedDex {
 	constructor(modid: ID) {
 		this.modid = modid;
 		let gen = parseInt(modid.charAt(3), 10);
-		if (this.modid === 'champions') gen = 9;
-		if ((modid !== 'champions' && !modid.startsWith('gen')) || !gen) throw new Error("Unsupported modid");
+		if (this.modid === 'champions' || this.modid === 'cobblemon') gen = 9;
+		if ((modid !== 'champions' && modid !== 'cobblemon' && !modid.startsWith('gen')) || !gen) {
+			throw new Error("Unsupported modid");
+		}
 		this.gen = gen;
 	}
 	text: ClientDexText = {

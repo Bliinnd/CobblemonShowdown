@@ -674,8 +674,10 @@ abstract class BattleTypedSearch<T extends SearchType> {
 
 	protected formatType: 'doubles' | 'bdsp' | 'bdspdoubles' | 'rs' | 'frlg' | 'bw1' | 'letsgo' | 'metronome' | 'natdex' |
 		'nfe' | 'ssdlc1' | 'ssdlc1doubles' | 'predlc' | 'predlcdoubles' | 'svdlc1' | 'svdlc1doubles' | 'stadium' | 'lc' |
-		'champions' | 'natdexchampions' | null = null;
+		'champions' | 'natdexchampions' | 'cobblemon' | 'natdexcobblemon' | null = null;
 	isDoubles = false;
+	/** CobblemonShowdown : variantes "(Egg Moves)" qui autorisent les attaques apprises par reproduction. */
+	cobblemonEggMoves = false;
 
 	/**
 	 * Cached copy of what the results list would be with only base filters
@@ -704,6 +706,20 @@ abstract class BattleTypedSearch<T extends SearchType> {
 			this.dex = Dex.forGen(gen);
 		} else if (!format) {
 			this.dex = Dex;
+		}
+
+		// CobblemonShowdown : "cobblemonou", "cobblemonnationaldexeggmoves"...
+		let cobblemonFormat = '' as ID;
+		if (format.startsWith('cobblemon')) {
+			cobblemonFormat = format.slice(9) as ID;
+			if (cobblemonFormat.endsWith('eggmoves')) {
+				this.cobblemonEggMoves = true;
+				cobblemonFormat = cobblemonFormat.slice(0, -8) as ID;
+			}
+			if (!cobblemonFormat) cobblemonFormat = 'ou' as ID;
+			this.formatType = cobblemonFormat === 'nationaldex' ? 'natdexcobblemon' : 'cobblemon';
+			this.dex = Dex.mod('cobblemon' as ID);
+			format = '' as ID;
 		}
 
 		if (format.startsWith('dlc1') && this.dex.gen === 8) {
@@ -814,7 +830,7 @@ abstract class BattleTypedSearch<T extends SearchType> {
 			format = format.slice(0, -5) as ID;
 			if (!format) format = 'anythinggoes' as ID;
 		}
-		this.format = format;
+		this.format = cobblemonFormat || format;
 
 		this.species = '' as ID;
 		this.set = null;
@@ -912,6 +928,8 @@ abstract class BattleTypedSearch<T extends SearchType> {
 		if (this.formatType === 'frlg') table = table['gen3frlg'];
 		if (this.formatType === 'champions') table = table['champions'];
 		if (this.formatType === 'natdexchampions') table = table['natdexchampions'];
+		if (this.formatType === 'cobblemon') table = table['cobblemon'];
+		if (this.formatType === 'natdexcobblemon') table = table['natdexcobblemon'];
 		if (speciesid in table.learnsets) return speciesid;
 		const species = this.dex.species.get(speciesid);
 		if (!species.exists) return '' as ID;
@@ -984,11 +1002,15 @@ abstract class BattleTypedSearch<T extends SearchType> {
 			if (this.formatType === 'frlg') table = table['gen3frlg'];
 			if (this.formatType === 'champions') table = table['champions'];
 			if (this.formatType === 'natdexchampions') table = table['natdexchampions'];
+			if (this.formatType === 'cobblemon') table = table['cobblemon'];
+			if (this.formatType === 'natdexcobblemon') table = table['natdexcobblemon'];
 			let learnset = table.learnsets[learnsetid];
 			const eggMovesOnly = this.eggMovesOnly(learnsetid, speciesid);
-			if (learnset && (moveid in learnset) && (!this.format.startsWith('tradebacks') ? learnset[moveid].includes(genChar) :
-				learnset[moveid].includes(genChar) || (learnset[moveid].includes(`${gen + 1}`) && move.gen === gen)) &&
-				(!eggMovesOnly || (learnset[moveid].includes('e') && this.dex.gen === 9))
+			let learnsetEntry: string | undefined = learnset?.[moveid];
+			if (learnsetEntry === 'E') learnsetEntry = this.cobblemonEggMoves ? '9a' : undefined;
+			if (learnsetEntry && (!this.format.startsWith('tradebacks') ? learnsetEntry.includes(genChar) :
+				learnsetEntry.includes(genChar) || (learnsetEntry.includes(`${gen + 1}`) && move.gen === gen)) &&
+				(!eggMovesOnly || (learnsetEntry.includes('e') && this.dex.gen === 9))
 			) {
 				return true;
 			}
@@ -1021,6 +1043,8 @@ abstract class BattleTypedSearch<T extends SearchType> {
 			this.formatType === 'stadium' ? `gen${gen}stadium${gen > 1 ? gen : ''}` :
 			this.formatType === 'champions' ? `champions` :
 			this.formatType === 'natdexchampions' ? `natdexchampions` :
+			this.formatType === 'cobblemon' ? 'cobblemon' :
+			this.formatType === 'natdexcobblemon' ? 'natdexcobblemon' :
 			`gen${gen}`;
 		if (table?.[tableKey]) {
 			table = table[tableKey];
@@ -1124,6 +1148,8 @@ class BattlePokemonSearch extends BattleTypedSearch<'pokemon'> {
 			table = table[`champions`];
 		} else if (this.formatType === 'natdexchampions') {
 			table = table[`natdexchampions`];
+		} else if (this.formatType === 'cobblemon' || this.formatType === 'natdexcobblemon') {
+			table = table[this.formatType];
 		} else if (isVGCOrBS) {
 			table = table[`gen${dex.gen}vgc`];
 		} else if (dex.gen === 9 && isHackmons && !this.formatType) {
@@ -1196,6 +1222,15 @@ class BattlePokemonSearch extends BattleTypedSearch<'pokemon'> {
 		}
 		let tierSet: SearchRow[] = table.tierSet;
 		let slices: { [k: string]: number } = table.formatSlices;
+		if (this.formatType === 'cobblemon' || this.formatType === 'natdexcobblemon') {
+			// CobblemonShowdown : tous les Pokémon autorisés dans le format, les autres
+			// apparaissent dans "Illegal results".
+			const bans: { [id: string]: 1 } = table.metagameBans?.[format] || {};
+			tierSet = tierSet.filter(([type, id]) => type !== 'pokemon' || !(id in bans));
+			// En LC, une seule liste (quelques Pokémon autorisés sont classés Uber ailleurs)
+			if (format === 'lc') return [['header', "LC"], ...tierSet.filter(([type]) => type === 'pokemon')];
+			return tierSet.filter(([type], i) => type !== 'header' || tierSet[i + 1]?.[0] === 'pokemon');
+		}
 		if (
 			format === 'ubers' || format === 'uber' || format === 'ubersuu' ||
 			format === '4v4doublesuu' || format === 'nationaldexdoubles'
@@ -1505,6 +1540,8 @@ class BattleItemSearch extends BattleTypedSearch<'item'> {
 			table = table[`champions`];
 		} else if (this.formatType === 'natdexchampions') {
 			table = table[`natdexchampions`];
+		} else if (this.formatType === 'cobblemon' || this.formatType === 'natdexcobblemon') {
+			table = table[this.formatType];
 		} else if (this.dex.gen < 9) {
 			table = table[`gen${this.dex.gen}`];
 		}
@@ -1835,7 +1872,8 @@ class BattleMoveSearch extends BattleTypedSearch<'move'> {
 
 		const move = dex.moves.get(id);
 		if (!move.exists) return true;
-		if ((move.status === 'slp' || id === 'yawn') && dex.gen === 9 && !this.formatType) {
+		const hasSleepMovesClause = !this.formatType || this.formatType === 'cobblemon';
+		if ((move.status === 'slp' || id === 'yawn') && dex.gen === 9 && hasSleepMovesClause) {
 			return false;
 		}
 		if (move.category === 'Status') {
@@ -1894,6 +1932,8 @@ class BattleMoveSearch extends BattleTypedSearch<'move'> {
 		if (this.formatType === 'frlg') lsetTable = lsetTable['gen3frlg'];
 		if (this.formatType === 'champions') lsetTable = lsetTable['champions'];
 		if (this.formatType === 'natdexchampions') lsetTable = lsetTable['natdexchampions'];
+		if (this.formatType === 'cobblemon') lsetTable = lsetTable['cobblemon'];
+		if (this.formatType === 'natdexcobblemon') lsetTable = lsetTable['natdexcobblemon'];
 		if (this.formatType?.startsWith('ssdlc1')) lsetTable = lsetTable['gen8dlc1'];
 		if (this.formatType?.startsWith('predlc')) lsetTable = lsetTable['gen9predlc'];
 		if (this.formatType?.startsWith('svdlc1')) lsetTable = lsetTable['gen9dlc1'];
@@ -1902,6 +1942,11 @@ class BattleMoveSearch extends BattleTypedSearch<'move'> {
 			if (learnset) {
 				for (let moveid in learnset) {
 					let learnsetEntry = learnset[moveid];
+					if (learnsetEntry === 'E') {
+						// Attaque apprise seulement par reproduction (Cobblemon)
+						if (!this.cobblemonEggMoves) continue;
+						learnsetEntry = '9a';
+					}
 					const move = dex.moves.get(moveid);
 					const minGenCode: { [gen: number]: string } = { 6: 'p', 7: 'q', 8: 'g', 9: 'a' };
 					if (regionBornLegality && !learnsetEntry.includes(minGenCode[dex.gen])) {
