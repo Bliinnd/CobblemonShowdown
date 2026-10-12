@@ -28,7 +28,7 @@ const cobblemon = JSON.parse(fs.readFileSync(path.join(HERE, `cobblemon-${TAG}.j
 
 /** Pokémon interdits en OU (et Monotype) en plus des légendaires, fabuleux, Ultra-Chimères et Paradoxe. */
 const OU_EXTRA_BANS = [
-	'Dragapult', 'Dracovish', 'Kingambit', 'Gliscor', 'Palafin', 'Sneasler', 'Annihilape', 'Espathra',
+	'Archaludon', 'Dracovish', 'Kingambit', 'Gliscor', 'Palafin', 'Sneasler', 'Annihilape', 'Espathra',
 ];
 /** Pas pleinement évolués, mais autorisés en OU. */
 const OU_NFE_ALLOWED = ['Porygon2', 'Chansey'];

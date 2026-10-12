@@ -40,7 +40,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 			// "Uber" regroupe les légendaires, fabuleux, Ultra-Chimères, Paradoxe et les bannis ci-dessous ;
 			// "NFE" et "LC" regroupent les Pokémon qui peuvent encore évoluer.
 			'Uber', 'NFE', 'LC', 'AG',
-			'Dragapult', 'Dracovish', 'Kingambit', 'Gliscor', 'Palafin', 'Sneasler', 'Annihilape', 'Espathra',
+			'Archaludon', 'Dracovish', 'Kingambit', 'Gliscor', 'Palafin', 'Sneasler', 'Annihilape', 'Espathra',
 			'Arena Trap', 'Moody', 'Shadow Tag', 'King\'s Rock', 'Razor Fang', 'Baton Pass', 'Last Respects', 'Shed Tail',
 		],
 	},

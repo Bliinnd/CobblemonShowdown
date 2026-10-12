@@ -6014,7 +6014,7 @@ export const FormatsData: import('../../../sim/dex-species').ModdedSpeciesFormat
 	},
 	dragapult: {
 		isNonstandard: null,
-		tier: "Uber",
+		tier: "OU",
 		natDexTier: "Uber",
 	},
 	zacian: {
@@ -6854,7 +6854,7 @@ export const FormatsData: import('../../../sim/dex-species').ModdedSpeciesFormat
 	},
 	archaludon: {
 		isNonstandard: null,
-		tier: "OU",
+		tier: "Uber",
 		natDexTier: "RUBL",
 	},
 	hydrapple: {
