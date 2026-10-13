@@ -31,7 +31,7 @@
 import { BattleSceneStub } from './battle-scene-stub';
 import { BattleLog } from './battle-log';
 import { BattleScene, type PokemonSprite, BattleStatusAnims } from './battle-animations';
-import { Dex, PSUtils, toID, toUserid, type ID, type ModdedDex } from './battle-dex';
+import { Dex, PSUtils, TL, toID, toUserid, type ID, type ModdedDex } from './battle-dex';
 import { BattleTextParser, type Args, type KWArgs, type SideID } from './battle-text-parser';
 import { Teams } from './battle-teams';
 declare const app: { user: AnyObject, rooms: AnyObject, ignore?: AnyObject } | undefined;
@@ -404,15 +404,16 @@ export class Pokemon implements PokemonDetails, PokemonHealth {
 		}
 	}
 	getBoost(boostStat: Dex.BoostStatName) {
+		// CobblemonShowdown : noms des statistiques traduits (affichage uniquement)
 		let boostStatTable = {
-			atk: 'Atk',
-			def: 'Def',
-			spa: 'SpA',
-			spd: 'SpD',
-			spe: 'Spe',
-			accuracy: 'Accuracy',
-			evasion: 'Evasion',
-			spc: 'Spc',
+			atk: TL.statShort.atk || 'Atk',
+			def: TL.statShort.def || 'Def',
+			spa: TL.statShort.spa || 'SpA',
+			spd: TL.statShort.spd || 'SpD',
+			spe: TL.statShort.spe || 'Spe',
+			accuracy: TL.stat.accuracy || 'Accuracy',
+			evasion: TL`Evasion`,
+			spc: TL.statShort.spc || 'Spc',
 		};
 		if (!this.boosts[boostStat]) {
 			return '1&times;&nbsp;' + boostStatTable[boostStat];
@@ -1411,7 +1412,7 @@ export class Battle {
 		this.subscription?.('ended');
 	}
 	prematureEnd() {
-		this.log(['message', 'This replay ends here.']);
+		this.log(['message', TL`This replay ends here.`]);
 		this.ended = true;
 		this.subscription?.('ended');
 	}
@@ -1690,36 +1691,36 @@ export class Battle {
 		if (move.id) pokemon.rememberMove(move.name, 0);
 		switch (effect.id) {
 		case 'par':
-			this.scene.resultAnim(pokemon, 'Paralyzed', 'par');
+			this.scene.resultAnim(pokemon, TL.status.par || 'Paralyzed', 'par');
 			break;
 		case 'frz':
-			this.scene.resultAnim(pokemon, 'Frozen', 'frz');
+			this.scene.resultAnim(pokemon, TL.status.frz || 'Frozen', 'frz');
 			break;
 		case 'slp':
-			this.scene.resultAnim(pokemon, 'Asleep', 'slp');
+			this.scene.resultAnim(pokemon, TL.status.slp || 'Asleep', 'slp');
 			pokemon.statusData.sleepTurns++;
 			break;
 		case 'truant':
-			this.scene.resultAnim(pokemon, 'Loafing around', 'neutral');
+			this.scene.resultAnim(pokemon, TL`Loafing around`, 'neutral');
 			break;
 		case 'recharge':
 			this.scene.runOtherAnim('selfstatus' as ID, [pokemon]);
-			this.scene.resultAnim(pokemon, 'Must recharge', 'neutral');
+			this.scene.resultAnim(pokemon, TL`Must recharge`, 'neutral');
 			break;
 		case 'focuspunch':
-			this.scene.resultAnim(pokemon, 'Lost focus', 'neutral');
+			this.scene.resultAnim(pokemon, TL`Lost focus`, 'neutral');
 			pokemon.removeTurnstatus('focuspunch' as ID);
 			break;
 		case 'shelltrap':
-			this.scene.resultAnim(pokemon, 'Trap failed', 'neutral');
+			this.scene.resultAnim(pokemon, TL`Trap failed`, 'neutral');
 			pokemon.removeTurnstatus('shelltrap' as ID);
 			break;
 		case 'flinch':
-			this.scene.resultAnim(pokemon, 'Flinched', 'neutral');
+			this.scene.resultAnim(pokemon, TL`Flinched`, 'neutral');
 			pokemon.removeTurnstatus('focuspunch' as ID);
 			break;
 		case 'attract':
-			this.scene.resultAnim(pokemon, 'Immobilized', 'neutral');
+			this.scene.resultAnim(pokemon, TL`Immobilized`, 'neutral');
 			break;
 		}
 		this.scene.animReset(pokemon);
@@ -1910,7 +1911,7 @@ export class Battle {
 			if (this.gen === 1 && stat === 'spa') stat = 'spc';
 			let amount = parseInt(args[3], 10);
 			if (amount === 0) {
-				this.scene.resultAnim(poke, 'already ' + poke.getBoost(stat), 'neutral');
+				this.scene.resultAnim(poke, TL`already ${poke.getBoost(stat)}`, 'neutral');
 				this.log(args, kwArgs);
 				break;
 			}
@@ -1937,7 +1938,7 @@ export class Battle {
 			if (this.gen === 1 && stat === 'spa') stat = 'spc';
 			let amount = parseInt(args[3], 10);
 			if (amount === 0) {
-				this.scene.resultAnim(poke, 'already ' + poke.getBoost(stat), 'neutral');
+				this.scene.resultAnim(poke, TL`already ${poke.getBoost(stat)}`, 'neutral');
 				this.log(args, kwArgs);
 				break;
 			}
@@ -1975,8 +1976,8 @@ export class Battle {
 				poke2.boosts[stat] = tmp;
 				if (!poke2.boosts[stat]) delete poke2.boosts[stat];
 			}
-			this.scene.resultAnim(poke, 'Stats swapped', 'neutral');
-			this.scene.resultAnim(poke2, 'Stats swapped', 'neutral');
+			this.scene.resultAnim(poke, TL`Stats swapped`, 'neutral');
+			this.scene.resultAnim(poke2, TL`Stats swapped`, 'neutral');
 
 			this.log(args, kwArgs);
 			break;
@@ -1988,7 +1989,7 @@ export class Battle {
 			for (const stat in poke.boosts) {
 				if (poke.boosts[stat] > 0) delete poke.boosts[stat];
 			}
-			this.scene.resultAnim(poke, 'Boosts lost', 'bad');
+			this.scene.resultAnim(poke, TL`Boosts lost`, 'bad');
 
 			if (effect.id) {
 				switch (effect.id) {
@@ -2006,7 +2007,7 @@ export class Battle {
 			for (const stat in poke.boosts) {
 				if (poke.boosts[stat] < 0) delete poke.boosts[stat];
 			}
-			this.scene.resultAnim(poke, 'Restored', 'good');
+			this.scene.resultAnim(poke, TL`Restored`, 'good');
 
 			this.log(args, kwArgs);
 			break;
@@ -2033,7 +2034,7 @@ export class Battle {
 					}
 				}
 			}
-			this.scene.resultAnim(poke, 'Stats copied', 'neutral');
+			this.scene.resultAnim(poke, TL`Stats copied`, 'neutral');
 
 			this.log(args, kwArgs);
 			break;
@@ -2046,7 +2047,7 @@ export class Battle {
 				let ofpoke = this.getPokemon(kwArgs.of);
 				this.activateAbility(ofpoke || poke, effect);
 			}
-			this.scene.resultAnim(poke, 'Stats reset', 'neutral');
+			this.scene.resultAnim(poke, TL`Stats reset`, 'neutral');
 
 			this.log(args, kwArgs);
 			break;
@@ -2056,7 +2057,7 @@ export class Battle {
 			for (const stat in poke.boosts) {
 				poke.boosts[stat] = -poke.boosts[stat];
 			}
-			this.scene.resultAnim(poke, 'Stats inverted', 'neutral');
+			this.scene.resultAnim(poke, TL`Stats inverted`, 'neutral');
 
 			this.log(args, kwArgs);
 			break;
@@ -2066,7 +2067,7 @@ export class Battle {
 			for (const active of this.getAllActive()) {
 				active.boosts = {};
 				this.scene.timeOffset = timeOffset;
-				this.scene.resultAnim(active, 'Stats reset', 'neutral');
+				this.scene.resultAnim(active, TL`Stats reset`, 'neutral');
 			}
 
 			this.log(args, kwArgs);
@@ -2074,7 +2075,7 @@ export class Battle {
 		}
 		case '-crit': {
 			let poke = this.getPokemon(args[1]);
-			if (poke) this.scene.resultAnim(poke, 'Critical hit', 'bad');
+			if (poke) this.scene.resultAnim(poke, TL`Critical hit`, 'bad');
 			if (this.activeMoveIsSpread) kwArgs.spread = '.';
 			this.log(args, kwArgs);
 			break;
@@ -2082,7 +2083,7 @@ export class Battle {
 		case '-supereffective': {
 			let poke = this.getPokemon(args[1]);
 			if (poke) {
-				this.scene.resultAnim(poke, 'Super-effective', 'bad');
+				this.scene.resultAnim(poke, TL`Super-effective`, 'bad');
 				if (Dex.afdMode === true) {
 					// April Fool's 2018
 					this.scene.runOtherAnim('hitmark' as ID, [poke]);
@@ -2094,7 +2095,7 @@ export class Battle {
 		}
 		case '-resisted': {
 			let poke = this.getPokemon(args[1]);
-			if (poke) this.scene.resultAnim(poke, 'Resisted', 'neutral');
+			if (poke) this.scene.resultAnim(poke, TL`Resisted`, 'neutral');
 			if (this.activeMoveIsSpread) kwArgs.spread = '.';
 			this.log(args, kwArgs);
 			break;
@@ -2104,13 +2105,13 @@ export class Battle {
 			let fromeffect = Dex.getEffect(kwArgs.from);
 			this.activateAbility(this.getPokemon(kwArgs.of) || poke, fromeffect);
 			this.log(args, kwArgs);
-			this.scene.resultAnim(poke, 'Immune', 'neutral');
+			this.scene.resultAnim(poke, TL`Immune`, 'neutral');
 			break;
 		}
 		case '-miss': {
 			let target = this.getPokemon(args[2]);
 			if (target) {
-				this.scene.resultAnim(target, 'Missed', 'neutral');
+				this.scene.resultAnim(target, TL`Missed`, 'neutral');
 			}
 			this.log(args, kwArgs);
 			break;
@@ -2127,31 +2128,31 @@ export class Battle {
 			}
 			switch (effect.id) {
 			case 'brn':
-				this.scene.resultAnim(poke, 'Already burned', 'neutral');
+				this.scene.resultAnim(poke, TL`Already burned`, 'neutral');
 				break;
 			case 'tox':
 			case 'psn':
-				this.scene.resultAnim(poke, 'Already poisoned', 'neutral');
+				this.scene.resultAnim(poke, TL`Already poisoned`, 'neutral');
 				break;
 			case 'slp':
 				if (fromeffect.id === 'uproar') {
-					this.scene.resultAnim(poke, 'Failed', 'neutral');
+					this.scene.resultAnim(poke, TL`Failed`, 'neutral');
 				} else {
-					this.scene.resultAnim(poke, 'Already asleep', 'neutral');
+					this.scene.resultAnim(poke, TL`Already asleep`, 'neutral');
 				}
 				break;
 			case 'par':
-				this.scene.resultAnim(poke, 'Already paralyzed', 'neutral');
+				this.scene.resultAnim(poke, TL`Already paralyzed`, 'neutral');
 				break;
 			case 'frz':
-				this.scene.resultAnim(poke, 'Already frozen', 'neutral');
+				this.scene.resultAnim(poke, TL`Already frozen`, 'neutral');
 				break;
 			case 'unboost':
-				this.scene.resultAnim(poke, 'Stat drop blocked', 'neutral');
+				this.scene.resultAnim(poke, TL`Stat drop blocked`, 'neutral');
 				break;
 			default:
 				if (poke) {
-					this.scene.resultAnim(poke, 'Failed', 'neutral');
+					this.scene.resultAnim(poke, TL`Failed`, 'neutral');
 				}
 				break;
 			}
@@ -2167,19 +2168,19 @@ export class Battle {
 			switch (effect.id) {
 			case 'quickguard':
 				poke.addTurnstatus('quickguard' as ID);
-				this.scene.resultAnim(poke, 'Quick Guard', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Quick Guard')), 'good');
 				break;
 			case 'wideguard':
 				poke.addTurnstatus('wideguard' as ID);
-				this.scene.resultAnim(poke, 'Wide Guard', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Wide Guard')), 'good');
 				break;
 			case 'craftyshield':
 				poke.addTurnstatus('craftyshield' as ID);
-				this.scene.resultAnim(poke, 'Crafty Shield', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Crafty Shield')), 'good');
 				break;
 			case 'protect':
 				poke.addTurnstatus('protect' as ID);
-				this.scene.resultAnim(poke, 'Protected', 'good');
+				this.scene.resultAnim(poke, TL`Protected`, 'good');
 				break;
 
 			case 'safetygoggles':
@@ -2232,30 +2233,30 @@ export class Battle {
 
 			switch (args[2]) {
 			case 'brn':
-				this.scene.resultAnim(poke, 'Burned', 'brn');
+				this.scene.resultAnim(poke, TL.status.brn || 'Burned', 'brn');
 				this.scene.runStatusAnim('brn' as ID, [poke]);
 				break;
 			case 'tox':
-				this.scene.resultAnim(poke, 'Toxic poison', 'psn');
+				this.scene.resultAnim(poke, TL`Toxic poison`, 'psn');
 				this.scene.runStatusAnim('psn' as ID, [poke]);
 				poke.statusData.toxicTurns = (effect.name === "Toxic Orb" ? -1 : 0);
 				break;
 			case 'psn':
-				this.scene.resultAnim(poke, 'Poisoned', 'psn');
+				this.scene.resultAnim(poke, TL.status.psn || 'Poisoned', 'psn');
 				this.scene.runStatusAnim('psn' as ID, [poke]);
 				break;
 			case 'slp':
-				this.scene.resultAnim(poke, 'Asleep', 'slp');
+				this.scene.resultAnim(poke, TL.status.slp || 'Asleep', 'slp');
 				if (effect.id === 'rest') {
 					poke.statusData.sleepTurns = 0; // for Gen 2 use through Sleep Talk
 				}
 				break;
 			case 'par':
-				this.scene.resultAnim(poke, 'Paralyzed', 'par');
+				this.scene.resultAnim(poke, TL.status.par || 'Paralyzed', 'par');
 				this.scene.runStatusAnim('par' as ID, [poke]);
 				break;
 			case 'frz':
-				this.scene.resultAnim(poke, 'Frozen', 'frz');
+				this.scene.resultAnim(poke, TL.status.frz || 'Frozen', 'frz');
 				this.scene.runStatusAnim('frz' as ID, [poke]);
 				break;
 			default:
@@ -2285,26 +2286,26 @@ export class Battle {
 				poke.status = '';
 				switch (args[2]) {
 				case 'brn':
-					this.scene.resultAnim(poke, 'Burn cured', 'good');
+					this.scene.resultAnim(poke, TL`Burn cured`, 'good');
 					break;
 				case 'tox':
 				case 'psn':
 					poke.statusData.toxicTurns = 0;
-					this.scene.resultAnim(poke, 'Poison cured', 'good');
+					this.scene.resultAnim(poke, TL`Poison cured`, 'good');
 					break;
 				case 'slp':
-					this.scene.resultAnim(poke, 'Woke up', 'good');
+					this.scene.resultAnim(poke, TL`Woke up`, 'good');
 					poke.statusData.sleepTurns = 0;
 					break;
 				case 'par':
-					this.scene.resultAnim(poke, 'Paralysis cured', 'good');
+					this.scene.resultAnim(poke, TL`Paralysis cured`, 'good');
 					break;
 				case 'frz':
-					this.scene.resultAnim(poke, 'Thawed', 'good');
+					this.scene.resultAnim(poke, TL`Thawed`, 'good');
 					break;
 				default:
 					poke.removeVolatile('confusion' as ID);
-					this.scene.resultAnim(poke, 'Cured', 'good');
+					this.scene.resultAnim(poke, TL`Cured`, 'good');
 				}
 			}
 			this.log(args, kwArgs);
@@ -2317,7 +2318,7 @@ export class Battle {
 				this.scene.updateStatbarIfExists(target);
 			}
 
-			this.scene.resultAnim(poke, 'Team Cured', 'good');
+			this.scene.resultAnim(poke, TL`Team Cured`, 'good');
 			this.log(args, kwArgs);
 			break;
 		}
@@ -2352,13 +2353,13 @@ export class Battle {
 					// falls through
 				case 'recycle':
 					poke.itemEffect = 'found';
-					this.scene.resultAnim(poke, item.name, 'neutral');
+					this.scene.resultAnim(poke, TL(item), 'neutral');
 					break;
 				case 'frisk':
 					this.activateAbility(ofpoke, "Frisk");
 					if (poke && poke !== ofpoke) { // used for gen 6
 						poke.itemEffect = 'frisked';
-						this.scene.resultAnim(poke, item.name, 'neutral');
+						this.scene.resultAnim(poke, TL(item), 'neutral');
 					}
 					break;
 				case 'magician':
@@ -2374,17 +2375,17 @@ export class Battle {
 					ofpoke!.prevItemEffect = 'stolen';
 					ofpoke!.addVolatile('itemremoved' as ID);
 					poke.itemEffect = 'stolen';
-					this.scene.resultAnim(poke, item.name, 'neutral');
-					this.scene.resultAnim(ofpoke!, 'Item Stolen', 'bad');
+					this.scene.resultAnim(poke, TL(item), 'neutral');
+					this.scene.resultAnim(ofpoke!, TL`Item Stolen`, 'bad');
 					break;
 				case 'harvest':
 					poke.itemEffect = 'harvested';
 					this.activateAbility(poke, "Harvest");
-					this.scene.resultAnim(poke, item.name, 'neutral');
+					this.scene.resultAnim(poke, TL(item), 'neutral');
 					break;
 				case 'bestow':
 					poke.itemEffect = 'bestowed';
-					this.scene.resultAnim(poke, item.name, 'neutral');
+					this.scene.resultAnim(poke, TL(item), 'neutral');
 					break;
 				case 'switcheroo':
 				case 'trick':
@@ -2396,7 +2397,7 @@ export class Battle {
 			} else {
 				switch (item.id) {
 				case 'airballoon':
-					this.scene.resultAnim(poke, 'Balloon', 'good');
+					this.scene.resultAnim(poke, TL`Balloon`, 'good');
 					break;
 				}
 			}
@@ -2434,7 +2435,7 @@ export class Battle {
 						poke.prevItemEffect = 'knocked off';
 					}
 					this.scene.runOtherAnim('itemoff' as ID, [poke]);
-					this.scene.resultAnim(poke, 'Item knocked off', 'neutral');
+					this.scene.resultAnim(poke, TL`Item knocked off`, 'neutral');
 					break;
 				case 'stealeat':
 					poke.prevItemEffect = 'stolen';
@@ -2451,14 +2452,14 @@ export class Battle {
 				case 'airballoon':
 					poke.prevItemEffect = 'popped';
 					poke.removeVolatile('airballoon' as ID);
-					this.scene.resultAnim(poke, 'Balloon popped', 'neutral');
+					this.scene.resultAnim(poke, TL`Balloon popped`, 'neutral');
 					break;
 				case 'focussash':
 					poke.prevItemEffect = 'consumed';
-					this.scene.resultAnim(poke, 'Sash', 'neutral');
+					this.scene.resultAnim(poke, TL`Sash`, 'neutral');
 					break;
 				case 'focusband':
-					this.scene.resultAnim(poke, 'Focus Band', 'neutral');
+					this.scene.resultAnim(poke, TL(Dex.items.get('Focus Band')), 'neutral');
 					break;
 				case 'redcard':
 					poke.prevItemEffect = 'held up';
@@ -2587,7 +2588,7 @@ export class Battle {
 				poke.rememberMove(trackedMove[0], 0);
 			}
 			this.scene.animTransform(poke);
-			this.scene.resultAnim(poke, 'Transformed', 'good');
+			this.scene.resultAnim(poke, TL`Transformed`, 'good');
 			this.log(['-transform', args[1], args[2], tpoke.speciesForme], kwArgs);
 			break;
 		}
@@ -2681,87 +2682,87 @@ export class Battle {
 				this.scene.animTransform(poke, true);
 				break;
 			case 'powertrick':
-				this.scene.resultAnim(poke, 'Power Trick', 'neutral');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Power Trick')), 'neutral');
 				break;
 			case 'foresight':
 			case 'miracleeye':
-				this.scene.resultAnim(poke, 'Identified', 'bad');
+				this.scene.resultAnim(poke, TL`Identified`, 'bad');
 				break;
 			case 'telekinesis':
-				this.scene.resultAnim(poke, 'Telekinesis', 'neutral');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Telekinesis')), 'neutral');
 				break;
 			case 'confusion':
 				if (!kwArgs.already) {
 					this.scene.runStatusAnim('confused' as ID, [poke]);
-					this.scene.resultAnim(poke, 'Confused', 'bad');
+					this.scene.resultAnim(poke, TL.status.confusion || 'Confused', 'bad');
 				}
 				break;
 			case 'leechseed':
 				this.scene.updateStatbar(poke);
 				break;
 			case 'healblock':
-				this.scene.resultAnim(poke, 'Heal Block', 'bad');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Heal Block')), 'bad');
 				break;
 			case 'yawn':
-				this.scene.resultAnim(poke, 'Drowsy', 'slp');
+				this.scene.resultAnim(poke, TL`Drowsy`, 'slp');
 				break;
 			case 'taunt':
-				this.scene.resultAnim(poke, 'Taunted', 'bad');
+				this.scene.resultAnim(poke, TL`Taunted`, 'bad');
 				break;
 			case 'imprison':
-				this.scene.resultAnim(poke, 'Imprisoning', 'good');
+				this.scene.resultAnim(poke, TL`Imprisoning`, 'good');
 				break;
 			case 'disable':
-				this.scene.resultAnim(poke, 'Disabled', 'bad');
+				this.scene.resultAnim(poke, TL`Disabled`, 'bad');
 				break;
 			case 'embargo':
-				this.scene.resultAnim(poke, 'Embargo', 'bad');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Embargo')), 'bad');
 				break;
 			case 'torment':
-				this.scene.resultAnim(poke, 'Tormented', 'bad');
+				this.scene.resultAnim(poke, TL`Tormented`, 'bad');
 				break;
 			case 'ingrain':
-				this.scene.resultAnim(poke, 'Ingrained', 'good');
+				this.scene.resultAnim(poke, TL`Ingrained`, 'good');
 				break;
 			case 'aquaring':
-				this.scene.resultAnim(poke, 'Aqua Ring', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Aqua Ring')), 'good');
 				break;
 			case 'stockpile1':
-				this.scene.resultAnim(poke, 'Stockpile', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Stockpile')), 'good');
 				break;
 			case 'stockpile2':
 				poke.removeVolatile('stockpile1' as ID);
-				this.scene.resultAnim(poke, 'Stockpile&times;2', 'good');
+				this.scene.resultAnim(poke, `${TL(Dex.moves.get('Stockpile'))}&times;2`, 'good');
 				break;
 			case 'stockpile3':
 				poke.removeVolatile('stockpile2' as ID);
-				this.scene.resultAnim(poke, 'Stockpile&times;3', 'good');
+				this.scene.resultAnim(poke, `${TL(Dex.moves.get('Stockpile'))}&times;3`, 'good');
 				break;
 			case 'perish0':
 				poke.removeVolatile('perish1' as ID);
 				break;
 			case 'perish1':
 				poke.removeVolatile('perish2' as ID);
-				this.scene.resultAnim(poke, 'Perish next turn', 'bad');
+				this.scene.resultAnim(poke, TL`Perish next turn`, 'bad');
 				break;
 			case 'perish2':
 				poke.removeVolatile('perish3' as ID);
-				this.scene.resultAnim(poke, 'Perish in 2', 'bad');
+				this.scene.resultAnim(poke, TL`Perish in 2`, 'bad');
 				break;
 			case 'perish3':
-				if (!kwArgs.silent) this.scene.resultAnim(poke, 'Perish in 3', 'bad');
+				if (!kwArgs.silent) this.scene.resultAnim(poke, TL`Perish in 3`, 'bad');
 				break;
 			case 'encore':
-				this.scene.resultAnim(poke, 'Encored', 'bad');
+				this.scene.resultAnim(poke, TL`Encored`, 'bad');
 				break;
 			case 'bide':
-				this.scene.resultAnim(poke, 'Bide', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Bide')), 'good');
 				break;
 			case 'attract':
-				this.scene.resultAnim(poke, 'Attracted', 'bad');
+				this.scene.resultAnim(poke, TL`Attracted`, 'bad');
 				break;
 			case 'autotomize':
-				this.scene.resultAnim(poke, 'Lightened', 'good');
+				this.scene.resultAnim(poke, TL`Lightened`, 'good');
 				if (poke.volatiles.autotomize) {
 					poke.volatiles.autotomize[1]++;
 				} else {
@@ -2769,41 +2770,41 @@ export class Battle {
 				}
 				break;
 			case 'focusenergy':
-				this.scene.resultAnim(poke, '+Crit rate', 'good');
+				this.scene.resultAnim(poke, TL`+Crit rate`, 'good');
 				break;
 			case 'curse':
-				this.scene.resultAnim(poke, 'Cursed', 'bad');
+				this.scene.resultAnim(poke, TL`Cursed`, 'bad');
 				break;
 			case 'nightmare':
-				this.scene.resultAnim(poke, 'Nightmare', 'bad');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Nightmare')), 'bad');
 				break;
 			case 'magnetrise':
-				this.scene.resultAnim(poke, 'Magnet Rise', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Magnet Rise')), 'good');
 				break;
 			case 'smackdown':
-				this.scene.resultAnim(poke, 'Smacked Down', 'bad');
+				this.scene.resultAnim(poke, TL`Smacked Down`, 'bad');
 				poke.removeVolatile('magnetrise' as ID);
 				poke.removeVolatile('telekinesis' as ID);
 				if (poke.lastMove === 'fly' || poke.lastMove === 'bounce') this.scene.animReset(poke);
 				break;
 			case 'substitute':
 				if (kwArgs.damage) {
-					this.scene.resultAnim(poke, 'Damage', 'bad');
+					this.scene.resultAnim(poke, TL`Damage`, 'bad');
 				} else if (kwArgs.block) {
-					this.scene.resultAnim(poke, 'Blocked', 'neutral');
+					this.scene.resultAnim(poke, TL`Blocked`, 'neutral');
 				}
 				break;
 
 			// Gen 1-2
 			case 'mist':
-				this.scene.resultAnim(poke, 'Mist', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Mist')), 'good');
 				break;
 			// Gen 1
 			case 'lightscreen':
-				this.scene.resultAnim(poke, 'Light Screen', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Light Screen')), 'good');
 				break;
 			case 'reflect':
-				this.scene.resultAnim(poke, 'Reflect', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Reflect')), 'good');
 				break;
 			case 'futuresight':
 				poke.side.addSideCondition(effect, false);
@@ -2836,10 +2837,10 @@ export class Battle {
 					this.scene.animTransform(poke);
 					break;
 				case 'powertrick':
-					this.scene.resultAnim(poke, 'Power Trick', 'neutral');
+					this.scene.resultAnim(poke, TL(Dex.moves.get('Power Trick')), 'neutral');
 					break;
 				case 'telekinesis':
-					this.scene.resultAnim(poke, 'Telekinesis&nbsp;ended', 'neutral');
+					this.scene.resultAnim(poke, TL`Telekinesis ended`.replace(/ /g, '&nbsp;'), 'neutral');
 					break;
 				case 'skydrop':
 					if (kwArgs.interrupt) {
@@ -2847,49 +2848,49 @@ export class Battle {
 					}
 					break;
 				case 'confusion':
-					this.scene.resultAnim(poke, 'Confusion&nbsp;ended', 'good');
+					this.scene.resultAnim(poke, TL`Confusion ended`.replace(/ /g, '&nbsp;'), 'good');
 					break;
 				case 'leechseed':
 					if (fromeffect.id === 'rapidspin') {
-						this.scene.resultAnim(poke, 'De-seeded', 'good');
+						this.scene.resultAnim(poke, TL`De-seeded`, 'good');
 					}
 					break;
 				case 'healblock':
-					this.scene.resultAnim(poke, 'Heal Block ended', 'good');
+					this.scene.resultAnim(poke, TL`Heal Block ended`, 'good');
 					break;
 				case 'attract':
-					this.scene.resultAnim(poke, 'Attract&nbsp;ended', 'good');
+					this.scene.resultAnim(poke, TL`Attract ended`.replace(/ /g, '&nbsp;'), 'good');
 					break;
 				case 'taunt':
-					this.scene.resultAnim(poke, 'Taunt&nbsp;ended', 'good');
+					this.scene.resultAnim(poke, TL`Taunt ended`.replace(/ /g, '&nbsp;'), 'good');
 					break;
 				case 'disable':
-					this.scene.resultAnim(poke, 'Disable&nbsp;ended', 'good');
+					this.scene.resultAnim(poke, TL`Disable ended`.replace(/ /g, '&nbsp;'), 'good');
 					break;
 				case 'embargo':
-					this.scene.resultAnim(poke, 'Embargo ended', 'good');
+					this.scene.resultAnim(poke, TL`Embargo ended`, 'good');
 					break;
 				case 'torment':
-					this.scene.resultAnim(poke, 'Torment&nbsp;ended', 'good');
+					this.scene.resultAnim(poke, TL`Torment ended`.replace(/ /g, '&nbsp;'), 'good');
 					break;
 				case 'encore':
-					this.scene.resultAnim(poke, 'Encore&nbsp;ended', 'good');
+					this.scene.resultAnim(poke, TL`Encore ended`.replace(/ /g, '&nbsp;'), 'good');
 					break;
 				case 'bide':
 					this.scene.runOtherAnim('bideunleash' as ID, [poke]);
 					break;
 				case 'illusion':
-					this.scene.resultAnim(poke, 'Illusion ended', 'bad');
+					this.scene.resultAnim(poke, TL`Illusion ended`, 'bad');
 					poke.rememberAbility('Illusion');
 					break;
 				case 'slowstart':
-					this.scene.resultAnim(poke, 'Slow Start ended', 'good');
+					this.scene.resultAnim(poke, TL`Slow Start ended`, 'good');
 					break;
 				case 'perishsong': // for backwards compatibility
 					poke.removeVolatile('perish3' as ID);
 					break;
 				case 'substitute':
-					this.scene.resultAnim(poke, 'Faded', 'bad');
+					this.scene.resultAnim(poke, TL`Faded`, 'bad');
 					break;
 				case 'stockpile':
 					poke.removeVolatile('stockpile1' as ID);
@@ -2938,40 +2939,40 @@ export class Battle {
 			poke.addTurnstatus(effect.id);
 			switch (effect.id) {
 			case 'roost':
-				this.scene.resultAnim(poke, 'Landed', 'neutral');
+				this.scene.resultAnim(poke, TL`Landed`, 'neutral');
 				break;
 			case 'quickguard':
-				this.scene.resultAnim(poke, 'Quick Guard', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Quick Guard')), 'good');
 				break;
 			case 'wideguard':
-				this.scene.resultAnim(poke, 'Wide Guard', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Wide Guard')), 'good');
 				break;
 			case 'craftyshield':
-				this.scene.resultAnim(poke, 'Crafty Shield', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Crafty Shield')), 'good');
 				break;
 			case 'matblock':
-				this.scene.resultAnim(poke, 'Mat Block', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Mat Block')), 'good');
 				break;
 			case 'protect':
-				this.scene.resultAnim(poke, 'Protected', 'good');
+				this.scene.resultAnim(poke, TL`Protected`, 'good');
 				break;
 			case 'endure':
-				this.scene.resultAnim(poke, 'Enduring', 'good');
+				this.scene.resultAnim(poke, TL`Enduring`, 'good');
 				break;
 			case 'helpinghand':
-				this.scene.resultAnim(poke, 'Helping Hand', 'good');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Helping Hand')), 'good');
 				break;
 			case 'focuspunch':
-				this.scene.resultAnim(poke, 'Focusing', 'neutral');
+				this.scene.resultAnim(poke, TL`Focusing`, 'neutral');
 				poke.rememberMove(effect.name, 0);
 				break;
 			case 'shelltrap':
-				this.scene.resultAnim(poke, 'Trap set', 'neutral');
+				this.scene.resultAnim(poke, TL`Trap set`, 'neutral');
 				poke.rememberMove(effect.name, 0);
 				break;
 			case 'beakblast':
 				this.scene.runOtherAnim('bidecharge' as ID, [poke]);
-				this.scene.resultAnim(poke, 'Beak Blast', 'neutral');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Beak Blast')), 'neutral');
 				break;
 			}
 			this.scene.updateStatbar(poke);
@@ -2984,10 +2985,10 @@ export class Battle {
 			poke.addMovestatus(effect.id);
 			switch (effect.id) {
 			case 'grudge':
-				this.scene.resultAnim(poke, 'Grudge', 'neutral');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Grudge')), 'neutral');
 				break;
 			case 'destinybond':
-				this.scene.resultAnim(poke, 'Destiny Bond', 'neutral');
+				this.scene.resultAnim(poke, TL(Dex.moves.get('Destiny Bond')), 'neutral');
 				break;
 			}
 			this.scene.updateStatbar(poke);
@@ -3017,9 +3018,9 @@ export class Battle {
 				break;
 			case 'substitute':
 				if (kwArgs.damage) {
-					this.scene.resultAnim(poke, 'Damage', 'bad');
+					this.scene.resultAnim(poke, TL`Damage`, 'bad');
 				} else if (kwArgs.block) {
-					this.scene.resultAnim(poke, 'Blocked', 'neutral');
+					this.scene.resultAnim(poke, TL`Blocked`, 'neutral');
 				}
 				break;
 			case 'attract':
@@ -3031,10 +3032,10 @@ export class Battle {
 
 			// move activations
 			case 'aromatherapy':
-				this.scene.resultAnim(poke, 'Team Cured', 'good');
+				this.scene.resultAnim(poke, TL`Team Cured`, 'good');
 				break;
 			case 'healbell':
-				this.scene.resultAnim(poke, 'Team Cured', 'good');
+				this.scene.resultAnim(poke, TL`Team Cured`, 'good');
 				break;
 			case 'brickbreak':
 				target!.side.removeSideCondition('Reflect');
@@ -3045,7 +3046,7 @@ export class Battle {
 			case 'phantomforce':
 			case 'shadowforce':
 			case 'feint':
-				this.scene.resultAnim(poke, 'Protection broken', 'bad');
+				this.scene.resultAnim(poke, TL`Protection broken`, 'bad');
 				poke.removeTurnstatus('protect' as ID);
 				for (const curTarget of poke.side.pokemon) {
 					curTarget.removeTurnstatus('wideguard' as ID);
@@ -3130,7 +3131,7 @@ export class Battle {
 				break;
 			default:
 				if (kwArgs.broken) { // for custom moves that break protection
-					this.scene.resultAnim(poke, 'Protection broken', 'bad');
+					this.scene.resultAnim(poke, TL`Protection broken`, 'bad');
 				}
 			}
 			this.log(args, kwArgs);

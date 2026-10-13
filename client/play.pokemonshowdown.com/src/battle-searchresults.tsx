@@ -69,8 +69,8 @@ export class PSSearchResults extends preact.Component<{
 		return [
 			`<li class="result" value="${index}"><div class="sortrow">`,
 			`<button class="sortcol numsortcol${!sortCol ? ' cur' : ''}">`,
-			`${!sortCol ? 'Sort: ' : escapeHTML(search.firstPokemonColumn)}</button>`,
-			`<button class="sortcol pnamesortcol${sortCol === 'name' ? ' cur' : ''}" data-sort="name">Name</button>`,
+			`${!sortCol ? escapeHTML(TL.label(TL`Sort`)) : escapeHTML(search.firstPokemonColumn)}</button>`,
+			`<button class="sortcol pnamesortcol${sortCol === 'name' ? ' cur' : ''}" data-sort="name">${escapeHTML(TL`Name`)}</button>`,
 			`<button class="sortcol typesortcol${sortCol === 'type' ? ' cur' : ''}" data-sort="type">${escapeHTML(TL`Types`)}</button>`,
 			!search.numAbilityCols ? '' :
 			`<button class="sortcol ${abilityWidthClass}${sortCol === 'ability' ? ' cur' : ''}" data-sort="ability">${escapeHTML(TL`Abilities`)}</button>`,
@@ -91,19 +91,19 @@ export class PSSearchResults extends preact.Component<{
 		const search = this.props.search;
 		const sortCol = search.sortCol;
 		return `<li class="result" value="${index}"><div class="sortrow">` +
-			`<button class="sortcol movenamesortcol${sortCol === 'name' ? ' cur' : ''}" data-sort="name">Name</button>` +
+			`<button class="sortcol movenamesortcol${sortCol === 'name' ? ' cur' : ''}" data-sort="name">${escapeHTML(TL`Name`)}</button>` +
 			`<button class="sortcol movetypesortcol${sortCol === 'type' ? ' cur' : ''}" data-sort="type">${escapeHTML(TL`Type`)}</button>` +
-			`<button class="sortcol movetypesortcol${sortCol === 'category' ? ' cur' : ''}" data-sort="category">Cat</button>` +
-			`<button class="sortcol powersortcol${sortCol === 'power' ? ' cur' : ''}" data-sort="power">Pow</button>` +
-			`<button class="sortcol accuracysortcol${sortCol === 'accuracy' ? ' cur' : ''}" data-sort="accuracy">Acc</button>` +
-			`<button class="sortcol ppsortcol${sortCol === 'pp' ? ' cur' : ''}" data-sort="pp">PP</button>` +
+			`<button class="sortcol movetypesortcol${sortCol === 'category' ? ' cur' : ''}" data-sort="category">${escapeHTML(TL`Cat`)}</button>` +
+			`<button class="sortcol powersortcol${sortCol === 'power' ? ' cur' : ''}" data-sort="power">${escapeHTML(TL`Pow`)}</button>` +
+			`<button class="sortcol accuracysortcol${sortCol === 'accuracy' ? ' cur' : ''}" data-sort="accuracy">${escapeHTML(TL`Acc`)}</button>` +
+			`<button class="sortcol ppsortcol${sortCol === 'pp' ? ' cur' : ''}" data-sort="pp">${escapeHTML(TL`PP`)}</button>` +
 			`</div></li>`;
 	}
 
 	renderPokemonRowHTML(index: number, id: ID, matchStart: number, matchEnd: number, errorMessage?: string) {
 		const search = this.props.search;
 		const pokemon = search.dex.species.get(id);
-		if (!pokemon) return `<li class="result" value="${index}">Unrecognized pokemon</li>`;
+		if (!pokemon) return `<li class="result" value="${index}">${escapeHTML(TL`Unrecognized pokemon`)}</li>`;
 
 		const pokemonText = search.dex.text.get(pokemon);
 		const displayName = pokemonText.name;
@@ -155,15 +155,16 @@ export class PSSearchResults extends preact.Component<{
 			}
 		}
 
-		buf += `<span class="col statcol"><em>HP</em><br />${stats.hp}</span>` +
-			`<span class="col statcol"><em>Atk</em><br />${stats.atk}</span>` +
-			`<span class="col statcol"><em>Def</em><br />${stats.def}</span>` +
+		const statLabel = (statID: string, english: string) => escapeHTML(TL.statShort[statID] || english);
+		buf += `<span class="col statcol"><em>${statLabel('hp', 'HP')}</em><br />${stats.hp}</span>` +
+			`<span class="col statcol"><em>${statLabel('atk', 'Atk')}</em><br />${stats.atk}</span>` +
+			`<span class="col statcol"><em>${statLabel('def', 'Def')}</em><br />${stats.def}</span>` +
 			(search.dex.gen >= 2 ?
-				`<span class="col statcol"><em>SpA</em><br />${stats.spa}</span>` +
-				`<span class="col statcol"><em>SpD</em><br />${stats.spd}</span>` :
-				`<span class="col statcol"><em>Spc</em><br />${stats.spa}</span>`) +
-				`<span class="col statcol"><em>Spe</em><br />${stats.spe}</span>` +
-				`<span class="col bstcol"><em>BST<br />${bst}</em></span></a></li>`;
+				`<span class="col statcol"><em>${statLabel('spa', 'SpA')}</em><br />${stats.spa}</span>` +
+				`<span class="col statcol"><em>${statLabel('spd', 'SpD')}</em><br />${stats.spd}</span>` :
+				`<span class="col statcol"><em>${statLabel('spc', 'Spc')}</em><br />${stats.spa}</span>`) +
+				`<span class="col statcol"><em>${statLabel('spe', 'Spe')}</em><br />${stats.spe}</span>` +
+				`<span class="col bstcol"><em>${escapeHTML(TL.tag.bst || 'BST')}<br />${bst}</em></span></a></li>`;
 		return buf;
 	}
 
@@ -204,7 +205,7 @@ export class PSSearchResults extends preact.Component<{
 	renderItemRowHTML(index: number, id: ID, matchStart: number, matchEnd: number, errorMessage?: string) {
 		const search = this.props.search;
 		const item = search.dex.items.get(id);
-		if (!item) return `<li class="result" value="${index}">Unrecognized item</li>`;
+		if (!item) return `<li class="result" value="${index}">${escapeHTML(TL`Unrecognized item`)}</li>`;
 		const itemText = search.dex.text.get(item);
 		[matchStart, matchEnd] = getLocalizedMatch(itemText.name, item.name, matchStart, matchEnd);
 		const itemName = id ? this.renderNameHTML(itemText.name, matchStart, matchEnd) :
@@ -222,7 +223,7 @@ export class PSSearchResults extends preact.Component<{
 	renderAbilityRowHTML(index: number, id: ID, matchStart: number, matchEnd: number, errorMessage?: string) {
 		const search = this.props.search;
 		const ability = search.dex.abilities.get(id);
-		if (!ability) return `<li class="result" value="${index}">Unrecognized ability</li>`;
+		if (!ability) return `<li class="result" value="${index}">${escapeHTML(TL`Unrecognized ability`)}</li>`;
 		const abilityText = search.dex.text.get(ability);
 		[matchStart, matchEnd] = getLocalizedMatch(abilityText.name, ability.name, matchStart, matchEnd);
 		const abilityName = id && ability.id !== 'noability' ?
@@ -244,13 +245,13 @@ export class PSSearchResults extends preact.Component<{
 			if (!id) {
 				return `<li class="result" value="${index}"><a href="${this.URL_ROOT}moves/" class="cur" ` +
 					`data-target="push" data-entry="move||${escapeHTML(slot)}">` +
-					`<span class="col movenamecol"><i>(slot ${escapeHTML(slot)} empty)</i></span></a></li>`;
+					`<span class="col movenamecol"><i>${escapeHTML(TL`(slot ${slot} empty)`)}</i></span></a></li>`;
 			}
 		}
 
 		const search = this.props.search;
 		const move = search.dex.moves.get(id);
-		if (!move) return `<li class="result" value="${index}">Unrecognized move</li>`;
+		if (!move) return `<li class="result" value="${index}">${escapeHTML(TL`Unrecognized move`)}</li>`;
 		const moveText = search.dex.text.get(move);
 		const entry = slot ? `move|${move.name}|${slot}` : `move|${move.name}`;
 		const tagStart = moveText.name === move.name && move.name.startsWith('Hidden Power') ? 12 : 0;
@@ -267,16 +268,17 @@ export class PSSearchResults extends preact.Component<{
 			pp = move.pp > 20 ? 20 : move.pp;
 			if (!move.noPPBoosts) pp = (pp / 5 + 1) * 4;
 		}
+		const powerLabel = escapeHTML(TL`Power`);
 		buf += `<span class="col typecol">` +
 			`<img src="${Dex.resourcePrefix}sprites/types/${encodeURIComponent(move.type)}.png" ` +
 			`alt="${escapeHTML(TL.type[move.type] || move.type)}" height="14" width="32" class="pixelated" />` +
 			`<img src="${Dex.resourcePrefix}sprites/categories/${escapeHTML(move.category)}.png" ` +
 			`alt="${escapeHTML(TL.tag[toID(move.category)] || move.category)}" height="14" width="32" class="pixelated" />` +
 			`</span>` +
-			`<span class="col labelcol">${move.category !== 'Status' ? `<em>Power</em><br />${move.basePower || '&mdash;'}` : ''}</span>` +
-			`<span class="col widelabelcol"><em>Accuracy</em><br />` +
+			`<span class="col labelcol">${move.category !== 'Status' ? `<em>${powerLabel}</em><br />${move.basePower || '&mdash;'}` : ''}</span>` +
+			`<span class="col widelabelcol"><em>${escapeHTML(TL`Accuracy`)}</em><br />` +
 			`${move.accuracy && move.accuracy !== true ? `${move.accuracy}%` : '&mdash;'}</span>` +
-			`<span class="col pplabelcol"><em>PP</em><br />${pp}</span>` +
+			`<span class="col pplabelcol"><em>${escapeHTML(TL`PP`)}</em><br />${pp}</span>` +
 			`<span class="col movedesccol">${escapeHTML(moveText.shortDesc)}</span></a></li>`;
 		return buf;
 	}
@@ -316,7 +318,7 @@ export class PSSearchResults extends preact.Component<{
 		return `<li class="result" value="${index}"><a href="${this.URL_ROOT}articles/${id}" ` +
 			`data-target="push" data-entry="article|${escapeHTML(name)}">` +
 			`<span class="col namecol">${this.renderNameHTML(name, matchStart, matchEnd)}</span>` +
-			`<span class="col movedesccol">${isSearchType ? "(search type)" : "(article)"}</span>` +
+			`<span class="col movedesccol">${escapeHTML(isSearchType ? TL`(search type)` : TL`(article)`)}</span>` +
 			(errorMessage || '') +
 			`</a></li>`;
 	}
@@ -339,7 +341,7 @@ export class PSSearchResults extends preact.Component<{
 		return `<li class="result" value="${index}"><a href="${this.URL_ROOT}egggroups/${id}" ` +
 			`data-target="push" data-entry="egggroup|${escapeHTML(name)}">` +
 			`<span class="col namecol">${this.renderNameHTML(displayName, matchStart, matchEnd)}</span>` +
-			`<span class="col movedesccol">(egg group)</span>` +
+			`<span class="col movedesccol">${escapeHTML(TL`(egg group)`)}</span>` +
 			(errorMessage || '') +
 			`</a></li>`;
 	}
@@ -356,7 +358,7 @@ export class PSSearchResults extends preact.Component<{
 		return `<li class="result" value="${index}"><a href="${this.URL_ROOT}tiers/${id}" ` +
 			`data-target="push" data-entry="tier|${escapeHTML(name)}">` +
 			`<span class="col namecol">${this.renderNameHTML(name, matchStart, matchEnd)}</span>` +
-			`<span class="col movedesccol">(tier)</span>` +
+			`<span class="col movedesccol">${escapeHTML(TL`(tier)`)}</span>` +
 			(errorMessage || '') +
 			`</a></li>`;
 	}
@@ -410,37 +412,38 @@ export class PSSearchResults extends preact.Component<{
 		case 'article':
 			return this.renderArticleRowHTML(index, id, matchStart, matchEnd, errorMessage);
 		}
-		return `<li>Error: not found</li>`;
+		return `<li>${escapeHTML(TL`Error: not found`)}</li>`;
 	}
 
 	static renderFilters(search: DexSearch, showHints?: boolean) {
 		return search.filters && <li class="dexlist-filters">
-			{showHints && "Filters: "}
+			{showHints && TL.label(TL`Filters`)}
 			{search.filters.map(([type, name]) =>
 				<button class="filter" data-filter={`${type}:${name}`}>
 					{getSearchDisplayName(search, type, name)} <i class="fa fa-times-circle" aria-hidden></i>
 				</button>
 			)}
-			{!search.query && showHints && <small style="color: #888">(backspace = delete filter)</small>}
+			{!search.query && showHints && <small style="color: #888">{TL`(backspace = delete filter)`}</small>}
 		</li>;
 	}
 
 	static renderFiltersHTML(search: DexSearch, showHints?: boolean) {
 		if (!search.filters) return '';
+		const backspaceHint = escapeHTML(TL`(backspace = delete filter)`);
 		return `<li class="dexlist-filters">` +
-			(showHints ? `Filters: ` : ``) +
+			(showHints ? escapeHTML(TL.label(TL`Filters`)) : ``) +
 			search.filters.map(([type, name]) =>
 				`<button class="filter" data-filter="${escapeHTML(type)}:${escapeHTML(name)}">` +
 				`${escapeHTML(getSearchDisplayName(search, type, name))} ` +
 				`<i class="fa fa-times-circle" aria-hidden></i></button>`
 			).join('') +
-			(!search.query && showHints ? `<small style="color: #888">(backspace = delete filter)</small>` : ``) +
+			(!search.query && showHints ? `<small style="color: #888">${backspaceHint}</small>` : ``) +
 			`</li>`;
 	}
 
 	renderPagerHTML(direction: -1 | 1) {
-		const label = direction < 0 ? 'Show previous search results' : 'Show next search results';
-		return `<li class="result resultpage"><button class="button" data-page="${direction}">${label}</button></li>`;
+		const label = direction < 0 ? TL`Show previous search results` : TL`Show next search results`;
+		return `<li class="result resultpage"><button class="button" data-page="${direction}">${escapeHTML(label)}</button></li>`;
 	}
 
 	handleClick = (ev: Event) => {

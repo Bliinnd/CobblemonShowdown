@@ -189,6 +189,25 @@ export const TL = Object.assign(translate, {
 		const labelText = TL`${label}: `;
 		return value === undefined ? labelText : labelText + String(value as any);
 	},
+	/**
+	 * Splits an already-translated sentence on literal `{NAME}` markers and
+	 * replaces each marker with `values[NAME]` (often a JSX element), so a
+	 * sentence containing links or markup is still translated as one string.
+	 * For instance, if `text` is the translation of "Type {CMD} for help.",
+	 * `TL.parts(text, { CMD: <code>/help</code> })` renders the command in
+	 * a `<code>` tag wherever the translator put `{CMD}`.
+	 *
+	 * The markers must be written literally inside the tagged TL template
+	 * (not as `${}` substitutions), since the extractor would otherwise turn
+	 * them into positional placeholders.
+	 */
+	parts<T>(text: string, values: { [name: string]: T }): (string | T)[] {
+		return text.split(/(\{[A-Z][A-Z0-9_]*\})/).map(part => {
+			// marker names are upper-case, so they can't collide with Object.prototype keys
+			const name = /^\{([A-Z][A-Z0-9_]*)\}$/.exec(part)?.[1];
+			return name !== undefined && name in values ? values[name] : part;
+		}).filter(part => part !== '');
+	},
 	orList(items: readonly string[]) {
 		if (items.length <= 1) return items.join();
 		if (items.length === 2) {

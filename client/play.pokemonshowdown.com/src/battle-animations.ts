@@ -106,14 +106,24 @@ export class BattleScene implements BattleSceneStub {
 		this.log = new BattleLog($logFrame[0] as HTMLDivElement, this);
 		this.log.battleParser!.pokemonName = (pokemonId: string) => {
 			if (!pokemonId) return '';
+			const language = this.log.battleParser!.language;
 			if (battle.ignoreNicks || battle.ignoreOpponent) {
 				const pokemon = battle.getPokemon(pokemonId);
-				if (pokemon) return pokemon.speciesForme;
+				if (pokemon) return BattleTextParser.speciesDisplayName(pokemon.speciesForme, language);
 			}
 			if (!pokemonId.startsWith('p')) return '???pokemon:' + pokemonId + '???';
-			if (pokemonId.charAt(3) === ':') return BattleTextParser.escapeReplace(pokemonId.slice(4).trim());
-			else if (pokemonId.charAt(2) === ':') return BattleTextParser.escapeReplace(pokemonId.slice(3).trim());
-			return '???pokemon:' + pokemonId + '???';
+			let name;
+			if (pokemonId.charAt(3) === ':') name = pokemonId.slice(4).trim();
+			else if (pokemonId.charAt(2) === ':') name = pokemonId.slice(3).trim();
+			else return '???pokemon:' + pokemonId + '???';
+			// CobblemonShowdown : nom traduit de l'espèce pour un Pokémon sans surnom
+			// (recherche sans effet de bord, contrairement à battle.getPokemon)
+			const { siden, slot, pokemonid } = battle.parsePokemonId(pokemonId);
+			const side = battle.sides[siden] as Side | undefined;
+			const active = slot >= 0 ? side?.active[slot] : null;
+			const pokemon = active?.ident === pokemonid ? active : side?.pokemon.find(p => p.ident === pokemonid);
+			name = BattleTextParser.pokemonDisplayName(name, pokemon?.speciesForme, language);
+			return BattleTextParser.escapeReplace(name);
 		};
 
 		let numericId = 0;
@@ -193,7 +203,7 @@ export class BattleScene implements BattleSceneStub {
 		this.$battle.append(this.$tooltips);
 
 		if (!this.animating) {
-			this.$battle.append('<div class="seeking"><strong>seeking...</strong></div>');
+			this.$battle.append(`<div class="seeking"><strong>${TL`seeking...`}</strong></div>`);
 		}
 
 		this.messagebarOpen = false;
@@ -208,7 +218,7 @@ export class BattleScene implements BattleSceneStub {
 	}
 
 	animationOff() {
-		this.$battle.append('<div class="seeking"><strong>seeking...</strong></div>');
+		this.$battle.append(`<div class="seeking"><strong>${TL`seeking...`}</strong></div>`);
 		this.$frame.find('div.playbutton').remove();
 		this.stopAnimation();
 
@@ -242,7 +252,10 @@ export class BattleScene implements BattleSceneStub {
 		this.stopAnimation();
 		this.updateBgm();
 		if (!this.battle.started) {
-			this.$frame.append('<div class="playbutton"><button name="play" class="button"><i class="fa fa-play" aria-hidden="true"></i> Play</button><br /><br /><button name="play-muted" class="startsoundchooser button" style="font-size:10pt">Play (sound off)</button></div>');
+			this.$frame.append(
+				`<div class="playbutton"><button name="play" class="button"><i class="fa fa-play" aria-hidden="true"></i> ${TL`[Play]`}</button><br /><br />` +
+				`<button name="play-muted" class="startsoundchooser button" style="font-size:10pt">${TL`[Play (sound off)]`}</button></div>`
+			);
 			this.$frame.find('div.playbutton button[name=play-muted]').click(() => {
 				this.setMute(true);
 				this.battle.play();
@@ -616,15 +629,17 @@ export class BattleScene implements BattleSceneStub {
 	}
 
 	getDetailsText(pokemon: Pokemon) {
-		let name = pokemon.side?.isFar &&
-			(this.battle.ignoreOpponent || this.battle.ignoreNicks) ? pokemon.speciesForme : pokemon.name;
-		if (name !== pokemon.speciesForme) {
-			name += ' (' + pokemon.speciesForme + ')';
+		// CobblemonShowdown : noms d'espèce traduits (le surnom réel reste inchangé)
+		const speciesName = BattleTextParser.speciesDisplayName(pokemon.speciesForme);
+		let name = pokemon.side?.isFar && (this.battle.ignoreOpponent || this.battle.ignoreNicks) ?
+			speciesName : BattleTextParser.pokemonDisplayName(pokemon.name, pokemon.speciesForme);
+		if (name !== speciesName) {
+			name += ' (' + speciesName + ')';
 		}
 		if (pokemon === pokemon.side.active[0]) {
-			name += ' (active)';
+			name += ' ' + TL`(active)`;
 		} else if (pokemon.fainted) {
-			name += ' (fainted)';
+			name += ' ' + TL`(fainted)`;
 		} else {
 			let statustext = '';
 			if (pokemon.hp !== pokemon.maxhp) {
@@ -717,7 +732,7 @@ export class BattleScene implements BattleSceneStub {
 			if (i % 3 === 2) pokemonhtml += `</div><div class="teamicons">`;
 		}
 		pokemonhtml = '<div class="teamicons">' + pokemonhtml + '</div>';
-		const ratinghtml = side.rating ? ` title="Rating: ${BattleLog.escapeHTML(side.rating)}"` : ``;
+		const ratinghtml = side.rating ? ` title="${BattleLog.escapeHTML(TL.label(TL`Rating`, side.rating))}"` : ``;
 		const faded = side.name ? `` : ` style="opacity: 0.4"`;
 		let badgehtml = '';
 		if (side.badges.length) {
@@ -731,7 +746,7 @@ export class BattleScene implements BattleSceneStub {
 				// todo, maybe make this more easily configured if we ever add badges for other stuff?
 				// but idk that we're planning that for now so
 				const [threshold] = details.split('-');
-				const hover = `User is Top ${threshold} on the ${format} Ladder`;
+				const hover = TL`User is Top ${threshold} on the ${format} Ladder`;
 				// ou and randbats get diff badges from everyone else, find it
 				// (regex futureproofs for double digit gens)
 				let formatType = format.split(/gen\d+/)[1] || 'none';
@@ -894,7 +909,7 @@ export class BattleScene implements BattleSceneStub {
 					x = 48 + 100 + 50 * i;
 				}
 				if (textBuf) textBuf += ' / ';
-				textBuf += pokemon.speciesForme;
+				textBuf += BattleTextParser.speciesDisplayName(pokemon.speciesForme);
 				let url = spriteData.url;
 				// if (this.paused) url.replace('/xyani', '/xy').replace('.gif', '.png');
 				buf += `<img src="${url}" width="${spriteData.w}" height="${spriteData.h}" style="position:absolute;top:${Math.floor(y - spriteData.h / 2)}px;left:${Math.floor(x - spriteData.w / 2)}px" />`;
@@ -904,7 +919,7 @@ export class BattleScene implements BattleSceneStub {
 					buf2 += `<img src="${Dex.fxPrefix}gender-${gender.toLowerCase()}.png" alt="${gender}" width="7" height="10" class="pixelated" style="margin-bottom:-1px" /> `;
 				}
 				if (pokemon.level !== 100) {
-					buf2 += `<span style="text-shadow:#000 1px 1px 0,#000 1px -1px 0,#000 -1px 1px 0,#000 -1px -1px 0"><small>L</small>${pokemon.level}</span>`;
+					buf2 += `<span style="text-shadow:#000 1px 1px 0,#000 1px -1px 0,#000 -1px 1px 0,#000 -1px -1px 0"><small>${TL('L', 'level')}</small>${pokemon.level}</span>`;
 				}
 				if (pokemon.item === '(mail)') {
 					buf2 += ` <img src="${Dex.resourcePrefix}fx/mail.png" width="8" height="10" alt="F" style="margin-bottom:-1px" />`;
@@ -915,8 +930,9 @@ export class BattleScene implements BattleSceneStub {
 			}
 			side.totalPokemon = side.pokemon.length;
 			if (textBuf) {
+				const sideName = BattleLog.escapeHTML(side.name);
 				this.log.addDiv('chat battle-history',
-					`<strong>${BattleLog.escapeHTML(side.name)}'s team:</strong> <em style="color:#445566;display:block;">${BattleLog.escapeHTML(textBuf)}</em>`
+					`<strong>${TL`${sideName}'s team:`}</strong> <em style="color:#445566;display:block;">${BattleLog.escapeHTML(textBuf)}</em>`
 				);
 			}
 			this.$sprites[spriteIndex].html(buf + buf2);
@@ -940,10 +956,10 @@ export class BattleScene implements BattleSceneStub {
 		if (!this.battle.joinButtons) return;
 		if (this.battle.ended || this.battle.rated) return;
 		if (!this.battle.p1.name) {
-			this.$battle.append('<div class="playbutton1"><button name="joinBattle">Join Battle</button></div>');
+			this.$battle.append(`<div class="playbutton1"><button name="joinBattle">${TL`[Join Battle]`}</button></div>`);
 		}
 		if (!this.battle.p2.name) {
-			this.$battle.append('<div class="playbutton2"><button name="joinBattle">Join Battle</button></div>');
+			this.$battle.append(`<div class="playbutton2"><button name="joinBattle">${TL`[Join Battle]`}</button></div>`);
 		}
 	}
 	hideJoinButtons() {
@@ -1438,7 +1454,7 @@ export class BattleScene implements BattleSceneStub {
 
 	typeAnim(pokemon: Pokemon, types: string) {
 		const result = BattleLog.escapeHTML(types).split('/').map(type =>
-			`<img src="${Dex.resourcePrefix}sprites/types/${encodeURIComponent(type)}.png" alt="${type}" class="pixelated" />`
+			`<img src="${Dex.resourcePrefix}sprites/types/${encodeURIComponent(type)}.png" alt="${BattleTextParser.typeName(type)}" class="pixelated" />`
 		).join(' ');
 		this.resultAnim(pokemon, result, 'neutral');
 	}
@@ -1464,6 +1480,9 @@ export class BattleScene implements BattleSceneStub {
 	}
 	abilityActivateAnim(pokemon: Pokemon, result: string) {
 		if (!this.animating) return;
+		// CobblemonShowdown : nom du talent traduit
+		const ability = Dex.abilities.get(result);
+		if (ability.exists && ability.name === result) result = TL(ability);
 		this.$fx.append(`<div class="result abilityresult"><strong>${result}</strong></div>`);
 		let $effect = this.$fx.children().last();
 		$effect.delay(this.timeOffset).css({
@@ -1498,7 +1517,7 @@ export class BattleScene implements BattleSceneStub {
 		}
 
 		if (damage === '100%' && pokemon.hp > 0) damage = '99%';
-		this.resultAnim(pokemon, this.battle.hardcoreMode ? 'Damage' : `&minus;${damage}`, 'bad');
+		this.resultAnim(pokemon, this.battle.hardcoreMode ? TL`Damage` : `&minus;${damage}`, 'bad');
 
 		$hp.animate({
 			width: w,
@@ -1521,7 +1540,7 @@ export class BattleScene implements BattleSceneStub {
 			callback = () => { $hp.removeClass('hp-red'); };
 		}
 
-		this.resultAnim(pokemon, this.battle.hardcoreMode ? 'Heal' : `+${damage}`, 'good');
+		this.resultAnim(pokemon, this.battle.hardcoreMode ? TL`Heal` : `+${damage}`, 'good');
 
 		$hp.animate({
 			width: w,
@@ -1823,8 +1842,8 @@ export class Sprite {
 }
 
 export class PokemonSprite extends Sprite {
-	// HTML strings are constructed from this table and stored back in it to cache them
-	protected static statusTable: { [id: string]: [string, 'good' | 'bad' | 'neutral'] | null | string } = {
+	// English labels, translated by `effectLabel` when displayed
+	protected static statusTable: { [id: string]: [string, 'good' | 'bad' | 'neutral'] | null } = {
 		formechange: null,
 		typechange: null,
 		typeadd: null,
@@ -2766,12 +2785,14 @@ export class PokemonSprite extends Sprite {
 	getStatbarHTML(pokemon: Pokemon) {
 		let buf = '<div class="statbar' + (this.isFrontSprite ? ' lstatbar' : ' rstatbar') + this.getClassForPosition(pokemon.slot) + '" style="display: none">';
 		const ignoreNick = this.isFrontSprite && (this.scene.battle.ignoreOpponent || this.scene.battle.ignoreNicks);
-		buf += `<strong>${BattleLog.escapeHTML(ignoreNick ? pokemon.speciesForme : pokemon.name)}`;
+		const name = ignoreNick ? BattleTextParser.speciesDisplayName(pokemon.speciesForme) :
+			BattleTextParser.pokemonDisplayName(pokemon.name, pokemon.speciesForme);
+		buf += `<strong>${BattleLog.escapeHTML(name)}`;
 		const gender = pokemon.gender;
 		if (gender === 'M' || gender === 'F') {
 			buf += ` <img src="${Dex.fxPrefix}gender-${gender.toLowerCase()}.png" alt="${gender}" width="7" height="10" class="pixelated" />`;
 		}
-		buf += (pokemon.level === 100 ? `` : ` <small>L${pokemon.level}</small>`);
+		buf += (pokemon.level === 100 ? `` : ` <small>${TL('L', 'level')}${pokemon.level}</small>`);
 
 		let symbol = '';
 		if (pokemon.speciesForme.includes('-Mega')) symbol = 'mega';
@@ -2781,7 +2802,7 @@ export class PokemonSprite extends Sprite {
 			buf += ` <img src="${Dex.resourcePrefix}sprites/misc/${symbol}.png" alt="${symbol}" style="vertical-align:text-bottom;" />`;
 		}
 		if (pokemon.terastallized) {
-			buf += ` <img src="${Dex.resourcePrefix}sprites/types/Tera${pokemon.terastallized}.png" alt="Tera-${pokemon.terastallized}" style="vertical-align:text-bottom;" height="16" width="16" />`;
+			buf += ` <img src="${Dex.resourcePrefix}sprites/types/Tera${pokemon.terastallized}.png" alt="Tera-${BattleTextParser.typeName(pokemon.terastallized)}" style="vertical-align:text-bottom;" height="16" width="16" />`;
 		}
 
 		buf += `</strong><div class="hpbar"><div class="hptext"></div><div class="hptextborder"></div><div class="prevhp"><div class="hp"></div></div><div class="status"></div>`;
@@ -2844,30 +2865,31 @@ export class PokemonSprite extends Sprite {
 			else $prevhp.addClass('prevhp-yellow prevhp-red');
 		}
 		let status = '';
+		// CobblemonShowdown : abréviations des statuts traduites (barre de PV)
 		if (pokemon.status === 'brn') {
-			status += '<span class="brn">BRN</span> ';
+			status += `<span class="brn">${TL`BRN`}</span> `;
 		} else if (pokemon.status === 'psn') {
-			status += '<span class="psn">PSN</span> ';
+			status += `<span class="psn">${TL`PSN`}</span> `;
 		} else if (pokemon.status === 'tox') {
-			status += '<span class="psn">TOX</span> ';
+			status += `<span class="psn">${TL`TOX`}</span> `;
 		} else if (pokemon.status === 'slp') {
-			status += '<span class="slp">SLP</span> ';
+			status += `<span class="slp">${TL`SLP`}</span> `;
 		} else if (pokemon.status === 'par') {
-			status += '<span class="par">PAR</span> ';
+			status += `<span class="par">${TL`PAR`}</span> `;
 		} else if (pokemon.status === 'frz') {
-			status += '<span class="frz">FRZ</span> ';
+			status += `<span class="frz">${TL`FRZ`}</span> `;
 		}
 		if (pokemon.terastallized) {
-			status += `<img src="${Dex.resourcePrefix}sprites/types/${encodeURIComponent(pokemon.terastallized)}.png" alt="${pokemon.terastallized}" class="pixelated" /> `;
+			status += `<img src="${Dex.resourcePrefix}sprites/types/${encodeURIComponent(pokemon.terastallized)}.png" alt="${BattleTextParser.typeName(pokemon.terastallized)}" class="pixelated" /> `;
 		} else if (pokemon.volatiles.typechange?.[1]) {
 			const types = pokemon.volatiles.typechange[1].split('/');
 			for (const type of types) {
-				status += '<img src="' + Dex.resourcePrefix + 'sprites/types/' + encodeURIComponent(type) + '.png" alt="' + type + '" class="pixelated" /> ';
+				status += '<img src="' + Dex.resourcePrefix + 'sprites/types/' + encodeURIComponent(type) + '.png" alt="' + BattleTextParser.typeName(type) + '" class="pixelated" /> ';
 			}
 		}
 		if (pokemon.volatiles.typeadd) {
 			const type = pokemon.volatiles.typeadd[1];
-			status += '+<img src="' + Dex.resourcePrefix + 'sprites/types/' + type + '.png" alt="' + type + '" class="pixelated" /> ';
+			status += '+<img src="' + Dex.resourcePrefix + 'sprites/types/' + type + '.png" alt="' + BattleTextParser.typeName(type) + '" class="pixelated" /> ';
 		}
 		for (const stat in pokemon.boosts) {
 			if (pokemon.boosts[stat]) {
@@ -2889,26 +2911,79 @@ export class PokemonSprite extends Sprite {
 		statusbar.html(status);
 	}
 
+	/**
+	 * CobblemonShowdown : les étiquettes sont traduites à chaque affichage (plus de
+	 * cache), pour suivre la langue choisie.
+	 */
 	private static getEffectTag(id: string) {
-		let effect = PokemonSprite.statusTable[id];
-		if (typeof effect === 'string') return effect;
-		if (effect === null) return (PokemonSprite.statusTable[id] = '');
+		const effect = PokemonSprite.statusTable[id];
+		if (effect === null) return '';
+		let label: string;
+		let type: 'good' | 'bad' | 'neutral' = 'neutral';
 		if (effect === undefined) {
-			let label = `[[${id}]]`;
+			label = `[[${id}]]`;
+			const nature = id.substr(0, 1).toUpperCase() + id.substr(1).toLowerCase();
 			if (Dex.species.get(id).exists) {
-				label = Dex.species.get(id).name;
+				label = BattleTextParser.speciesDisplayName(Dex.species.get(id).name);
 			} else if (Dex.items.get(id).exists) {
-				label = Dex.items.get(id).name;
+				label = TL(Dex.items.get(id));
 			} else if (Dex.moves.get(id).exists) {
-				label = Dex.moves.get(id).name;
+				label = TL(Dex.moves.get(id));
 			} else if (Dex.abilities.get(id).exists) {
-				label = Dex.abilities.get(id).name;
-			} else if ((BattleNatures as any)[id.substr(0, 1).toUpperCase() + id.substr(1).toLowerCase()]) {
-				label = id.substr(0, 1).toUpperCase() + id.substr(1).toLowerCase();
+				label = TL(Dex.abilities.get(id));
+			} else if ((BattleNatures as any)[nature]) {
+				label = TL.nature[nature] || nature;
 			}
-			effect = [label, 'neutral'];
+		} else {
+			label = PokemonSprite.effectLabel(effect[0]);
+			type = effect[1];
 		}
-		return (PokemonSprite.statusTable[id] = `<span class="${effect[1]}">${effect[0].replace(/ /g, '&nbsp;')}</span> `);
+		return `<span class="${type}">${label.replace(/ /g, '&nbsp;')}</span> `;
+	}
+
+	/**
+	 * CobblemonShowdown : traduit une étiquette de `statusTable`. Les noms
+	 * d'attaques et de talents viennent des données traduites ; les autres
+	 * étiquettes sont dans le catalogue de l'interface.
+	 */
+	private static effectLabel(label: string): string {
+		// "Stockpile&times;2"
+		const times = /^(.+)(&times;\d+)$/.exec(label);
+		if (times) return PokemonSprite.effectLabel(times[1]) + times[2];
+		// "Protosynthesis: Atk", "Fallen: 3"
+		const colon = label.indexOf(': ');
+		if (colon > 0) {
+			const detail = label.slice(colon + 2);
+			const statID = ({ Atk: 'atk', Def: 'def', SpA: 'spa', SpD: 'spd', Spe: 'spe' } as { [k: string]: string })[detail];
+			const detailText = (statID && TL.statShort[statID]) || detail;
+			return TL.label(PokemonSprite.effectLabel(label.slice(0, colon)), detailText);
+		}
+		const move = Dex.moves.get(label);
+		if (move.exists && move.name === label) return TL(move);
+		const ability = Dex.abilities.get(label);
+		if (ability.exists && ability.name === label) return TL(ability);
+		switch (label) {
+		case 'Dynamaxed': return TL`Dynamaxed`;
+		case 'Confused': return TL.status.confusion || label;
+		case 'Drowsy': return TL`Drowsy`;
+		case 'Imprisoning foe': return TL`Imprisoning foe`;
+		case 'Lightened': return TL`Lightened`;
+		case 'Transformed': return TL`Transformed`;
+		case 'Infatuation': return TL`Infatuation`;
+		case 'Perish now': return TL`Perish now`;
+		case 'Perish next turn': return TL`Perish next turn`;
+		case 'Perish in 2': return TL`Perish in 2`;
+		case 'Perish in 3': return TL`Perish in 3`;
+		case 'Balloon': return TL`Balloon`;
+		case 'Must recharge': return TL`Must recharge`;
+		case 'Critical Hit Boost': return TL`Critical Hit Boost`;
+		case 'Fallen': return TL`Fallen`;
+		case 'Syrupy': return TL`Syrupy`;
+		case 'Landed': return TL`Landed`;
+		case 'Focusing': return TL`Focusing`;
+		case 'Trap set': return TL`Trap set`;
+		}
+		return label;
 	}
 
 	updateHPText(pokemon: Pokemon) {

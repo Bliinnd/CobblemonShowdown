@@ -34,7 +34,7 @@ class TeamRoom extends PSRoom {
 		super(options);
 		const team = PS.teams.byKey[this.id.slice(5)] || null;
 		this.team = team!;
-		this.title = `[Team] ${this.team?.name || 'Not found'}`;
+		this.title = `[${TL`Team`}] ${this.team?.name || TL`Not found`}`;
 		if (team) this.setFormat(team.format);
 		this.load();
 	}
@@ -48,7 +48,7 @@ class TeamRoom extends PSRoom {
 		const team = PS.teams.byKey[this.id.slice(5)] || null;
 		this.teamDeleted = !team && (!!this.team || this.teamDeleted);
 		this.team = team!;
-		this.title = `[Team] ${this.team?.name || (this.teamDeleted ? 'Team deleted' : 'Not found')}`;
+		this.title = `[${TL`Team`}] ${this.team?.name || (this.teamDeleted ? TL`Team deleted` : TL`Not found`)}`;
 		return team;
 	}
 	setFormat(format: string) {
@@ -93,7 +93,7 @@ class TeamRoom extends PSRoom {
 	}
 	save() {
 		PS.teams.save();
-		const title = `[Team] ${this.team?.name || 'Team'}`;
+		const title = `[${TL`Team`}] ${this.team?.name || TL`Team`}`;
 		if (title !== this.title) {
 			this.title = title;
 			PS.update();
@@ -286,8 +286,12 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 					))}
 				</ul>
 				<p>
-					Find {info.resources.length ? 'more ' : ''}
-					helpful resources for {formatName} on <a href={info.url} target="_blank">the Smogon Dex</a>.
+					{TL.parts(info.resources.length ?
+						TL`Find more helpful resources for {FORMAT} on {LINK}.` :
+						TL`Find helpful resources for {FORMAT} on {LINK}.`, {
+						FORMAT: formatName,
+						LINK: <a href={info.url} target="_blank">{TL`the Smogon Dex`}</a>,
+					})}
 				</p></div>
 			</details>
 		) : null;
@@ -315,6 +319,7 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 		}
 
 		const unsaved = team.uploaded && team.uploadedPackedTeam ? team.uploadedPackedTeam !== team.packedTeam : false;
+		const disconnectedText = TL`This is a disconnected team. This could be because you uploaded it on a different account, or because you deleted or un-uploaded it on a different computer. For safety, you can't edit this team. You can, however, delete it, or make a copy (which will be editable).`;
 		return <PSPanelWrapper room={room}>
 			<div class="team-pad">
 				<a class="button" href="teambuilder" data-target="replace">
@@ -370,7 +375,7 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 					{team.uploadedPackedTeam && !team.uploaded ? <>
 						{TL`Uploading...`}
 					</> : team.uploaded ? <>
-						<small>Share URL:</small> {}
+						<small>{TL.label(TL`Share URL`)}</small> {}
 						<CopyableURLBox
 							url={`https://psim.us/t/${team.uploaded.teamid}${team.uploaded.private ? '-' + team.uploaded.private : ''}`}
 						/> {}
@@ -390,7 +395,7 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 							<input
 								name="teamprivacy" checked={!PS.prefs.uploadprivacy}
 								type="checkbox" onChange={this.changePrivacyPref}
-							/> Public
+							/> {TL`Public`}
 						</label>
 						<button class="button exportbutton" onClick={this.uploadTeam}>
 							<i class="fa fa-upload"></i> {PS.prefs.uploadprivacy ? (
@@ -400,10 +405,7 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 							)}
 						</button>
 					</> : <>
-						This is a disconnected team. This could be because you uploaded it
-						on a different account, or because you deleted or un-uploaded it on
-						a different computer. For safety, you can't edit this team. You can,
-						however, delete it, or make a copy (which will be editable).
+						{disconnectedText}
 					</>}
 				</p>}
 			</TeamEditor>
@@ -450,7 +452,7 @@ class ViewTeamPanel extends PSRoomPanel {
 					break;
 				}
 			}
-			this.props.room.title = `[Team] ${this.team.name || 'Untitled team'}`;
+			this.props.room.title = `[${TL`Team`}] ${this.team.name || TL`Untitled team`}`;
 			this.teamData = data;
 			PS.update();
 		});
@@ -540,22 +542,22 @@ class TeamStoragePanel extends PSRoomPanel {
 			return <PSPanelWrapper room={room} width={280}><div class="pad">
 				<div><button class="option cur" data-cmd="/close">
 					<i class="fa fa-plug"></i> <strong>{TL`Disconnected`}</strong><br />
-					Not found in the Teams database. Maybe you uploaded it on a different account?
+					{TL`Not found in the Teams database. Maybe you uploaded it on a different account?`}
 				</button></div>
 			</div></PSPanelWrapper>;
 		}
 		return <PSPanelWrapper room={room} width={280}><div class="pad">
 			<div><button class={`option${storage === 'local' ? ' cur' : ''}`} onClick={this.chooseOption} value="local">
 				<i class="fa fa-laptop"></i> <strong>{TL`Local`}</strong><br />
-				Stored in cookies on your computer. Warning: Your browser might delete these. Make sure to use backups.
+				{TL`Stored in cookies on your computer. Warning: Your browser might delete these. Make sure to use backups.`}
 			</button></div>
 			<div><button class={`option${storage === 'account' ? ' cur' : ''}`} onClick={this.chooseOption} value="account">
 				<i class="fa fa-cloud"></i> <strong>{TL`Account`}</strong><br />
-				Uploaded to the Teams database. You can share with the URL.
+				{TL`Uploaded to the Teams database. You can share with the URL.`}
 			</button></div>
 			<div><button class={`option${storage === 'public' ? ' cur' : ''}`} onClick={this.chooseOption} value="public">
 				<i class="fa fa-globe"></i> <strong>{TL`Account (public)`}</strong><br />
-				Uploaded to the Teams database publicly. Share with the URL or people can find it by searching.
+				{TL`Uploaded to the Teams database publicly. Share with the URL or people can find it by searching.`}
 			</button></div>
 		</div></PSPanelWrapper>;
 	}

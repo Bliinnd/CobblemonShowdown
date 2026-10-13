@@ -71,6 +71,7 @@ function groupNameText(name: string | undefined) {
 		'Prize Winner': TL`Prize Winner`,
 		Whitelist: TL`Whitelist`,
 		Locked: TL`Locked`,
+		Namelocked: TL`Namelocked`,
 		Muted: TL`Muted`,
 	}[rank] || rank;
 	return translated + (symbol || '');
@@ -601,7 +602,8 @@ class VolumePanel extends PSRoomPanel {
 			<h3>{TL`Volume`}</h3>
 			<p class="volume">
 				<label class="optlabel">
-					Effects: <span class="value">{!PS.prefs.mute && PS.prefs.effectvolume ? `${PS.prefs.effectvolume}%` : `-`}</span>
+					{TL.label(TL`Effects`)}
+					<span class="value">{!PS.prefs.mute && PS.prefs.effectvolume ? `${PS.prefs.effectvolume}%` : `-`}</span>
 				</label>
 				{PS.prefs.mute ?
 					<em>{TL`(muted)`}</em> :
@@ -612,7 +614,8 @@ class VolumePanel extends PSRoomPanel {
 			</p>
 			<p class="volume">
 				<label class="optlabel">
-					Music: <span class="value">{!PS.prefs.mute && PS.prefs.musicvolume ? `${PS.prefs.musicvolume}%` : `-`}</span>
+					{TL.label(TL`Music`)}
+					<span class="value">{!PS.prefs.mute && PS.prefs.musicvolume ? `${PS.prefs.musicvolume}%` : `-`}</span>
 				</label>
 				{PS.prefs.mute ?
 					<em>{TL`(muted)`}</em> :
@@ -623,7 +626,7 @@ class VolumePanel extends PSRoomPanel {
 			</p>
 			<p class="volume">
 				<label class="optlabel">
-					Notifications: {}
+					{TL.label(TL`Notifications`)}
 					<span class="value">{!PS.prefs.mute && PS.prefs.notifvolume ? `${PS.prefs.notifvolume}%` : `-`}</span>
 				</label>
 				{PS.prefs.mute ?
@@ -635,7 +638,7 @@ class VolumePanel extends PSRoomPanel {
 			</p>
 			<p>
 				<label class="checkbox">
-					<input type="checkbox" name="mute" checked={PS.prefs.mute} onChange={this.setMute} /> Mute all
+					<input type="checkbox" name="mute" checked={PS.prefs.mute} onChange={this.setMute} /> {TL`Mute all`}
 				</label>
 			</p>
 		</div></PSPanelWrapper>;
@@ -1198,7 +1201,7 @@ class ChangePasswordPanel extends PSRoomPanel {
 			password,
 			cpassword,
 		}).then(data => {
-			if (data?.actionerror) return this.setState({ errorMsg: data?.actionerror });
+			if (data?.actionerror) return this.setState({ errorMsg: PSLoginServer.errorText(data.actionerror) });
 			PS.alert(TL`Your password was successfully changed!`);
 
 		}).catch(err => {
@@ -1290,7 +1293,7 @@ class RegisterPanel extends PSRoomPanel {
 			username: PS.user.name,
 			challstr: PS.user.challstr,
 		}).then(data => {
-			if (data?.actionerror) this.setState({ errorMsg: data?.actionerror });
+			if (data?.actionerror) this.setState({ errorMsg: PSLoginServer.errorText(data.actionerror) });
 			if (data?.curuser?.loggedin) {
 				let name = data.curuser.username;
 				PS.user.registered = { name, userid: toID(name) };
@@ -1400,7 +1403,7 @@ class BackgroundListPanel extends PSRoomPanel {
 			const bgUrl = reader.result as string;
 			if (bgUrl.length > 4200000) {
 				PS.join('changebackground' as RoomID, {
-					args: { error: `Image is too large and can't be saved. It should be under 3.5MB or so.` },
+					args: { error: TL`Image is too large and can't be saved. It should be under 3.5MB or so.` },
 				});
 				return;
 			}
@@ -1416,7 +1419,7 @@ class BackgroundListPanel extends PSRoomPanel {
 
 		reader.onerror = () => {
 			PS.join('changebackground' as RoomID, {
-				args: { error: "Failed to load background image." },
+				args: { error: TL`Failed to load background image.` },
 			});
 		};
 		reader.readAsDataURL(file);
@@ -1479,15 +1482,15 @@ class BackgroundListPanel extends PSRoomPanel {
 			<div class="bglist">
 				<button onClick={this.setBg} value="charizards" class={option('charizards')}>
 					<span class="bg" style="background-position: 0 -0px"></span>{}
-					Charizards
+					{TL`Charizards`}
 				</button>
 				<button onClick={this.setBg} value="horizon" class={option('horizon')}>
 					<span class="bg" style="background-position: 0 -90px"></span>{}
-					Horizon
+					{TL`Horizon`}
 				</button>
 				<button onClick={this.setBg} value="ocean" class={option('ocean')}>
 					<span class="bg" style="background-position: 0 -270px"></span>{}
-					Ocean
+					{TL`Ocean`}
 				</button>
 				<button onClick={this.setBg} value="shaymin" class={option('shaymin')}>
 					<span class="bg" style="background-position: 0 -360px"></span>{}
@@ -1495,13 +1498,13 @@ class BackgroundListPanel extends PSRoomPanel {
 				</button>
 				<button onClick={this.setBg} value="solidblue" class={option('solidblue')}>
 					<span class="bg" style="background: #344b6c"></span>{}
-					Solid blue
+					{TL`Solid blue`}
 				</button>
 			</div>
 			<div style="clear: left"></div>
 			<p><strong>{TL`Custom`}</strong></p>
 			<p>
-				Upload:
+				{TL.label(TL`Upload`)}
 			</p>
 			<p><input type="file" accept="image/*" name="bgfile" onChange={this.uploadBg} /></p>
 			{!!this.state.status && <p class="error">{this.state.status}</p>}
@@ -1533,13 +1536,13 @@ class ChatFormattingPanel extends PSRoomPanel {
 		const room = this.props.room;
 		const ctrl = PSView.isMac ? 'Cmd' : 'Ctrl';
 		return <PSPanelWrapper room={room} width={480}><div class="pad">
-			<p>Usable formatting:</p>
-			<p>**<strong>bold</strong>** (<kbd>{ctrl}</kbd>+<kbd>B</kbd>)</p>
-			<p>__<em>italics</em>__ (<kbd>{ctrl}</kbd>+<kbd>I</kbd>)</p>
-			<p>``<code>code formatting</code>`` (<kbd>Ctrl</kbd>+<kbd>`</kbd>)</p>
-			<p>~~<s>strikethrough</s>~~</p>
-			<p>^^<sup>superscript</sup>^^</p>
-			<p>\\<sub>subscript</sub>\\</p>
+			<p>{TL`Usable formatting:`}</p>
+			<p>**<strong>{TL`bold`}</strong>** (<kbd>{ctrl}</kbd>+<kbd>B</kbd>)</p>
+			<p>__<em>{TL`italics`}</em>__ (<kbd>{ctrl}</kbd>+<kbd>I</kbd>)</p>
+			<p>``<code>{TL`code formatting`}</code>`` (<kbd>Ctrl</kbd>+<kbd>`</kbd>)</p>
+			<p>~~<s>{TL`strikethrough`}</s>~~</p>
+			<p>^^<sup>{TL`superscript`}</sup>^^</p>
+			<p>\\<sub>{TL`subscript`}</sub>\\</p>
 			<p>
 				<label class="checkbox">
 					<input
@@ -1547,7 +1550,9 @@ class ChatFormattingPanel extends PSRoomPanel {
 						type="checkbox"
 						name="greentext"
 						checked={PS.prefs.chatformatting.hidegreentext}
-					/> Suppress <span class="greentext">&gt;greentext</span>
+					/> {TL.parts(TL`Suppress {GREENTEXT}`, {
+						GREENTEXT: <span class="greentext">&gt;{TL`greentext`}</span>,
+					})}
 				</label>
 			</p>
 			<p>
@@ -1558,7 +1563,10 @@ class ChatFormattingPanel extends PSRoomPanel {
 						name="me"
 						checked={PS.prefs.chatformatting.hideme}
 
-					/> Suppress <code>/me</code> <em>action formatting</em>
+					/> {TL.parts(TL`Suppress {ME} {ACTION_FORMATTING}`, {
+						ME: <code>/me</code>,
+						ACTION_FORMATTING: <em>{TL`action formatting`}</em>,
+					})}
 				</label>
 			</p>
 			<p>
@@ -1568,7 +1576,7 @@ class ChatFormattingPanel extends PSRoomPanel {
 						type="checkbox"
 						name="spoiler"
 						checked={PS.prefs.chatformatting.hidespoiler}
-					/> Auto-show spoilers: <span class="spoiler">these things</span>
+					/> {TL.label(TL`Auto-show spoilers`)}<span class="spoiler">{TL`these things`}</span>
 				</label>
 			</p>
 			<p>
@@ -1578,7 +1586,7 @@ class ChatFormattingPanel extends PSRoomPanel {
 						type="checkbox"
 						name="links"
 						checked={PS.prefs.chatformatting.hidelinks}
-					/> Make [[clickable links]] unclickable
+					/> {TL`Make [[clickable links]] unclickable`}
 				</label>
 			</p>
 			<p>
@@ -1588,7 +1596,7 @@ class ChatFormattingPanel extends PSRoomPanel {
 						type="checkbox"
 						name="interstice"
 						checked={PS.prefs.chatformatting.hideinterstice}
-					/> Don't warn for untrusted links
+					/> {TL`Don't warn for untrusted links`}
 				</label>
 			</p>
 			<p><button data-cmd="/close" class="button">{TL`[Done]`}</button></p>
@@ -1608,7 +1616,7 @@ class LeaveRoomPanel extends PSRoomPanel {
 		const parentRoomid = room.parentRoomid!;
 
 		return <PSPanelWrapper room={room} width={480}><div class="pad">
-			<p>Close <code>{parentRoomid || "ERROR"}</code>?</p>
+			<p>{TL.parts(TL`Close {ROOM}?`, { ROOM: <code>{parentRoomid || "ERROR"}</code> })}</p>
 			<p class="buttonbar">
 				<button data-cmd={`/closeand /close ${parentRoomid}`} class="button autofocus">
 					<strong>{TL`[Close room]`}</strong>
@@ -1999,7 +2007,7 @@ class RoomTabListPanel extends PSRoomPanel {
 			</ul>
 			<div class="pad"><label class="checkbox"><input
 				type="checkbox" checked={verticalTabs} onChange={this.handleLayoutChange}
-			/> Try vertical tabs</label></div>
+			/> {TL`Try vertical tabs`}</label></div>
 		</div></PSPanelWrapper>;
 	}
 }
@@ -2060,61 +2068,53 @@ class RulesPanel extends PSRoomPanel<PopupRoom> {
 		const type = room.args?.type;
 		const isWarn = type === 'warn';
 		const message = room.args?.message as string || '';
+		// whole paragraphs, so each rule is translated as one sentence
+		const rule2 = TL`Follow US laws (PS is based in the US). No porn (minors use PS), don't distribute pirated material, and don't slander others.`;
+		const rule3 = TL`No sex. Don't discuss anything sexually explicit, not even in private messages, not even if you're both adults.`;
+		const rule4 = TL`No cheating. Don't exploit bugs to gain an unfair advantage. Don't game the system (by intentionally losing against yourself or a friend in a ladder match, by timerstalling, etc). Don't impersonate staff if you're not.`;
+		const rule5 = TL`Moderators have discretion to punish any behaviour they deem inappropriate, whether or not it's on this list. If you disagree with a moderator ruling, appeal to an administrator (a user with ~ next to their name) or {LINK}.`;
+		const firstAmendment = TL`(Note: The First Amendment does not apply to PS, since PS is not a government organization.)`;
+		const chatRule1 = TL`Do not spam, flame, or troll. This includes advertising, raiding, asking questions with one-word answers in the lobby, and flooding the chat such as by copy/pasting logs in the lobby.`;
+		const chatRule2 = TL`Don't call unnecessary attention to yourself. Don't be obnoxious. ALL CAPS and {FORMATTING} are acceptable to emphasize things, but should be used sparingly, not all the time.`;
+		const chatRule3 = TL`No minimodding: don't mod if it's not your job. Don't tell people they'll be muted, don't ask for people to be muted, and don't talk about whether or not people should be muted ('inb4 mute', etc). This applies to bans and other punishments, too.`;
+		const chatRule4 = TL`We reserve the right to tell you to stop discussing moderator decisions if you become unreasonable or belligerent`;
+		const chatNote = TL`(Note: You can opt out of chat rules in private chat rooms and battle rooms, but only if all ROs or players agree to it.)`;
+		const nameRule1 = TL`Usernames may not impersonate a recognized user (a user with %, @, #, or ~ next to their name) or a famous person/organization that uses PS or is associated with Pokémon.`;
+		const nameRule2 = TL`Usernames may not be derogatory or insulting in nature, to an individual or group (insulting yourself is okay as long as it's not too serious).`;
+		const nameRule3 = TL`Usernames may not directly reference sexual activity, or be excessively disgusting.`;
+		const namePolicy = TL`This policy is less restrictive than that of many places, so you might see some "borderline" nicknames that might not be accepted elsewhere. You might consider it unfair that they are allowed to keep their nickname. The fact remains that their nickname follows the above rules, and if you were asked to choose a new name, yours does not.`;
 		return <PSPanelWrapper room={room} width={room.args?.width as number || 780}>
 			<div class="pad">
 				{
 					isWarn &&
-					<p><strong style="color:red">{(BattleLog.escapeHTML(message) || 'You have been warned for breaking the rules.')}
-					</strong></p>
+					<p><strong style="color:red">{
+						BattleLog.escapeHTML(message) || TL`You have been warned for breaking the rules.`
+					}</strong></p>
 				}
-				<h2>Pok&eacute;mon Showdown Rules</h2>
-				<p><b>1.</b> Be nice to people. Respect people. Don't be rude or mean to people.</p>
-				<p><b>2.</b> {}
-					Follow US laws (PS is based in the US). No porn (minors use PS), don't distribute pirated material, {}
-					and don't slander others.</p>
-				<p><b>3.</b> {}
-					&nbsp;No sex. Don't discuss anything sexually explicit, not even in private messages, {}
-					not even if you're both adults.</p>
-				<p><b>4.</b> {}
-					&nbsp;No cheating. Don't exploit bugs to gain an unfair advantage. {}
-					Don't game the system (by intentionally losing against yourself or a friend in a ladder match, by timerstalling, etc). {}
-					Don't impersonate staff if you're not.</p>
-				<p><b>5.</b> {}
-					Moderators have discretion to punish any behaviour they deem inappropriate, whether or not it's on this list. {}
-					If you disagree with a moderator ruling, appeal to an administrator (a user with ~ next to their name) or {}
-					<a href="https://pokemonshowdown.com/appeal">Discipline Appeals</a>.</p>
-				<p>(Note: The First Amendment does not apply to PS, since PS is not a government organization.)</p>
-				<p><b>Chat</b></p>
-				<p><b>1.</b> {}
-					Do not spam, flame, or troll. This includes advertising, raiding, {}
-					asking questions with one-word answers in the lobby, {}
-					and flooding the chat such as by copy/pasting logs in the lobby.</p>
-				<p><b>2.</b> {}
-					Don't call unnecessary attention to yourself. Don't be obnoxious. ALL CAPS and <i>formatting</i> {}
-					are acceptable to emphasize things, but should be used sparingly, not all the time.</p>
-				<p><b>3.</b> {}
-					No minimodding: don't mod if it's not your job. Don't tell people they'll be muted, {}
-					don't ask for people to be muted, {}
-					and don't talk about whether or not people should be muted ('inb4 mute\, etc). {}
-					This applies to bans and other punishments, too.</p>
-				<p><b>4.</b> {}
-					We reserve the right to tell you to stop discussing moderator decisions if you become unreasonable or belligerent</p>
-				<p><b>5.</b> English only, unless specified otherwise.</p>
-				<p>(Note: You can opt out of chat rules in private chat rooms and battle rooms, {}
-					but only if all ROs or players agree to it.)</p>
+				<h2>{TL`Pokémon Showdown Rules`}</h2>
+				<p><b>1.</b> {TL`Be nice to people. Respect people. Don't be rude or mean to people.`}</p>
+				<p><b>2.</b> {rule2}</p>
+				<p><b>3.</b> &nbsp;{rule3}</p>
+				<p><b>4.</b> &nbsp;{rule4}</p>
+				<p><b>5.</b> {TL.parts(rule5, {
+					LINK: <a href="https://pokemonshowdown.com/appeal">{TL`Discipline Appeals`}</a>,
+				})}</p>
+				<p>{firstAmendment}</p>
+				<p><b>{TL`Chat`}</b></p>
+				<p><b>1.</b> {chatRule1}</p>
+				<p><b>2.</b> {TL.parts(chatRule2, { FORMATTING: <i>{TL`formatting`}</i> })}</p>
+				<p><b>3.</b> {chatRule3}</p>
+				<p><b>4.</b> {chatRule4}</p>
+				<p><b>5.</b> {TL`English only, unless specified otherwise.`}</p>
+				<p>{chatNote}</p>
 				{
 					!isWarn && <>
-						<p><b>Usernames</b></p>
-						<p>Your username can be chosen and changed at any time. Keep in mind:</p>
-						<p><b>1.</b> Usernames may not impersonate a recognized user (a user with %, @, #, or ~ next to their name) {}
-							or a famous person/organization that uses PS or is associated with Pokémon.</p>
-						<p><b>2.</b> Usernames may not be derogatory or insulting in nature, to an individual or group {}
-							(insulting yourself is okay as long as it's not too serious).</p>
-						<p><b>3.</b> Usernames may not directly reference sexual activity, or be excessively disgusting.</p>
-						<p>This policy is less restrictive than that of many places, so you might see some "borderline" nicknames {}
-							that might not be accepted elsewhere. You might consider it unfair that they are allowed to keep their {}
-							nickname. The fact remains that their nickname follows the above rules, and {}
-							if you were asked to choose a new name, yours does not.</p>
+						<p><b>{TL`Usernames`}</b></p>
+						<p>{TL`Your username can be chosen and changed at any time. Keep in mind:`}</p>
+						<p><b>1.</b> {nameRule1}</p>
+						<p><b>2.</b> {nameRule2}</p>
+						<p><b>3.</b> {nameRule3}</p>
+						<p>{namePolicy}</p>
 					</>
 				}
 				<p class="buttonbar"><button

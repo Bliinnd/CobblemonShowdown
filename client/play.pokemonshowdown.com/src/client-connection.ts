@@ -454,7 +454,81 @@ export class PSStorage {
 
 PSConnection.connect();
 
+/**
+ * CobblemonShowdown : the login server (loginserver/src) sends its error
+ * messages in English. The ones a player can get while logging in, choosing
+ * or changing a name, registering, changing their password or loading their
+ * teams are translated here; any other message is shown as the server sent it.
+ *
+ * Each key must stay identical to the login server's message. (The known
+ * messages are `TL` calls rather than `TLkey` markers: the build only inlines
+ * `TL` and `eHTML` tagged templates, and any other tagged template compiles to
+ * a global `_templateObject` cache shared by every client script.)
+ */
+const LOGIN_SERVER_ERRORS: { [message: string]: (() => string) | undefined } = Object.assign(Object.create(null), {
+	// `login` action (Session#login, Session#passwordVerify)
+	"Wrong password.": () => TL`Wrong password.`,
+	"Too many unrecognized login attempts have been made against this account. Please try again later.": () => TL`Too many unrecognized login attempts have been made against this account. Please try again later.`,
+	"For security reasons, logins must happen with POST data.": () => TL`For security reasons, logins must happen with POST data.`,
+	'incorrect login data, you need "name" and "pass" fields': () => TL`incorrect login data, you need "name" and "pass" fields`,
+	"incorrect login data, userid must contain at least one letter or number": () => TL`incorrect login data, userid must contain at least one letter or number`,
+
+	// assertions (Session#getAssertion): logging in, choosing a name, registering
+	"Your username cannot start with 'guest'.": () => TL`Your username cannot start with 'guest'.`,
+	"Your username must be less than 19 characters long.": () => TL`Your username must be less than 19 characters long.`,
+	"Your username contains disallowed text.": () => TL`Your username contains disallowed text.`,
+	"Your username is no longer available.": () => TL`Your username is no longer available.`,
+	"Your username must contain at least one letter.": () => TL`Your username must contain at least one letter.`,
+	"Corrupt challenge": () => TL`Corrupt challenge`,
+	"This server is requesting an invalid login key. This probably means that either you are not connected to a server, or the server is set up incorrectly.": () => TL`This server is requesting an invalid login key. This probably means that either you are not connected to a server, or the server is set up incorrectly.`,
+	"Unknown key ID": () => TL`Unknown key ID`,
+
+	// `register` action
+	"You must specify a username.": () => TL`You must specify a username.`,
+	"Your username must include at least one letter.": () => TL`Your username must include at least one letter.`,
+	"Your username is already taken.": () => TL`Your username is already taken.`,
+	"You must specify a password.": () => TL`You must specify a password.`,
+	"Your password must have at least 5 characters.": () => TL`Your password must have at least 5 characters.`,
+	"Your passwords do not match.": () => TL`Your passwords do not match.`,
+	"Answer the anti-spam question.": () => TL`Answer the anti-spam question.`,
+	// The login server's text says 2, but it refuses a registration once the IP has already
+	// registered 3 accounts in the last 2 hours (`regcount > 2`): translations should say 3.
+	"You cannot register more than 2 names every 2 hours.": () => TL`You cannot register more than 2 names every 2 hours.`,
+	"Invalid challenge string argument.": () => TL`Invalid challenge string argument.`,
+
+	// `changepassword` action
+	"'changepassword' requests can only be made with POST data.": () => TL`'changepassword' requests can only be made with POST data.`,
+	"Specify your current password.": () => TL`Specify your current password.`,
+	"Specify your new password.": () => TL`Specify your new password.`,
+	"Repeat your new password.": () => TL`Repeat your new password.`,
+	"Your session has expired. Please log in again.": () => TL`Your session has expired. Please log in again.`,
+	"Your new passwords do not match.": () => TL`Your new passwords do not match.`,
+	"Your old password was incorrect.": () => TL`Your old password was incorrect.`,
+	"Your new password must be at least 5 characters long.": () => TL`Your new password must be at least 5 characters long.`,
+
+	// `changeusername` action
+	"Invalid request (username changing must be done through POST requests).": () => TL`Invalid request (username changing must be done through POST requests).`,
+	"Specify a username.": () => TL`Specify a username.`,
+	"You're not logged in as that user.": () => TL`You're not logged in as that user.`,
+
+	// `getteams` and `getteam` actions
+	"The server could not load your teams. Please try again later.": () => TL`The server could not load your teams. Please try again later.`,
+	"Invalid team ID": () => TL`Invalid team ID`,
+	"Failed to fetch team. Please try again later.": () => TL`Failed to fetch team. Please try again later.`,
+});
+const OLD_LOGIN_KEY_ERROR = /^This server is using login key (\d+), which is no longer supported\. Please tell the server operator to update their config\.js file\.$/;
+
 export const PSLoginServer = new class {
+	/** Translates an error message sent by the login server, if it's a known one. */
+	errorText(message: string): string {
+		const translate = LOGIN_SERVER_ERRORS[message];
+		if (translate) return translate();
+		const keyid = OLD_LOGIN_KEY_ERROR.exec(message)?.[1];
+		if (keyid) {
+			return TL`This server is using login key ${keyid}, which is no longer supported. Please tell the server operator to update their config.js file.`;
+		}
+		return message;
+	}
 	rawQuery(act: string, data: PostData): Promise<string | null> {
 		// commenting out because for some reason this is working in Chrome????
 		// if (location.protocol === 'file:') {

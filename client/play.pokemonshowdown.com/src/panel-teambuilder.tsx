@@ -203,7 +203,7 @@ class TeambuilderRoom extends PSRoom {
 	createTeam(copyFrom?: Team | null, isBox = false): Team {
 		if (copyFrom) {
 			return {
-				name: `Copy of ${copyFrom.name}`,
+				name: TL`Copy of ${copyFrom.name}`,
 				format: copyFrom.format,
 				folder: copyFrom.folder,
 				packedTeam: copyFrom.packedTeam,
@@ -863,7 +863,7 @@ class TeambuilderPanel extends PSRoomPanel<TeambuilderRoom> {
 						<input
 							name="readable" type="checkbox" checked={room.exportReadable}
 							onChange={this.changeExportReadable}
-						/> Readable
+						/> {TL`Readable`}
 					</label>
 				</p>
 				<textarea

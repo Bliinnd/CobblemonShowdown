@@ -10,11 +10,11 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	venusaurmega: {
 		name: "Méga-Florizarre",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Florizarre",
 	},
 	venusaurgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Florizarre Gigamax",
+		forme: "Gigamax",
 	},
 	charmander: {
 		name: "Salamèche",
@@ -27,15 +27,15 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	charizardmegax: {
 		name: "Méga-Dracaufeu X",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Dracaufeu X",
 	},
 	charizardmegay: {
 		name: "Méga-Dracaufeu Y",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Dracaufeu Y",
 	},
 	charizardgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Dracaufeu Gigamax",
+		forme: "Gigamax",
 	},
 	squirtle: {
 		name: "Carapuce",
@@ -48,11 +48,11 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	blastoisemega: {
 		name: "Méga-Tortank",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Tortank",
 	},
 	blastoisegmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Tortank Gigamax",
+		forme: "Gigamax",
 	},
 	caterpie: {
 		name: "Chenipan",
@@ -64,8 +64,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Papilusion",
 	},
 	butterfreegmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Papilusion Gigamax",
+		forme: "Gigamax",
 	},
 	weedle: {
 		name: "Aspicot",
@@ -78,7 +78,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	beedrillmega: {
 		name: "Méga-Dardargnan",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Dardargnan",
 	},
 	pidgey: {
 		name: "Roucool",
@@ -91,25 +91,25 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	pidgeotmega: {
 		name: "Méga-Roucarnage",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Roucarnage",
 	},
 	rattata: {
 		name: "Rattata",
 	},
 	rattataalola: {
 		name: "Rattata d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	raticate: {
 		name: "Rattatac",
 	},
 	raticatealolatotem: {
-		name: null, // NEEDS TRANSLATION
+		name: "Rattatac d’Alola Dominant",
 		forme: "Dominant (Forme d’Alola)",
 	},
 	raticatealola: {
 		name: "Rattatac d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	spearow: {
 		name: "Piafabec",
@@ -127,97 +127,97 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Pikachu",
 	},
 	pikachustarter: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Partenaire",
+		forme: "Pikachu Partenaire",
 	},
 	pikachuoriginal: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Casquette Originale",
+		forme: "Casquette Originale",
 	},
 	pikachuhoenn: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Casquette de Hoenn",
+		forme: "Casquette de Hoenn",
 	},
 	pikachusinnoh: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Casquette de Sinnoh",
+		forme: "Casquette de Sinnoh",
 	},
 	pikachuunova: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Casquette d’Unys",
+		forme: "Casquette d’Unys",
 	},
 	pikachukalos: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Casquette de Kalos",
+		forme: "Casquette de Kalos",
 	},
 	pikachualola: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Casquette d’Alola",
+		forme: "Casquette d’Alola",
 	},
 	pikachupartner: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Casquette Partenaire",
+		forme: "Casquette Partenaire",
 	},
 	pikachuworld: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Casquette Monde",
+		forme: "Casquette Monde",
 	},
 	pikachucosplay: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Cosplayeur",
+		forme: "Pikachu Cosplayeur",
 	},
 	pikachurockstar: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Rockeur",
+		forme: "Pikachu Rockeur",
 	},
 	pikachubelle: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Lady",
+		forme: "Pikachu Lady",
 	},
 	pikachupopstar: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Star",
+		forme: "Pikachu Star",
 	},
 	pikachuphd: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Docteur",
+		forme: "Pikachu Docteur",
 	},
 	pikachulibre: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Catcheur",
+		forme: "Pikachu Catcheur",
 	},
 	pikachugmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pikachu Gigamax",
+		forme: "Gigamax",
 	},
 	raichu: {
 		name: "Raichu",
 	},
 	raichumegax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Raichu X",
+		forme: "Méga-Raichu X",
 	},
 	raichumegay: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Raichu Y",
+		forme: "Méga-Raichu Y",
 	},
 	raichualola: {
 		name: "Raichu d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	sandshrew: {
 		name: "Sabelette",
 	},
 	sandshrewalola: {
 		name: "Sabelette d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	sandslash: {
 		name: "Sablaireau",
 	},
 	sandslashalola: {
 		name: "Sablaireau d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	nidoranf: {
 		name: "Nidoran♀",
@@ -244,22 +244,22 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Mélodelfe",
 	},
 	clefablemega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Mélodelfe",
+		forme: "Méga-Mélodelfe",
 	},
 	vulpix: {
 		name: "Goupix",
 	},
 	vulpixalola: {
 		name: "Goupix d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	ninetales: {
 		name: "Feunard",
 	},
 	ninetalesalola: {
 		name: "Feunard d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	jigglypuff: {
 		name: "Rondoudou",
@@ -299,36 +299,36 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	diglettalola: {
 		name: "Taupiqueur d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	dugtrio: {
 		name: "Triopikeur",
 	},
 	dugtrioalola: {
 		name: "Triopikeur d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	meowth: {
 		name: "Miaouss",
 	},
 	meowthalola: {
 		name: "Miaouss d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	meowthgalar: {
 		name: "Miaouss de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	meowthgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Miaouss Gigamax",
+		forme: "Gigamax",
 	},
 	persian: {
 		name: "Persian",
 	},
 	persianalola: {
 		name: "Persian d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	psyduck: {
 		name: "Psykokwak",
@@ -347,14 +347,14 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	growlithehisui: {
 		name: "Caninos de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	arcanine: {
 		name: "Arcanin",
 	},
 	arcaninehisui: {
 		name: "Arcanin de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	poliwag: {
 		name: "Ptitard",
@@ -376,7 +376,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	alakazammega: {
 		name: "Méga-Alakazam",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Alakazam",
 	},
 	machop: {
 		name: "Machoc",
@@ -388,8 +388,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Mackogneur",
 	},
 	machampgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Mackogneur Gigamax",
+		forme: "Gigamax",
 	},
 	bellsprout: {
 		name: "Chétiflor",
@@ -401,8 +401,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Empiflor",
 	},
 	victreebelmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Empiflor",
+		forme: "Méga-Empiflor",
 	},
 	tentacool: {
 		name: "Tentacool",
@@ -415,53 +415,53 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	geodudealola: {
 		name: "Racaillou d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	graveler: {
 		name: "Gravalanch",
 	},
 	graveleralola: {
 		name: "Gravalanch d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	golem: {
 		name: "Grolem",
 	},
 	golemalola: {
 		name: "Grolem d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	ponyta: {
 		name: "Ponyta",
 	},
 	ponytagalar: {
 		name: "Ponyta de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	rapidash: {
 		name: "Galopa",
 	},
 	rapidashgalar: {
 		name: "Galopa de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	slowpoke: {
 		name: "Ramoloss",
 	},
 	slowpokegalar: {
 		name: "Ramoloss de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	slowbro: {
 		name: "Flagadoss",
 	},
 	slowbromega: {
 		name: "Méga-Flagadoss",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Flagadoss",
 	},
 	slowbrogalar: {
 		name: "Flagadoss de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	magnemite: {
 		name: "Magnéti",
@@ -474,7 +474,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	farfetchdgalar: {
 		name: "Canarticho de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	doduo: {
 		name: "Doduo",
@@ -493,14 +493,14 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	grimeralola: {
 		name: "Tadmorv d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	muk: {
 		name: "Grotadmorv",
 	},
 	mukalola: {
 		name: "Grotadmorv d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	shellder: {
 		name: "Kokiyas",
@@ -519,11 +519,11 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	gengarmega: {
 		name: "Méga-Ectoplasma",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Ectoplasma",
 	},
 	gengargmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Ectoplasma Gigamax",
+		forme: "Gigamax",
 	},
 	onix: {
 		name: "Onix",
@@ -541,22 +541,22 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Krabboss",
 	},
 	kinglergmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Krabboss Gigamax",
+		forme: "Gigamax",
 	},
 	voltorb: {
 		name: "Voltorbe",
 	},
 	voltorbhisui: {
 		name: "Voltorbe de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	electrode: {
 		name: "Électrode",
 	},
 	electrodehisui: {
 		name: "Électrode de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	exeggcute: {
 		name: "Noeunoeuf",
@@ -566,7 +566,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	exeggutoralola: {
 		name: "Noadkoko d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	cubone: {
 		name: "Osselait",
@@ -575,12 +575,12 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Ossatueur",
 	},
 	marowakalolatotem: {
-		name: null, // NEEDS TRANSLATION
+		name: "Ossatueur d’Alola Dominant",
 		forme: "Dominant (Forme d’Alola)",
 	},
 	marowakalola: {
 		name: "Ossatueur d’Alola",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme d’Alola",
 	},
 	hitmonlee: {
 		name: "Kicklee",
@@ -599,7 +599,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	weezinggalar: {
 		name: "Smogogo de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	rhyhorn: {
 		name: "Rhinocorne",
@@ -618,7 +618,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	kangaskhanmega: {
 		name: "Méga-Kangourex",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Kangourex",
 	},
 	horsea: {
 		name: "Hypotrempe",
@@ -639,15 +639,15 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Staross",
 	},
 	starmiemega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Staross",
+		forme: "Méga-Staross",
 	},
 	mrmime: {
 		name: "M. Mime",
 	},
 	mrmimegalar: {
 		name: "M. Mime de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	scyther: {
 		name: "Insécateur",
@@ -666,21 +666,21 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	pinsirmega: {
 		name: "Méga-Scarabrute",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Scarabrute",
 	},
 	tauros: {
 		name: "Tauros",
 	},
 	taurospaldeacombat: {
-		name: null, // NEEDS TRANSLATION
+		name: "Tauros de Paldea Combatif",
 		forme: "Race Combative (Forme de Paldea)",
 	},
 	taurospaldeablaze: {
-		name: null, // NEEDS TRANSLATION
+		name: "Tauros de Paldea Flamboyant",
 		forme: "Race Flamboyante (Forme de Paldea)",
 	},
 	taurospaldeaaqua: {
-		name: null, // NEEDS TRANSLATION
+		name: "Tauros de Paldea Aquatique",
 		forme: "Race Aquatique (Forme de Paldea)",
 	},
 	magikarp: {
@@ -691,14 +691,14 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	gyaradosmega: {
 		name: "Méga-Léviator",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Léviator",
 	},
 	lapras: {
 		name: "Lokhlass",
 	},
 	laprasgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Lokhlass Gigamax",
+		forme: "Gigamax",
 	},
 	ditto: {
 		name: "Métamorph",
@@ -707,12 +707,12 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Évoli",
 	},
 	eeveestarter: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Évoli Partenaire",
+		forme: "Évoli Partenaire",
 	},
 	eeveegmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Évoli Gigamax",
+		forme: "Gigamax",
 	},
 	vaporeon: {
 		name: "Aquali",
@@ -743,35 +743,35 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	aerodactylmega: {
 		name: "Méga-Ptéra",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Ptéra",
 	},
 	snorlax: {
 		name: "Ronflex",
 	},
 	snorlaxgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Ronflex Gigamax",
+		forme: "Gigamax",
 	},
 	articuno: {
 		name: "Artikodin",
 	},
 	articunogalar: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Artikodin de Galar",
+		forme: "Forme de Galar",
 	},
 	zapdos: {
 		name: "Électhor",
 	},
 	zapdosgalar: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Électhor de Galar",
+		forme: "Forme de Galar",
 	},
 	moltres: {
 		name: "Sulfura",
 	},
 	moltresgalar: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Sulfura de Galar",
+		forme: "Forme de Galar",
 	},
 	dratini: {
 		name: "Minidraco",
@@ -783,19 +783,19 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Dracolosse",
 	},
 	dragonitemega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Dracolosse",
+		forme: "Méga-Dracolosse",
 	},
 	mewtwo: {
 		name: "Mewtwo",
 	},
 	mewtwomegax: {
 		name: "Méga-Mewtwo X",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Mewtwo X",
 	},
 	mewtwomegay: {
 		name: "Méga-Mewtwo Y",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Mewtwo Y",
 	},
 	mew: {
 		name: "Mew",
@@ -810,8 +810,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Méganium",
 	},
 	meganiummega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Méganium",
+		forme: "Méga-Méganium",
 	},
 	cyndaquil: {
 		name: "Héricendre",
@@ -824,7 +824,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	typhlosionhisui: {
 		name: "Typhlosion de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	totodile: {
 		name: "Kaiminus",
@@ -836,8 +836,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Aligatueur",
 	},
 	feraligatrmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Aligatueur",
+		forme: "Méga-Aligatueur",
 	},
 	sentret: {
 		name: "Fouinette",
@@ -876,8 +876,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Pichu",
 	},
 	pichuspikyeared: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pichu Troizépi",
+		forme: "Troizépi",
 	},
 	cleffa: {
 		name: "Mélo",
@@ -908,7 +908,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	ampharosmega: {
 		name: "Méga-Pharamp",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Pharamp",
 	},
 	bellossom: {
 		name: "Joliflor",
@@ -951,7 +951,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	wooperpaldea: {
 		name: "Axoloto de Paldéa",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Paldea",
 	},
 	quagsire: {
 		name: "Maraiste",
@@ -969,14 +969,14 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Roigada",
 	},
 	slowkinggalar: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Roigada de Galar",
+		forme: "Forme de Galar",
 	},
 	misdreavus: {
 		name: "Feuforêve",
 	},
 	unown: {
-		name: null, // NEEDS TRANSLATION
+		name: "Zarbi",
 		baseSpecies: "Zarbi",
 	},
 	unownb: {
@@ -1083,7 +1083,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	steelixmega: {
 		name: "Méga-Steelix",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Steelix",
 	},
 	snubbull: {
 		name: "Snubbull",
@@ -1096,14 +1096,14 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	qwilfishhisui: {
 		name: "Qwilfish de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	scizor: {
 		name: "Cizayox",
 	},
 	scizormega: {
 		name: "Méga-Cizayox",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Cizayox",
 	},
 	shuckle: {
 		name: "Caratroc",
@@ -1113,14 +1113,14 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	heracrossmega: {
 		name: "Méga-Scarhino",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Scarhino",
 	},
 	sneasel: {
 		name: "Farfuret",
 	},
 	sneaselhisui: {
 		name: "Farfuret de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	teddiursa: {
 		name: "Teddiursa",
@@ -1145,7 +1145,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	corsolagalar: {
 		name: "Corayon de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	remoraid: {
 		name: "Rémoraid",
@@ -1163,8 +1163,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Airmure",
 	},
 	skarmorymega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Airmure",
+		forme: "Méga-Airmure",
 	},
 	houndour: {
 		name: "Malosse",
@@ -1174,7 +1174,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	houndoommega: {
 		name: "Méga-Démolosse",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Démolosse",
 	},
 	kingdra: {
 		name: "Hyporoi",
@@ -1235,7 +1235,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	tyranitarmega: {
 		name: "Méga-Tyranocif",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Tyranocif",
 	},
 	lugia: {
 		name: "Lugia",
@@ -1257,7 +1257,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	sceptilemega: {
 		name: "Méga-Jungko",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Jungko",
 	},
 	torchic: {
 		name: "Poussifeu",
@@ -1270,7 +1270,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	blazikenmega: {
 		name: "Méga-Braségali",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Braségali",
 	},
 	mudkip: {
 		name: "Gobou",
@@ -1283,7 +1283,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	swampertmega: {
 		name: "Méga-Laggron",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Laggron",
 	},
 	poochyena: {
 		name: "Medhyèna",
@@ -1296,14 +1296,14 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	zigzagoongalar: {
 		name: "Zigzaton de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	linoone: {
 		name: "Linéon",
 	},
 	linoonegalar: {
 		name: "Linéon de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	wurmple: {
 		name: "Chenipotte",
@@ -1361,7 +1361,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	gardevoirmega: {
 		name: "Méga-Gardevoir",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Gardevoir",
 	},
 	surskit: {
 		name: "Arakdo",
@@ -1425,14 +1425,14 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	sableyemega: {
 		name: "Méga-Ténéfix",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Ténéfix",
 	},
 	mawile: {
 		name: "Mysdibule",
 	},
 	mawilemega: {
 		name: "Méga-Mysdibule",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Mysdibule",
 	},
 	aron: {
 		name: "Galekid",
@@ -1445,7 +1445,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	aggronmega: {
 		name: "Méga-Galeking",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Galeking",
 	},
 	meditite: {
 		name: "Méditikka",
@@ -1455,7 +1455,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	medichammega: {
 		name: "Méga-Charmina",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Charmina",
 	},
 	electrike: {
 		name: "Dynavolt",
@@ -1465,7 +1465,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	manectricmega: {
 		name: "Méga-Élecsprint",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Élecsprint",
 	},
 	plusle: {
 		name: "Posipi",
@@ -1496,7 +1496,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	sharpedomega: {
 		name: "Méga-Sharpedo",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Sharpedo",
 	},
 	wailmer: {
 		name: "Wailmer",
@@ -1512,7 +1512,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	cameruptmega: {
 		name: "Méga-Camérupt",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Camérupt",
 	},
 	torkoal: {
 		name: "Chartor",
@@ -1549,7 +1549,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	altariamega: {
 		name: "Méga-Altaria",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Altaria",
 	},
 	zangoose: {
 		name: "Mangriff",
@@ -1604,15 +1604,15 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	castformsunny: {
 		name: "Morphéo Solaire",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Solaire",
 	},
 	castformrainy: {
 		name: "Morphéo Eau de Pluie",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Eau de Pluie",
 	},
 	castformsnowy: {
 		name: "Morphéo Blizzard",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Blizzard",
 	},
 	kecleon: {
 		name: "Kecleon",
@@ -1625,7 +1625,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	banettemega: {
 		name: "Méga-Branette",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Branette",
 	},
 	duskull: {
 		name: "Skelénox",
@@ -1640,19 +1640,19 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Éoko",
 	},
 	chimechomega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Éoko",
+		forme: "Méga-Éoko",
 	},
 	absol: {
 		name: "Absol",
 	},
 	absolmegaz: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Absol Z",
+		forme: "Méga-Absol Z",
 	},
 	absolmega: {
 		name: "Méga-Absol",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Absol",
 	},
 	wynaut: {
 		name: "Okéoké",
@@ -1665,7 +1665,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	glaliemega: {
 		name: "Méga-Oniglali",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Oniglali",
 	},
 	spheal: {
 		name: "Obalie",
@@ -1702,7 +1702,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	salamencemega: {
 		name: "Méga-Drattak",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Drattak",
 	},
 	beldum: {
 		name: "Terhal",
@@ -1715,7 +1715,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	metagrossmega: {
 		name: "Méga-Métalosse",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Métalosse",
 	},
 	regirock: {
 		name: "Regirock",
@@ -1731,54 +1731,54 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	latiasmega: {
 		name: "Méga-Latias",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Latias",
 	},
 	latios: {
 		name: "Latios",
 	},
 	latiosmega: {
 		name: "Méga-Latios",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Latios",
 	},
 	kyogre: {
 		name: "Kyogre",
 	},
 	kyogreprimal: {
 		name: "Primo-Kyogre",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Primo-Résurgence",
 	},
 	groudon: {
 		name: "Groudon",
 	},
 	groudonprimal: {
 		name: "Primo-Groudon",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Primo-Résurgence",
 	},
 	rayquaza: {
 		name: "Rayquaza",
 	},
 	rayquazamega: {
 		name: "Méga-Rayquaza",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Rayquaza",
 	},
 	jirachi: {
 		name: "Jirachi",
 	},
 	deoxys: {
 		name: "Deoxys",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Normale",
 	},
 	deoxysattack: {
 		name: "Deoxys Attaque",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Attaque",
 	},
 	deoxysdefense: {
 		name: "Deoxys Défense",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Défense",
 	},
 	deoxysspeed: {
 		name: "Deoxys Vitesse",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Vitesse",
 	},
 	turtwig: {
 		name: "Tortipouss",
@@ -1817,8 +1817,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Étouraptor",
 	},
 	staraptormega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Étouraptor",
+		forme: "Méga-Étouraptor",
 	},
 	bidoof: {
 		name: "Keunotor",
@@ -1860,30 +1860,30 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Bastiodon",
 	},
 	burmy: {
-		name: null, // NEEDS TRANSLATION
+		name: "Cheniti",
 		baseSpecies: "Cheniti",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Cape Plante",
 	},
 	burmysandy: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Cheniti Sable",
+		forme: "Cape Sable",
 	},
 	burmytrash: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Cheniti Déchet",
+		forme: "Cape Déchet",
 	},
 	wormadam: {
-		name: null, // NEEDS TRANSLATION
+		name: "Cheniselle",
 		baseSpecies: "Cheniselle",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Cape Plante",
 	},
 	wormadamsandy: {
 		name: "Cheniselle Sable",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Cape Sable",
 	},
 	wormadamtrash: {
 		name: "Cheniselle Déchet",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Cape Déchet",
 	},
 	mothim: {
 		name: "Papilord",
@@ -1908,29 +1908,29 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	cherrim: {
 		name: "Ceriflor",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Temps Couvert",
 	},
 	cherrimsunshine: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Ceriflor Ensoleillé",
+		forme: "Temps Ensoleillé",
 	},
 	shellos: {
-		name: null, // NEEDS TRANSLATION
+		name: "Sancoki",
 		baseSpecies: "Sancoki",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mer Occident",
 	},
 	shelloseast: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Sancoki Orient",
+		forme: "Mer Orient",
 	},
 	gastrodon: {
-		name: null, // NEEDS TRANSLATION
+		name: "Tritosor",
 		baseSpecies: "Tritosor",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mer Occident",
 	},
 	gastrodoneast: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Tritosor Orient",
+		forme: "Mer Orient",
 	},
 	ambipom: {
 		name: "Capidextre",
@@ -1949,7 +1949,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	lopunnymega: {
 		name: "Méga-Lockpin",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Lockpin",
 	},
 	mismagius: {
 		name: "Magirêve",
@@ -2003,12 +2003,12 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Carchacrok",
 	},
 	garchompmegaz: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Carchacrok Z",
+		forme: "Méga-Carchacrok Z",
 	},
 	garchompmega: {
 		name: "Méga-Carchacrok",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Carchacrok",
 	},
 	munchlax: {
 		name: "Goinfrex",
@@ -2020,12 +2020,12 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Lucario",
 	},
 	lucariomegaz: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Lucario Z",
+		forme: "Méga-Lucario Z",
 	},
 	lucariomega: {
 		name: "Méga-Lucario",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Lucario",
 	},
 	hippopotas: {
 		name: "Hippopotas",
@@ -2065,7 +2065,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	abomasnowmega: {
 		name: "Méga-Blizzaroi",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Blizzaroi",
 	},
 	weavile: {
 		name: "Dimoret",
@@ -2114,7 +2114,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	gallademega: {
 		name: "Méga-Gallame",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Gallame",
 	},
 	probopass: {
 		name: "Tarinorme",
@@ -2126,31 +2126,31 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Momartik",
 	},
 	froslassmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Momartik",
+		forme: "Méga-Momartik",
 	},
 	rotom: {
 		name: "Motisma",
 	},
 	rotomheat: {
 		name: "Motisma Chaleur",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Motisma Chaleur",
 	},
 	rotomwash: {
 		name: "Motisma Lavage",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Motisma Lavage",
 	},
 	rotomfrost: {
 		name: "Motisma Froid",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Motisma Froid",
 	},
 	rotomfan: {
 		name: "Motisma Hélice",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Motisma Hélice",
 	},
 	rotommow: {
 		name: "Motisma Tonte",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Motisma Tonte",
 	},
 	uxie: {
 		name: "Créhelf",
@@ -2166,33 +2166,33 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	dialgaorigin: {
 		name: "Diagla Originel",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Originelle",
 	},
 	palkia: {
 		name: "Palkia",
 	},
 	palkiaorigin: {
 		name: "Palkia Originel",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Originelle",
 	},
 	heatran: {
 		name: "Heatran",
 	},
 	heatranmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Heatran",
+		forme: "Méga-Heatran",
 	},
 	regigigas: {
 		name: "Regigigas",
 	},
 	giratina: {
-		name: null, // NEEDS TRANSLATION
+		name: "Giratina",
 		baseSpecies: "Giratina",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Alternative",
 	},
 	giratinaorigin: {
 		name: "Giratina Originel",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Originelle",
 	},
 	cresselia: {
 		name: "Cresselia",
@@ -2207,88 +2207,88 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Darkrai",
 	},
 	darkraimega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Darkrai",
+		forme: "Méga-Darkrai",
 	},
 	shaymin: {
-		name: null, // NEEDS TRANSLATION
+		name: "Shaymin",
 		baseSpecies: "Shaymin",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Terrestre",
 	},
 	shayminsky: {
 		name: "Shaymin Céleste",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Céleste",
 	},
 	arceus: {
 		name: "Arceus",
 	},
 	arceusfighting: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Combat",
+		forme: "Combat",
 	},
 	arceusflying: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Vol",
+		forme: "Vol",
 	},
 	arceuspoison: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Poison",
+		forme: "Poison",
 	},
 	arceusground: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Sol",
+		forme: "Sol",
 	},
 	arceusrock: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Roche",
+		forme: "Roche",
 	},
 	arceusbug: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Insecte",
+		forme: "Insecte",
 	},
 	arceusghost: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Spectre",
+		forme: "Spectre",
 	},
 	arceussteel: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Acier",
+		forme: "Acier",
 	},
 	arceusfire: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Feu",
+		forme: "Feu",
 	},
 	arceuswater: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Eau",
+		forme: "Eau",
 	},
 	arceusgrass: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Plante",
+		forme: "Plante",
 	},
 	arceuselectric: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Électrik",
+		forme: "Électrik",
 	},
 	arceuspsychic: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Psy",
+		forme: "Psy",
 	},
 	arceusice: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Glace",
+		forme: "Glace",
 	},
 	arceusdragon: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Dragon",
+		forme: "Dragon",
 	},
 	arceusdark: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Ténèbres",
+		forme: "Ténèbres",
 	},
 	arceusfairy: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Arceus Fée",
+		forme: "Fée",
 	},
 	victini: {
 		name: "Victini",
@@ -2312,8 +2312,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Roitiflam",
 	},
 	emboarmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Roitiflam",
+		forme: "Méga-Roitiflam",
 	},
 	oshawott: {
 		name: "Moustillon",
@@ -2326,7 +2326,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	samurotthisui: {
 		name: "Clamiral de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	patrat: {
 		name: "Ratentif",
@@ -2410,15 +2410,15 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Minotaupe",
 	},
 	excadrillmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Minotaupe",
+		forme: "Méga-Minotaupe",
 	},
 	audino: {
 		name: "Nanméouïe",
 	},
 	audinomega: {
 		name: "Méga-Nanméouïe",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Nanméouïe",
 	},
 	timburr: {
 		name: "Charpenti",
@@ -2463,8 +2463,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Brutapode",
 	},
 	scolipedemega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Brutapode",
+		forme: "Méga-Brutapode",
 	},
 	cottonee: {
 		name: "Doudouvet",
@@ -2480,20 +2480,20 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	lilliganthisui: {
 		name: "Fragilady de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	basculin: {
-		name: null, // NEEDS TRANSLATION
+		name: "Bargantua",
 		baseSpecies: "Bargantua",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Motif Rouge",
 	},
 	basculinbluestriped: {
 		name: "Bargantua Bleu",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Motif Bleu",
 	},
 	basculinwhitestriped: {
 		name: "Bargantua Blanc",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Motif Blanc",
 	},
 	sandile: {
 		name: "Mascaïman",
@@ -2509,19 +2509,19 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	darumakagalar: {
 		name: "Darumarond de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	darmanitan: {
 		name: "Darumacho",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mode Normal",
 	},
 	darmanitangalar: {
-		name: null, // NEEDS TRANSLATION
+		name: "Darumacho de Galar",
 		forme: "Mode Normal (Forme de Galar)",
 	},
 	darmanitanzen: {
 		name: "Darumacho Transe",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mode Transe",
 	},
 	darmanitangalarzen: {
 		name: "Darumacho de Galar Transe",
@@ -2543,8 +2543,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Baggaïd",
 	},
 	scraftymega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Baggaïd",
+		forme: "Méga-Baggaïd",
 	},
 	sigilyph: {
 		name: "Cryptéro",
@@ -2554,7 +2554,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	yamaskgalar: {
 		name: "Tutafeh de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	cofagrigus: {
 		name: "Tutankafer",
@@ -2578,22 +2578,22 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Miasmax",
 	},
 	garbodorgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Miasmax Gigamax",
+		forme: "Gigamax",
 	},
 	zorua: {
 		name: "Zorua",
 	},
 	zoruahisui: {
 		name: "Zorua de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	zoroark: {
 		name: "Zoroark",
 	},
 	zoroarkhisui: {
 		name: "Zoroark de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	minccino: {
 		name: "Chinchidou",
@@ -2635,38 +2635,38 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Sorbouboul",
 	},
 	deerling: {
-		name: null, // NEEDS TRANSLATION
+		name: "Vivaldaim",
 		baseSpecies: "Vivaldaim",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Printemps",
 	},
 	deerlingsummer: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Vivaldaim Été",
+		forme: "Forme Été",
 	},
 	deerlingautumn: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Vivaldaim Automne",
+		forme: "Forme Automne",
 	},
 	deerlingwinter: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Vivaldaim Hiver",
+		forme: "Forme Hiver",
 	},
 	sawsbuck: {
-		name: null, // NEEDS TRANSLATION
+		name: "Haydaim",
 		baseSpecies: "Haydaim",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Printemps",
 	},
 	sawsbucksummer: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Haydaim Été",
+		forme: "Forme Été",
 	},
 	sawsbuckautumn: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Haydaim Automne",
+		forme: "Forme Automne",
 	},
 	sawsbuckwinter: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Haydaim Hiver",
+		forme: "Forme Hiver",
 	},
 	emolga: {
 		name: "Emolga",
@@ -2723,8 +2723,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Ohmassacre",
 	},
 	eelektrossmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Ohmassacre",
+		forme: "Méga-Ohmassacre",
 	},
 	elgyem: {
 		name: "Lewsor",
@@ -2742,8 +2742,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Lugulabre",
 	},
 	chandeluremega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Lugulabre",
+		forme: "Méga-Lugulabre",
 	},
 	axew: {
 		name: "Coupenotte",
@@ -2774,7 +2774,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	stunfiskgalar: {
 		name: "Limonde de Galar",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Galar",
 	},
 	mienfoo: {
 		name: "Kungfouine",
@@ -2792,8 +2792,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Golemastoc",
 	},
 	golurkmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Golemastoc",
+		forme: "Méga-Golemastoc",
 	},
 	pawniard: {
 		name: "Scalpion",
@@ -2812,7 +2812,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	braviaryhisui: {
 		name: "Gueriaigle de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	vullaby: {
 		name: "Vostourno",
@@ -2851,22 +2851,22 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Viridium",
 	},
 	tornadus: {
-		name: null, // NEEDS TRANSLATION
+		name: "Boréas",
 		baseSpecies: "Boréas",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Avatar",
 	},
 	tornadustherian: {
 		name: "Boréas Totémique",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Totémique",
 	},
 	thundurus: {
-		name: null, // NEEDS TRANSLATION
+		name: "Fulguris",
 		baseSpecies: "Fulguris",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Avatar",
 	},
 	thundurustherian: {
 		name: "Fulguris Totémique",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Totémique",
 	},
 	reshiram: {
 		name: "Reshiram",
@@ -2875,59 +2875,59 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Zekrom",
 	},
 	landorus: {
-		name: null, // NEEDS TRANSLATION
+		name: "Démétéros",
 		baseSpecies: "Démétéros",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Avatar",
 	},
 	landorustherian: {
 		name: "Démétéros Totémique",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Totémique",
 	},
 	kyurem: {
 		name: "Kyurem",
 	},
 	kyuremblack: {
 		name: "Kyurem Noir",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Kyurem Noir",
 	},
 	kyuremwhite: {
 		name: "Kyurem Blanc",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Kyurem Blanc",
 	},
 	keldeo: {
 		name: "Keldeo",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Aspect Normal",
 	},
 	keldeoresolute: {
 		name: "Keldeo Décidé",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Aspect Décidé",
 	},
 	meloetta: {
 		name: "Meloetta",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Chant",
 	},
 	meloettapirouette: {
 		name: "Meloetta Danse",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Danse",
 	},
 	genesect: {
 		name: "Genesect",
 	},
 	genesectdouse: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Genesect Aqua",
+		forme: "Module Aqua",
 	},
 	genesectshock: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Genesect Choc",
+		forme: "Module Choc",
 	},
 	genesectburn: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Genesect Pyro",
+		forme: "Module Pyro",
 	},
 	genesectchill: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Genesect Cryo",
+		forme: "Module Cryo",
 	},
 	chespin: {
 		name: "Marisson",
@@ -2939,8 +2939,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Blindépique",
 	},
 	chesnaughtmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Blindépique",
+		forme: "Méga-Blindépique",
 	},
 	fennekin: {
 		name: "Feunnec",
@@ -2952,8 +2952,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Goupelin",
 	},
 	delphoxmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Goupelin",
+		forme: "Méga-Goupelin",
 	},
 	froakie: {
 		name: "Grenousse",
@@ -2965,16 +2965,16 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Amphinobi",
 	},
 	greninjabond: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Amphinobi Synergie",
+		forme: "Synergie",
 	},
 	greninjamega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Amphinobi",
+		forme: "Méga-Amphinobi",
 	},
 	greninjaash: {
 		name: "Sachanobi",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Sacha",
 	},
 	bunnelby: {
 		name: "Sapereau",
@@ -2998,85 +2998,85 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Pérégrain",
 	},
 	vivillon: {
-		name: null, // NEEDS TRANSLATION
+		name: "Prismillon",
 		baseSpecies: "Prismillon",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Motif Floraison",
 	},
 	vivillonfancy: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Fantaisie",
+		forme: "Motif Fantaisie",
 	},
 	vivillonpokeball: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Poké Ball",
+		forme: "Motif Poké Ball",
 	},
 	vivillonarchipelago: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Archipel",
+		forme: "Motif Archipel",
 	},
 	vivilloncontinental: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Continent",
+		forme: "Motif Continent",
 	},
 	vivillonelegant: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Monarchie",
+		forme: "Motif Monarchie",
 	},
 	vivillongarden: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Verdure",
+		forme: "Motif Verdure",
 	},
 	vivillonhighplains: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Sécheresse",
+		forme: "Motif Sécheresse",
 	},
 	vivillonicysnow: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Blizzard",
+		forme: "Motif Blizzard",
 	},
 	vivillonjungle: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Jungle",
+		forme: "Motif Jungle",
 	},
 	vivillonmarine: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Rivage",
+		forme: "Motif Rivage",
 	},
 	vivillonmodern: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Métropole",
+		forme: "Motif Métropole",
 	},
 	vivillonmonsoon: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Cyclone",
+		forme: "Motif Cyclone",
 	},
 	vivillonocean: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Soleil Levant",
+		forme: "Motif Soleil Levant",
 	},
 	vivillonpolar: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Banquise",
+		forme: "Motif Banquise",
 	},
 	vivillonriver: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Delta",
+		forme: "Motif Delta",
 	},
 	vivillonsandstorm: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Sable",
+		forme: "Motif Sable",
 	},
 	vivillonsavanna: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Mangrove",
+		forme: "Motif Mangrove",
 	},
 	vivillonsun: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Zénith",
+		forme: "Motif Zénith",
 	},
 	vivillontundra: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Prismillon Glace",
+		forme: "Motif Glace",
 	},
 	litleo: {
 		name: "Hélionceau",
@@ -3085,79 +3085,79 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Némélios",
 	},
 	pyroarmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Némélios",
+		forme: "Méga-Némélios",
 	},
 	flabebe: {
-		name: null, // NEEDS TRANSLATION
+		name: "Flabébé",
 		baseSpecies: "Flabébé",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Fleur Rouge",
 	},
 	flabebeblue: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Flabébé Bleu",
+		forme: "Fleur Bleue",
 	},
 	flabebeorange: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Flabébé Orange",
+		forme: "Fleur Orange",
 	},
 	flabebewhite: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Flabébé Blanc",
+		forme: "Fleur Blanche",
 	},
 	flabebeyellow: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Flabébé Jaune",
+		forme: "Fleur Jaune",
 	},
 	floette: {
-		name: null, // NEEDS TRANSLATION
-		baseSpecies: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Floette",
+		baseSpecies: "Floette",
+		forme: "Fleur Rouge",
 	},
 	floetteblue: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Floette Bleu",
+		forme: "Fleur Bleue",
 	},
 	floetteorange: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Floette Orange",
+		forme: "Fleur Orange",
 	},
 	floettewhite: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Floette Blanc",
+		forme: "Fleur Blanche",
 	},
 	floetteyellow: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Floette Jaune",
+		forme: "Fleur Jaune",
 	},
 	floettemega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Floette",
+		forme: "Méga-Floette",
 	},
 	floetteeternal: {
 		name: "Floette Éternel",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Fleur Éternelle",
 	},
 	florges: {
-		name: null, // NEEDS TRANSLATION
+		name: "Florges",
 		baseSpecies: "Florges",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Fleur Rouge",
 	},
 	florgesblue: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Florges Bleu",
+		forme: "Fleur Bleue",
 	},
 	florgesorange: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Florges Orange",
+		forme: "Fleur Orange",
 	},
 	florgeswhite: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Florges Blanc",
+		forme: "Fleur Blanche",
 	},
 	florgesyellow: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Florges Jaune",
+		forme: "Fleur Jaune",
 	},
 	skiddo: {
 		name: "Cabriolaine",
@@ -3173,62 +3173,62 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	furfrou: {
 		name: "Couafarel",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Sauvage",
 	},
 	furfroudandy: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Couafarel Monsieur",
+		forme: "Coupe Monsieur",
 	},
 	furfroudebutante: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Couafarel Demoiselle",
+		forme: "Coupe Demoiselle",
 	},
 	furfroudiamond: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Couafarel Diamant",
+		forme: "Coupe Diamant",
 	},
 	furfrouheart: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Couafarel Cœur",
+		forme: "Coupe Cœur",
 	},
 	furfroukabuki: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Couafarel Kabuki",
+		forme: "Coupe Kabuki",
 	},
 	furfroulareine: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Couafarel Reine",
+		forme: "Coupe Reine",
 	},
 	furfroumatron: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Couafarel Madame",
+		forme: "Coupe Madame",
 	},
 	furfroupharaoh: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Couafarel Pharaon",
+		forme: "Coupe Pharaon",
 	},
 	furfroustar: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Couafarel Étoile",
+		forme: "Coupe Étoile",
 	},
 	espurr: {
 		name: "Psystigri",
 	},
 	meowstic: {
-		name: null, // NEEDS TRANSLATION
+		name: "Mistigrix",
 		baseSpecies: "Mistigrix",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mâle",
 	},
 	meowsticf: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Mistigrix Femelle",
+		forme: "Femelle",
 	},
 	meowsticmmega: {
-		name: null, // NEEDS TRANSLATION
+		name: "Méga-Mistigrix Mâle",
 		forme: "Méga-Mistigrix (Mâle)",
 	},
 	meowsticfmega: {
-		name: null, // NEEDS TRANSLATION
+		name: "Méga-Mistigrix Femelle",
 		forme: "Méga-Mistigrix (Femelle)",
 	},
 	honedge: {
@@ -3239,11 +3239,11 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	aegislash: {
 		name: "Exagide",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Parade",
 	},
 	aegislashblade: {
 		name: "Exagide Assaut",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Assaut",
 	},
 	spritzee: {
 		name: "Fluvetin",
@@ -3264,8 +3264,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Sepiatroce",
 	},
 	malamarmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Sepiatroce",
+		forme: "Méga-Sepiatroce",
 	},
 	binacle: {
 		name: "Opermine",
@@ -3274,8 +3274,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Golgopathe",
 	},
 	barbaraclemega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Golgopathe",
+		forme: "Méga-Golgopathe",
 	},
 	skrelp: {
 		name: "Venalgue",
@@ -3284,8 +3284,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Kravarech",
 	},
 	dragalgemega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Kravarech",
+		forme: "Méga-Kravarech",
 	},
 	clauncher: {
 		name: "Flingouste",
@@ -3318,8 +3318,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Brutalibré",
 	},
 	hawluchamega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Brutalibré",
+		forme: "Méga-Brutalibré",
 	},
 	dedenne: {
 		name: "Dedenne",
@@ -3335,14 +3335,14 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	sliggoohisui: {
 		name: "Colimucus de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	goodra: {
 		name: "Muplodocus",
 	},
 	goodrahisui: {
 		name: "Muplodocus de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	klefki: {
 		name: "Trousselin",
@@ -3355,35 +3355,35 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	pumpkaboo: {
 		name: "Pitrouille",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Taille Normale",
 	},
 	pumpkaboosmall: {
 		name: "Pitrouille Mini",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Taille Mini",
 	},
 	pumpkaboolarge: {
 		name: "Pitrouille Maxi",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Taille Maxi",
 	},
 	pumpkaboosuper: {
 		name: "Pitrouille Ultra",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Taille Ultra",
 	},
 	gourgeist: {
 		name: "Banshitrouye",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Taille Normale",
 	},
 	gourgeistsmall: {
 		name: "Banshitrouye Mini",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Taille Mini",
 	},
 	gourgeistlarge: {
 		name: "Banshitrouye Maxi",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Taille Maxi",
 	},
 	gourgeistsuper: {
 		name: "Banshitrouye Ultra",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Taille Ultra",
 	},
 	bergmite: {
 		name: "Grelaçon",
@@ -3393,7 +3393,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	avalugghisui: {
 		name: "Séracrawl de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	noibat: {
 		name: "Sonistrelle",
@@ -3403,47 +3403,47 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	xerneas: {
 		name: "Xerneas",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mode Déchaîné",
 	},
 	xerneasneutral: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Xerneas Paisible",
+		forme: "Mode Paisible",
 	},
 	yveltal: {
 		name: "Yveltal",
 	},
 	zygarde: {
-		name: null, // NEEDS TRANSLATION
-		baseSpecies: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Zygarde",
+		baseSpecies: "Zygarde",
+		forme: "Forme 50 %",
 	},
 	zygardemega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Zygarde",
+		forme: "Méga-Zygarde",
 	},
 	zygarde10: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Zygarde 10 %",
+		forme: "Forme 10 %",
 	},
 	zygardecomplete: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Zygarde Parfait",
+		forme: "Forme Parfaite",
 	},
 	diancie: {
 		name: "Diancie",
 	},
 	dianciemega: {
 		name: "Méga-Diancie",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Méga-Diancie",
 	},
 	hoopa: {
-		name: null, // NEEDS TRANSLATION
+		name: "Hoopa",
 		baseSpecies: "Hoopa",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Hoopa Enchaîné",
 	},
 	hoopaunbound: {
 		name: "Hoopa Déchaîné",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Hoopa Déchaîné",
 	},
 	volcanion: {
 		name: "Volcanion",
@@ -3459,7 +3459,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	decidueyehisui: {
 		name: "Archéduc de Hisui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme de Hisui",
 	},
 	litten: {
 		name: "Flamiaou",
@@ -3495,8 +3495,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Argouste",
 	},
 	gumshoostotem: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Argouste Dominant",
+		forme: "Dominant",
 	},
 	grubbin: {
 		name: "Larvibule",
@@ -3508,8 +3508,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Lucanon",
 	},
 	vikavolttotem: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Lucanon Dominant",
+		forme: "Dominant",
 	},
 	crabrawler: {
 		name: "Crabagarre",
@@ -3518,25 +3518,25 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Crabominable",
 	},
 	crabominablemega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Crabominable",
+		forme: "Méga-Crabominable",
 	},
 	oricorio: {
-		name: null, // NEEDS TRANSLATION
+		name: "Plumeline",
 		baseSpecies: "Plumeline",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Style Flamenco",
 	},
 	oricoriopompom: {
 		name: "Plumeline Style Pom-Pom",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Style Pom-Pom",
 	},
 	oricoriopau: {
 		name: "Plumeline Style Hula",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Style Hula",
 	},
 	oricoriosensu: {
 		name: "Plumeline Style Buyō",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Style Buyō",
 	},
 	cutiefly: {
 		name: "Bombydou",
@@ -3545,36 +3545,36 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Rubombelle",
 	},
 	ribombeetotem: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Rubombelle Dominant",
+		forme: "Dominant",
 	},
 	rockruff: {
 		name: "Rocabot",
 	},
 	rockruffdusk: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Rocabot Tempo Perso",
+		forme: "Tempo Perso",
 	},
 	lycanroc: {
-		name: null, // NEEDS TRANSLATION
+		name: "Lougaroc",
 		baseSpecies: "Lougaroc",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Diurne",
 	},
 	lycanrocmidnight: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Lougaroc Nocturne",
+		forme: "Forme Nocturne",
 	},
 	lycanrocdusk: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Lougaroc Crépusculaire",
+		forme: "Forme Crépusculaire",
 	},
 	wishiwashi: {
 		name: "Froussardine",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Solitaire",
 	},
 	wishiwashischool: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Froussardine Banc",
+		forme: "Forme Banc",
 	},
 	mareanie: {
 		name: "Vorastérie",
@@ -3595,8 +3595,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Tarenbulle",
 	},
 	araquanidtotem: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Tarenbulle Dominant",
+		forme: "Dominant",
 	},
 	fomantis: {
 		name: "Mimantis",
@@ -3605,8 +3605,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Floramantis",
 	},
 	lurantistotem: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Floramantis Dominant",
+		forme: "Dominant",
 	},
 	morelull: {
 		name: "Spododo",
@@ -3621,8 +3621,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Malamandre",
 	},
 	salazzletotem: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Malamandre Dominant",
+		forme: "Dominant",
 	},
 	stufful: {
 		name: "Nounourson",
@@ -3655,8 +3655,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Sarmuraï",
 	},
 	golisopodmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Sarmuraï",
+		forme: "Méga-Sarmuraï",
 	},
 	sandygast: {
 		name: "Bacabouh",
@@ -3672,108 +3672,108 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	silvally: {
 		name: "Silvallié",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Type : Normal",
 	},
 	silvallyfighting: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Combat",
+		forme: "Type : Combat",
 	},
 	silvallyflying: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Vol",
+		forme: "Type : Vol",
 	},
 	silvallypoison: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Poison",
+		forme: "Type : Poison",
 	},
 	silvallyground: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Sol",
+		forme: "Type : Sol",
 	},
 	silvallyrock: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Roche",
+		forme: "Type : Roche",
 	},
 	silvallybug: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Insecte",
+		forme: "Type : Insecte",
 	},
 	silvallyghost: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Spectre",
+		forme: "Type : Spectre",
 	},
 	silvallysteel: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Acier",
+		forme: "Type : Acier",
 	},
 	silvallyfire: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Feu",
+		forme: "Type : Feu",
 	},
 	silvallywater: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Eau",
+		forme: "Type : Eau",
 	},
 	silvallygrass: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Plante",
+		forme: "Type : Plante",
 	},
 	silvallyelectric: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Électrik",
+		forme: "Type : Électrik",
 	},
 	silvallypsychic: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Psy",
+		forme: "Type : Psy",
 	},
 	silvallyice: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Glace",
+		forme: "Type : Glace",
 	},
 	silvallydragon: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Dragon",
+		forme: "Type : Dragon",
 	},
 	silvallydark: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Ténèbres",
+		forme: "Type : Ténèbres",
 	},
 	silvallyfairy: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Silvallié Fée",
+		forme: "Type : Fée",
 	},
 	minior: {
-		name: null, // NEEDS TRANSLATION
+		name: "Météno",
 		baseSpecies: "Météno",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Noyau Rouge",
 	},
 	miniormeteor: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Météno Météore",
+		forme: "Forme Météore",
 	},
 	miniororange: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Météno Orange",
+		forme: "Noyau Orange",
 	},
 	minioryellow: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Météno Jaune",
+		forme: "Noyau Jaune",
 	},
 	miniorgreen: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Météno Vert",
+		forme: "Noyau Vert",
 	},
 	miniorblue: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Météno Bleu",
+		forme: "Noyau Bleu",
 	},
 	miniorindigo: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Météno Indigo",
+		forme: "Noyau Indigo",
 	},
 	miniorviolet: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Météno Violet",
+		forme: "Noyau Violet",
 	},
 	komala: {
 		name: "Dodoala",
@@ -3785,24 +3785,24 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Togedemaru",
 	},
 	togedemarutotem: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Togedemaru Dominant",
+		forme: "Dominant",
 	},
 	mimikyu: {
 		name: "Mimiqui",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Déguisée",
 	},
 	mimikyubustedtotem: {
-		name: null, // NEEDS TRANSLATION
+		name: "Mimiqui Démasqué Dominant",
 		forme: "Dominant (Forme Démasquée)",
 	},
 	mimikyutotem: {
-		name: null, // NEEDS TRANSLATION
+		name: "Mimiqui Dominant",
 		forme: "Dominant (Forme Déguisée)",
 	},
 	mimikyubusted: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Mimiqui Démasqué",
+		forme: "Forme Démasquée",
 	},
 	bruxish: {
 		name: "Denticrisse",
@@ -3811,8 +3811,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Draïeul",
 	},
 	drampamega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Draïeul",
+		forme: "Méga-Draïeul",
 	},
 	dhelmise: {
 		name: "Sinistrail",
@@ -3827,8 +3827,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Ékaïser",
 	},
 	kommoototem: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Ékaïser Dominant",
+		forme: "Dominant",
 	},
 	tapukoko: {
 		name: "Tokorico",
@@ -3879,31 +3879,31 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Necrozma",
 	},
 	necrozmaduskmane: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Necrozma Crinière du Couchant",
+		forme: "Crinière du Couchant",
 	},
 	necrozmadawnwings: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Necrozma Ailes de l’Aurore",
+		forme: "Ailes de l’Aurore",
 	},
 	necrozmaultra: {
 		name: "Ultra-Necrozma",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Ultra-Necrozma",
 	},
 	magearna: {
 		name: "Magearna",
 	},
 	magearnamega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Magearna",
+		forme: "Méga-Magearna",
 	},
 	magearnaoriginalmega: {
-		name: null, // NEEDS TRANSLATION
+		name: "Méga-Magearna Passé",
 		forme: "Méga-Magearna (Couleur du Passé)",
 	},
 	magearnaoriginal: {
 		name: "Magearna Passé",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Couleur du Passé",
 	},
 	marshadow: {
 		name: "Marshadow",
@@ -3924,8 +3924,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Zeraora",
 	},
 	zeraoramega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Zeraora",
+		forme: "Méga-Zeraora",
 	},
 	meltan: {
 		name: "Meltan",
@@ -3934,8 +3934,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Melmetal",
 	},
 	melmetalgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Melmetal Gigamax",
+		forme: "Gigamax",
 	},
 	grookey: {
 		name: "Ouistempo",
@@ -3947,8 +3947,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Gorythmic",
 	},
 	rillaboomgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Gorythmic Gigamax",
+		forme: "Gigamax",
 	},
 	scorbunny: {
 		name: "Flambino",
@@ -3960,8 +3960,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Pyrobut",
 	},
 	cinderacegmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pyrobut Gigamax",
+		forme: "Gigamax",
 	},
 	sobble: {
 		name: "Larméléon",
@@ -3973,8 +3973,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Lézargus",
 	},
 	inteleongmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Lézargus Gigamax",
+		forme: "Gigamax",
 	},
 	skwovet: {
 		name: "Rongourmand",
@@ -3992,8 +3992,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Corvaillus",
 	},
 	corviknightgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Corvaillus Gigamax",
+		forme: "Gigamax",
 	},
 	blipbug: {
 		name: "Larvadar",
@@ -4005,8 +4005,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Astronelle",
 	},
 	orbeetlegmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Astronelle Gigamax",
+		forme: "Gigamax",
 	},
 	nickit: {
 		name: "Goupilou",
@@ -4033,8 +4033,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Torgamord",
 	},
 	drednawgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Torgamord Gigamax",
+		forme: "Gigamax",
 	},
 	yamper: {
 		name: "Voltoutou",
@@ -4052,8 +4052,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Monthracite",
 	},
 	coalossalgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Monthracite Gigamax",
+		forme: "Gigamax",
 	},
 	applin: {
 		name: "Verpom",
@@ -4062,15 +4062,15 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Pomdrapi",
 	},
 	flapplegmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pomdrapi Gigamax",
+		forme: "Gigamax",
 	},
 	appletun: {
 		name: "Dratatin",
 	},
 	appletungmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Dratatin Gigamax",
+		forme: "Gigamax",
 	},
 	silicobra: {
 		name: "Dunaja",
@@ -4079,19 +4079,19 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Dunaconda",
 	},
 	sandacondagmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Dunaconda Gigamax",
+		forme: "Gigamax",
 	},
 	cramorant: {
 		name: "Nigosier",
 	},
 	cramorantgulping: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Nigosier Gobe-Tout",
+		forme: "Forme Gobe-Tout",
 	},
 	cramorantgorging: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Nigosier Gobe-Chu",
+		forme: "Forme Gobe-Chu",
 	},
 	arrokuda: {
 		name: "Embrochet",
@@ -4103,20 +4103,20 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Toxizap",
 	},
 	toxtricity: {
-		name: null, // NEEDS TRANSLATION
-		baseSpecies: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Salarsen",
+		baseSpecies: "Salarsen",
+		forme: "Forme Aigüe",
 	},
 	toxtricitygmax: {
-		name: null, // NEEDS TRANSLATION
+		name: "Salarsen Gigamax",
 		forme: "Gigamax (Forme Aigüe)",
 	},
 	toxtricitylowkey: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Salarsen Grave",
+		forme: "Forme Grave",
 	},
 	toxtricitylowkeygmax: {
-		name: null, // NEEDS TRANSLATION
+		name: "Salarsen Grave Gigamax",
 		forme: "Gigamax (Forme Grave)",
 	},
 	sizzlipede: {
@@ -4126,8 +4126,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Scolocendre",
 	},
 	centiskorchgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Scolocendre Gigamax",
+		forme: "Gigamax",
 	},
 	clobbopus: {
 		name: "Poulpaf",
@@ -4137,19 +4137,19 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	sinistea: {
 		name: "Théffroi",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Contrefaçon",
 	},
 	sinisteaantique: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Théffroi Authentique",
+		forme: "Forme Authentique",
 	},
 	polteageist: {
 		name: "Polthégeist",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Contrefaçon",
 	},
 	polteageistantique: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Polthégeist Authentique",
+		forme: "Forme Authentique",
 	},
 	hatenna: {
 		name: "Bibichut",
@@ -4161,8 +4161,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Sorcilence",
 	},
 	hatterenegmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Sorcilence Gigamax",
+		forme: "Gigamax",
 	},
 	impidimp: {
 		name: "Grimalin",
@@ -4174,8 +4174,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Angoliath",
 	},
 	grimmsnarlgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Angoliath Gigamax",
+		forme: "Gigamax",
 	},
 	obstagoon: {
 		name: "Ixon",
@@ -4199,52 +4199,52 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Crèmy",
 	},
 	alcremie: {
-		name: null, // NEEDS TRANSLATION
-		baseSpecies: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly",
+		baseSpecies: "Charmilly",
+		forme: "Lait Vanille",
 	},
 	alcremierubycream: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly Lait Ruby",
+		forme: "Lait Ruby",
 	},
 	alcremiematchacream: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly Lait Matcha",
+		forme: "Lait Matcha",
 	},
 	alcremiemintcream: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly Lait Menthe",
+		forme: "Lait Menthe",
 	},
 	alcremielemoncream: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly Lait Citron",
+		forme: "Lait Citron",
 	},
 	alcremiesaltedcream: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly Lait Salé",
+		forme: "Lait Salé",
 	},
 	alcremierubyswirl: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly Mélange Ruby",
+		forme: "Mélange Ruby",
 	},
 	alcremiecaramelswirl: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly Mélange Caramel",
+		forme: "Mélange Caramel",
 	},
 	alcremierainbowswirl: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly Mélange Tricolore",
+		forme: "Mélange Tricolore",
 	},
 	alcremiegmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Charmilly Gigamax",
+		forme: "Gigamax",
 	},
 	falinks: {
 		name: "Hexadron",
 	},
 	falinksmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Hexadron",
+		forme: "Méga-Hexadron",
 	},
 	pincurchin: {
 		name: "Wattapik",
@@ -4260,28 +4260,28 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	eiscue: {
 		name: "Bekaglaçon",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Tête de Gel",
 	},
 	eiscuenoice: {
 		name: "Bekaglaçon Dégel",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Tête Dégel",
 	},
 	indeedee: {
-		name: null, // NEEDS TRANSLATION
+		name: "Wimessir",
 		baseSpecies: "Wimessir",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mâle",
 	},
 	indeedeef: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Wimessir Femelle",
+		forme: "Femelle",
 	},
 	morpeko: {
 		name: "Morpeko",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mode Rassasié",
 	},
 	morpekohangry: {
 		name: "Morpeko Affamé",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mode Affamé",
 	},
 	cufant: {
 		name: "Charibari",
@@ -4290,8 +4290,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Pachyradjah",
 	},
 	copperajahgmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Pachyradjah Gigamax",
+		forme: "Gigamax",
 	},
 	dracozolt: {
 		name: "Galvagon",
@@ -4309,8 +4309,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Duralugon",
 	},
 	duraludongmax: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Duralugon Gigamax",
+		forme: "Gigamax",
 	},
 	dreepy: {
 		name: "Fantyrm",
@@ -4323,45 +4323,45 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	zacian: {
 		name: "Zacian",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Héros Aguerri",
 	},
 	zaciancrowned: {
 		name: "Zacian Épée Suprême",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Épée Suprême",
 	},
 	zamazenta: {
 		name: "Zamazenta",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Héros Aguerri",
 	},
 	zamazentacrowned: {
 		name: "Zamazenta Bouclier Suprême",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Bouclier Suprême",
 	},
 	eternatus: {
 		name: "Éthernatos",
 	},
 	eternatuseternamax: {
 		name: "Éthernatos Infinimax",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Infinimax",
 	},
 	kubfu: {
 		name: "Wushours",
 	},
 	urshifu: {
-		name: null, // NEEDS TRANSLATION
-		baseSpecies: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Shifours",
+		baseSpecies: "Shifours",
+		forme: "Style Poing Final",
 	},
 	urshifugmax: {
-		name: null, // NEEDS TRANSLATION
+		name: "Shifours Gigamax",
 		forme: "Gigamax (Style Poing Final)",
 	},
 	urshifurapidstrike: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Shifours Mille Poings",
+		forme: "Style Mille Poings",
 	},
 	urshifurapidstrikegmax: {
-		name: null, // NEEDS TRANSLATION
+		name: "Shifours Mille Poings Gigamax",
 		forme: "Gigamax (Style Mille Poings)",
 	},
 	zarude: {
@@ -4369,7 +4369,7 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	zarudedada: {
 		name: "Zarude Papa",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Papa",
 	},
 	regieleki: {
 		name: "Regieleki",
@@ -4388,11 +4388,11 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	calyrexice: {
 		name: "Calyrex Cavalier du Froid",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Cavalier du Froid",
 	},
 	calyrexshadow: {
 		name: "Calyrex Cavalier d’Effroi",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Cavalier d’Effroi",
 	},
 	wyrdeer: {
 		name: "Cerbyllin",
@@ -4404,17 +4404,17 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Ursaking",
 	},
 	ursalunabloodmoon: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Ursaking Lune Vermeille",
+		forme: "Lune Vermeille",
 	},
 	basculegion: {
-		name: null, // NEEDS TRANSLATION
+		name: "Paragruel",
 		baseSpecies: "Paragruel",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mâle",
 	},
 	basculegionf: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Paragruel Femelle",
+		forme: "Femelle",
 	},
 	sneasler: {
 		name: "Farfurex",
@@ -4423,13 +4423,13 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Qwilpik",
 	},
 	enamorus: {
-		name: null, // NEEDS TRANSLATION
+		name: "Amovénus",
 		baseSpecies: "Amovénus",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Avatar",
 	},
 	enamorustherian: {
 		name: "Amovénus Totémique",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Totémique",
 	},
 	sprigatito: {
 		name: "Poussacha",
@@ -4462,13 +4462,13 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Gourmelet",
 	},
 	oinkologne: {
-		name: null, // NEEDS TRANSLATION
+		name: "Fragroin",
 		baseSpecies: "Fragroin",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Mâle",
 	},
 	oinkolognef: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Fragroin Femelle",
+		forme: "Femelle",
 	},
 	tarountula: {
 		name: "Tissenboule",
@@ -4495,13 +4495,13 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Compagnol",
 	},
 	maushold: {
-		name: null, // NEEDS TRANSLATION
+		name: "Famignol",
 		baseSpecies: "Famignol",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Famille de Trois",
 	},
 	mausholdfour: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Famignol Famille de Quatre",
+		forme: "Famille de Quatre",
 	},
 	fidough: {
 		name: "Pâtachiot",
@@ -4519,21 +4519,21 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Arboliva",
 	},
 	squawkabilly: {
-		name: null, // NEEDS TRANSLATION
+		name: "Tapatoès",
 		baseSpecies: "Tapatoès",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Plumage Vert",
 	},
 	squawkabillyyellow: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Tapatoès Jaune",
+		forme: "Plumage Jaune",
 	},
 	squawkabillywhite: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Tapatoès Blanc",
+		forme: "Plumage Blanc",
 	},
 	squawkabillyblue: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Tapatoès Bleu",
+		forme: "Plumage Bleu",
 	},
 	nacli: {
 		name: "Selutin",
@@ -4599,8 +4599,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Scovilain",
 	},
 	scovillainmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Scovilain",
+		forme: "Méga-Scovilain",
 	},
 	rellor: {
 		name: "Léboulérou",
@@ -4637,11 +4637,11 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	palafin: {
 		name: "Superdofin",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Ordinaire",
 	},
 	palafinhero: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Superdofin Super",
+		forme: "Forme Super",
 	},
 	varoom: {
 		name: "Vrombi",
@@ -4662,8 +4662,8 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Floréclat",
 	},
 	glimmoramega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Floréclat",
+		forme: "Méga-Floréclat",
 	},
 	greavard: {
 		name: "Toutombe",
@@ -4687,29 +4687,29 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Oyacata",
 	},
 	tatsugiri: {
-		name: null, // NEEDS TRANSLATION
+		name: "Nigirigon",
 		baseSpecies: "Nigirigon",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Courbée",
 	},
 	tatsugiricurlymega: {
-		name: null, // NEEDS TRANSLATION
+		name: "Méga-Nigirigon Courbé",
 		forme: "Méga-Nigirigon (Forme Courbée)",
 	},
 	tatsugiridroopymega: {
-		name: null, // NEEDS TRANSLATION
+		name: "Méga-Nigirigon Affalé",
 		forme: "Méga-Nigirigon (Forme Affalée)",
 	},
 	tatsugiristretchymega: {
-		name: null, // NEEDS TRANSLATION
+		name: "Méga-Nigirigon Raide",
 		forme: "Méga-Nigirigon (Forme Raide)",
 	},
 	tatsugiridroopy: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Nigirigon Affalé",
+		forme: "Forme Affalée",
 	},
 	tatsugiristretchy: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Nigirigon Raide",
+		forme: "Forme Raide",
 	},
 	annihilape: {
 		name: "Courrousinge",
@@ -4721,13 +4721,13 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Farigiraf",
 	},
 	dudunsparce: {
-		name: null, // NEEDS TRANSLATION
-		baseSpecies: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Deusolourdo",
+		baseSpecies: "Deusolourdo",
+		forme: "Forme Double",
 	},
 	dudunsparcethreesegment: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Deusolourdo Triple",
+		forme: "Forme Triple",
 	},
 	kingambit: {
 		name: "Scalpereur",
@@ -4778,16 +4778,16 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Glaivodo",
 	},
 	baxcaliburmega: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Méga-Glaivodo",
+		forme: "Méga-Glaivodo",
 	},
 	gimmighoul: {
 		name: "Mordudor",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Coffre",
 	},
 	gimmighoulroaming: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Mordudor Marche",
+		forme: "Forme Marche",
 	},
 	gholdengo: {
 		name: "Gromago",
@@ -4827,19 +4827,19 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	poltchageist: {
 		name: "Poltchageist",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Imitation",
 	},
 	poltchageistartisan: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Poltchageist Onéreux",
+		forme: "Forme Onéreuse",
 	},
 	sinistcha: {
 		name: "Théffroyable",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Médiocre",
 	},
 	sinistchamasterpiece: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Théffroyable Exceptionnel",
+		forme: "Forme Exceptionnelle",
 	},
 	okidogi: {
 		name: "Félicanis",
@@ -4851,37 +4851,37 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 		name: "Favianos",
 	},
 	ogerpon: {
-		name: null, // NEEDS TRANSLATION
+		name: "Ogerpon",
 		baseSpecies: "Ogerpon",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Masque Turquoise",
 	},
 	ogerponcornerstonetera: {
-		name: null, // NEEDS TRANSLATION
+		name: "Ogerpon de la Pierre Téracristal",
 		forme: "Téracristal (Masque de la Pierre)",
 	},
 	ogerponhearthflametera: {
-		name: null, // NEEDS TRANSLATION
+		name: "Ogerpon du Fourneau Téracristal",
 		forme: "Téracristal (Masque du Fourneau)",
 	},
 	ogerponwellspringtera: {
-		name: null, // NEEDS TRANSLATION
+		name: "Ogerpon du Puits Téracristal",
 		forme: "Téracristal (Masque du Puits)",
 	},
 	ogerpontealtera: {
-		name: null, // NEEDS TRANSLATION
+		name: "Ogerpon Turquoise Téracristal",
 		forme: "Téracristal (Masque Turquoise)",
 	},
 	ogerponwellspring: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Ogerpon du Puits",
+		forme: "Masque du Puits",
 	},
 	ogerponhearthflame: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Ogerpon du Fourneau",
+		forme: "Masque du Fourneau",
 	},
 	ogerponcornerstone: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Ogerpon de la Pierre",
+		forme: "Masque de la Pierre",
 	},
 	archaludon: {
 		name: "Pondralugon",
@@ -4903,15 +4903,15 @@ export const PokedexText: { [id: IDEntry]: SpeciesText } = {
 	},
 	terapagos: {
 		name: "Terapagos",
-		forme: null, // NEEDS TRANSLATION
+		forme: "Forme Normale",
 	},
 	terapagosterastal: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Terapagos Téracristal",
+		forme: "Forme Téracristal",
 	},
 	terapagosstellar: {
-		name: null, // NEEDS TRANSLATION
-		forme: null, // NEEDS TRANSLATION
+		name: "Terapagos Stellaire",
+		forme: "Forme Stellaire",
 	},
 	pecharunt: {
 		name: "Pêchaminus",

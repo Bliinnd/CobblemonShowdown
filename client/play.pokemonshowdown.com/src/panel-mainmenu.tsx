@@ -240,9 +240,9 @@ export class MainMenuRoom extends PSRoom {
 
 		let column = 0;
 
-		window.NonBattleGames = { rps: 'Rock Paper Scissors' };
+		window.NonBattleGames = { rps: TL`Rock Paper Scissors` };
 		for (let i = 3; i <= 9; i += 2) {
-			window.NonBattleGames[`bestof${i}`] = `Best-of-${i}`;
+			window.NonBattleGames[`bestof${i}`] = TL`Best-of-{NUMBER}`.replace('{NUMBER}', `${i}`);
 		}
 		window.BattleFormats = {};
 		for (let j = 1; j < formatsList.length; j++) {
@@ -438,7 +438,7 @@ export class MainMenuRoom extends PSRoom {
 			break;
 		case 'rooms':
 			if (response.pspl) {
-				for (const roomInfo of response.pspl) roomInfo.spotlight = "Spotlight";
+				for (const roomInfo of response.pspl) roomInfo.spotlight = TL`Spotlight`;
 				response.chat = [...response.pspl, ...response.chat];
 				response.pspl = null;
 			}
@@ -667,17 +667,17 @@ class MainMenuPanel extends PSRoomPanel<MainMenuRoom> {
 		if (PS.down) {
 			return <div class="menugroup" style="background: rgba(10,10,10,.6)">
 				{PS.down === 'ddos' ? (
-					<p class="error"><strong>Pok&eacute;mon Showdown is offline due to a DDoS attack!</strong></p>
+					<p class="error"><strong>{TL`Pokémon Showdown is offline due to a DDoS attack!`}</strong></p>
 				) : (
-					<p class="error"><strong>Pok&eacute;mon Showdown is offline due to technical difficulties!</strong></p>
+					<p class="error"><strong>{TL`Pokémon Showdown is offline due to technical difficulties!`}</strong></p>
 				)}
 				<p>
 					<div style={{ textAlign: 'center' }}>
 						<img width="96" height="96" src={`//${Config.routes.client}/sprites/gen5/teddiursa.png`} alt="" />
 					</div>
-					Bear with us as we freak out.
+					{TL`Bear with us as we freak out.`}
 				</p>
-				<p>(We'll be back up in a few hours.)</p>
+				<p>{TL`(We'll be back up in a few hours.)`}</p>
 			</div>;
 		}
 
@@ -1072,40 +1072,42 @@ export class TeamForm extends preact.Component<{
 			{showCustomRules && (!this.customRules ? <p>
 				<label class="checkbox"><input
 					type="checkbox" name="customrules" checked={this.customRules} onChange={this.toggleCustomRule}
-				/> Custom rules</label>
+				/> {TL`Custom rules`}</label>
 			</p> : <fieldset class="fieldset">
 				<legend><label class="checkbox"><input
 					type="checkbox" name="customrules" checked={this.customRules} onChange={this.toggleCustomRule}
-				/> Custom rules</label></legend>
+				/> {TL`Custom rules`}</label></legend>
 				{(format?.bestOfDefault || this.bestOf) && <p>
 					<label class="checkbox">
 						<input
 							type="checkbox" name="bestof" checked={this.bestOf} onChange={this.toggleCustomRule}
 						/>
-						<abbr title="Start a team-locked best-of-n series">Best-of-<input
-							name="bestofvalue" type="number" min="3" max="9" step="2" value={this.bestOfValue}
-							onInput={this.changeBestOfValue}
-							style="width: 28px; vertical-align: initial;"
-						/></abbr></label>
+						<abbr title={TL`Start a team-locked best-of-n series`}>{TL.parts(TL`Best-of-{NUMBER}`, {
+							NUMBER: <input
+								name="bestofvalue" type="number" min="3" max="9" step="2" value={this.bestOfValue}
+								onInput={this.changeBestOfValue}
+								style="width: 28px; vertical-align: initial;"
+							/>,
+						})}</abbr></label>
 				</p>}
 				{(format?.teraPreviewDefault || this.teraPreview) && <p>
 					<label class="checkbox"><input
 						type="checkbox" name="terapreview" checked={this.teraPreview} onChange={this.toggleCustomRule}
-					/> Tera Type Preview</label>
+					/> {TL`Tera Type Preview`}</label>
 				</p>}
 				{(format?.itemClauseDefault || this.itemClause) && <p>
 					<label class="checkbox"><input
 						type="checkbox" name="itemclause" checked={this.itemClause} onChange={this.toggleCustomRule}
-					/> Item Clause</label>
+					/> {TL`Item Clause`}</label>
 				</p>}
 				<textarea
-					name="customrules" class="textbox" rows={3} placeholder="Rules separated by commas or lines"
+					name="customrules" class="textbox" rows={3} placeholder={TL`Rules separated by commas or lines`}
 					value={this.customRuleText} onInput={this.changeCustomRules}
 					style="min-height:3em"
 				/>
 				<small><a
 					href="https://github.com/smogon/pokemon-showdown/blob/master/config/CUSTOM-RULES.md" target="_blank"
-				>Custom rules guide</a></small>
+				>{TL`Custom rules guide`}</a></small>
 			</fieldset>)}
 			<p>{this.props.children}</p>
 		</form>;
