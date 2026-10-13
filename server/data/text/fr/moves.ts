@@ -8117,7 +8117,7 @@ export const MovesText: { [id: IDEntry]: MoveText } = {
 			desc: null, // NEEDS TRANSLATION
 		},
 
-		switchOut: "{POKEMON} revient vers {TRAINER:definite} !",
+		switchOut: "{POKEMON} revient vers {TRAINER} !",
 	},
 	vacuumwave: {
 		name: "Onde Vide",

@@ -13,9 +13,9 @@ export const DefaultText: { [id: IDEntry]: DefaultText } = {
 		opposingParty: "l’équipe ennemie",
 
 		turn: "== Tour {NUMBER} ==",
-		switchIn: "{TRAINER:definite:capitalize} envoie {FULLNAME} !",
+		switchIn: "{TRAINER} envoie {FULLNAME} !",
 		switchInOwn: "{FULLNAME} ! Go !",
-		switchOut: "{TRAINER:definite:capitalize} retire {NICKNAME} !",
+		switchOut: "{TRAINER} retire {NICKNAME} !",
 		switchOutOwn: "Reviens, {NICKNAME} !",
 		drag: "{FULLNAME} est traîné de force au combat !",
 		faint: "{POKEMON} est K.O. !",
