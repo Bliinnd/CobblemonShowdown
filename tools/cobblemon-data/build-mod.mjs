@@ -100,6 +100,21 @@ function inChampions(species) {
 	return s.exists && !s.isNonstandard && s.tier !== 'Illegal';
 }
 
+const gen8Dex = Dex.mod('gen8');
+const DOUBLES_TIERS = ['DUber', 'DOU', 'DBL', 'DUU', '(DUU)'];
+/**
+ * Tier en double (règles Doubles OU de Smogon) : celui d'Écarlate/Violet quand il existe, sinon
+ * "DUber" pour les légendaires majeurs et les fabuleux, sinon celui d'Épée/Bouclier, sinon (DUU).
+ * Le tag "LC" de Showdown repose sur ce tier : les Pokémon qui peuvent évoluer restent NFE / LC.
+ */
+function doublesTierFor(species) {
+	if (species.nfe) return species.prevo ? 'NFE' : 'LC';
+	if (DOUBLES_TIERS.includes(species.doublesTier)) return species.doublesTier;
+	if (species.tags.includes('Restricted Legendary') || species.tags.includes('Mythical')) return 'DUber';
+	const gen8Tier = gen8Dex.species.get(species.id).doublesTier;
+	return DOUBLES_TIERS.includes(gen8Tier) ? gen8Tier : '(DUU)';
+}
+
 function isBannedInOU(species, entry) {
 	if (OU_EXTRA_BANS.includes(species.baseSpecies) || OU_EXTRA_BANS.includes(species.name)) return true;
 	if (entry?.labels.some(l => BANNED_LABELS.includes(l))) return true;
@@ -127,9 +142,12 @@ for (const species of dex.species.all()) {
 	if (cobbleAvailable) {
 		available.add(species.id);
 		data.isNonstandard = null;
-		if (isBannedInOU(species, entry)) data.tier = 'Uber';
+		// "AG" : interdits même en Ubers (comme sur Showdown).
+		if (species.tier === 'AG') data.tier = 'AG';
+		else if (isBannedInOU(species, entry)) data.tier = 'Uber';
 		else if (species.nfe && !OU_NFE_ALLOWED.includes(species.name)) data.tier = species.prevo ? 'NFE' : 'LC';
 		else data.tier = 'OU';
+		data.doublesTier = doublesTierFor(species);
 		// National Dex : on garde les tiers de Smogon quand ils existent.
 		data.natDexTier = species.natDexTier && species.natDexTier !== 'Illegal' ? species.natDexTier : data.tier;
 	} else if (

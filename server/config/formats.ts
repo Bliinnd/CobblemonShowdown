@@ -22,11 +22,13 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	// Cobblemon
 	///////////////////////////////////////////////////////////////////
 	// Pokémon et attaques du mod Cobblemon 1.8.2 (données : data/mods/cobblemon).
-	// Pas de téracristallisation. Les egg moves sont interdits par défaut
-	// (règle "Cobblemon No Egg Moves") et autorisés dans les formats "+ Egg Moves".
+	// Pas de téracristallisation. Deux catégories, chacune coupée en Simple et Double
+	// (le client affiche "Catégorie / Sous-section" sur deux niveaux) :
+	// - "Sans egg moves" : règle "Cobblemon No Egg Moves" ;
+	// - "Avec egg moves" : mêmes formats avec "!Cobblemon No Egg Moves" (noms en "+ Egg Moves").
 
 	{
-		section: "Cobblemon",
+		section: "Sans egg moves / Simple",
 	},
 	{
 		name: "[Gen 9] Cobblemon OU",
@@ -43,6 +45,13 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 			'Archaludon', 'Dracovish', 'Kingambit', 'Gliscor', 'Palafin', 'Sneasler', 'Annihilape', 'Espathra',
 			'Arena Trap', 'Moody', 'Shadow Tag', 'King\'s Rock', 'Razor Fang', 'Baton Pass', 'Last Respects', 'Shed Tail',
 		],
+	},
+	{
+		name: "[Gen 9] Cobblemon Ubers",
+		desc: `Règles Ubers de Showdown : légendaires, fabuleux, Ultra-Chimères et Paradoxe autorisés. Pas de téracristallisation.`,
+		mod: 'cobblemon',
+		ruleset: ['Standard', 'Terastal Clause', 'Cobblemon No Egg Moves'],
+		banlist: ['AG', 'Moody', 'King\'s Rock', 'Razor Fang', 'Baton Pass', 'Last Respects'],
 	},
 	{
 		name: "[Gen 9] Cobblemon Monotype",
@@ -73,13 +82,43 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 			'Quick Claw', 'Razor Fang', 'Assist', 'Baton Pass', 'Last Respects', 'Shed Tail',
 		],
 	},
+	{
+		section: "Sans egg moves / Double",
+	},
+	{
+		name: "[Gen 9] Cobblemon Doubles OU",
+		desc: `Combat en double avec les règles Doubles OU de Smogon, sans téracristallisation.`,
+		mod: 'cobblemon',
+		gameType: 'doubles',
+		ruleset: ['Standard Doubles', 'Evasion Abilities Clause', 'Terastal Clause', 'Cobblemon No Egg Moves'],
+		// "DUber" : les Pokémon interdits en Doubles OU par Smogon (tiers calculés par build-mod.mjs).
+		banlist: ['DUber', 'Shadow Tag', 'Commander'],
+	},
+	{
+		name: "[Gen 9] Cobblemon VGC",
+		desc: `Combat en double au niveau 50 : chaque joueur amène 6 Pokémon et en choisit 4. Ni légendaires, ni fabuleux, ni Ultra-Chimères, ni Paradoxe (comme la Régulation H), et un seul exemplaire de chaque objet.`,
+		mod: 'cobblemon',
+		gameType: 'doubles',
+		ruleset: ['Flat Rules', '!! Adjust Level = 50', 'VGC Timer', 'Terastal Clause', 'Cobblemon No Egg Moves'],
+		banlist: ['Sub-Legendary', 'Ultra Beast', 'Paradox'],
+	},
 
-	// Variantes avec egg moves autorisés.
+	// Les mêmes formats, avec les egg moves autorisés.
+	{
+		section: "Avec egg moves / Simple",
+		column: 2,
+	},
 	{
 		name: "[Gen 9] Cobblemon OU + Egg Moves",
 		desc: `Cobblemon OU, avec les egg moves autorisés.`,
 		mod: 'cobblemon',
 		ruleset: ['[Gen 9] Cobblemon OU', '!Cobblemon No Egg Moves'],
+	},
+	{
+		name: "[Gen 9] Cobblemon Ubers + Egg Moves",
+		desc: `Cobblemon Ubers, avec les egg moves autorisés.`,
+		mod: 'cobblemon',
+		ruleset: ['[Gen 9] Cobblemon Ubers', '!Cobblemon No Egg Moves'],
 	},
 	{
 		name: "[Gen 9] Cobblemon Monotype + Egg Moves",
@@ -98,6 +137,24 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		desc: `Cobblemon National Dex, avec les egg moves autorisés.`,
 		mod: 'cobblemon',
 		ruleset: ['[Gen 9] Cobblemon National Dex', '!Cobblemon No Egg Moves'],
+	},
+	{
+		section: "Avec egg moves / Double",
+		column: 2,
+	},
+	{
+		name: "[Gen 9] Cobblemon Doubles OU + Egg Moves",
+		desc: `Cobblemon Doubles OU, avec les egg moves autorisés.`,
+		mod: 'cobblemon',
+		gameType: 'doubles',
+		ruleset: ['[Gen 9] Cobblemon Doubles OU', '!Cobblemon No Egg Moves'],
+	},
+	{
+		name: "[Gen 9] Cobblemon VGC + Egg Moves",
+		desc: `Cobblemon VGC, avec les egg moves autorisés.`,
+		mod: 'cobblemon',
+		gameType: 'doubles',
+		ruleset: ['[Gen 9] Cobblemon VGC', '!Cobblemon No Egg Moves'],
 	},
 
 	// S/V Singles
@@ -6153,14 +6210,14 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 ];
 
-// CobblemonShowdown : seuls les formats de la section "Cobblemon" sont proposés
-// aux joueurs. Les formats officiels de Showdown restent définis (outils et tests
-// de Showdown) mais n'apparaissent plus dans les listes.
+// CobblemonShowdown : seuls les formats des sections Cobblemon ("Sans egg moves / ..."
+// et "Avec egg moves / ...") sont proposés aux joueurs. Les formats officiels de Showdown
+// restent définis (outils et tests de Showdown) mais n'apparaissent plus dans les listes.
 {
 	let section = '';
 	for (const format of Formats as AnyObject[]) {
 		if (format.section) section = format.section;
-		if (!format.name || section === 'Cobblemon') continue;
+		if (!format.name || /^(Sans|Avec) egg moves \/ /.test(section)) continue;
 		Object.assign(format, { searchShow: false, challengeShow: false, tournamentShow: false });
 	}
 }

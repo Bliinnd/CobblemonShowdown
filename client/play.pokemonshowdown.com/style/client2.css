@@ -2521,3 +2521,17 @@ pre.textbox.textbox-empty[placeholder]:before {
 .dark .userlist span {
 	text-shadow: 1px 1px 0 #222222;
 }
+
+/* CobblemonShowdown : titres des catégories de formats ("Sans egg moves", "Avec egg moves") */
+.options-column .formats-category {
+	margin: 6px 0 0;
+	padding: 0 0 1px;
+	width: 220px;
+	font-size: 9pt;
+	border-bottom: 1px solid #AABBCC;
+	color: #345;
+}
+.dark .options-column .formats-category {
+	border-bottom-color: #556677;
+	color: #BBCCDD;
+}
