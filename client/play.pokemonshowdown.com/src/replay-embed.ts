@@ -57,7 +57,7 @@ requireScript('https://play.pokemonshowdown.com/js/battle.js?a7');
 
 /**
  * CobblemonShowdown : the scripts above come from play.pokemonshowdown.com,
- * which may not define `TL` (nor load the translation catalog). Without it,
+ * which may not define TL (nor load the translation catalog). Without it,
  * this stand-in keeps the replay controls working, in English.
  */
 function ensureTL() {

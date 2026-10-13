@@ -23,9 +23,9 @@ export const translations: TranslationCatalog = {
 	"[Join chat]": "Rejoindre le chat",
 	"[All tabs]": "Tous les onglets",
 	"[Menu]": "Menu",
-	"Uploaded Replay": null, // NEEDS TRANSLATION
-	"{p1} v. {p2}": null, // NEEDS TRANSLATION
-	"(empty room)": null, // NEEDS TRANSLATION
+	"Uploaded Replay": "Replay importé",
+	"{p1} v. {p2}": "{p1} vs {p2}",
+	"(empty room)": "(salon vide)",
 
 	// #endregion Navigation
 
@@ -96,325 +96,321 @@ export const translations: TranslationCatalog = {
 	"The login server did not respond.": "Le serveur d’authentification n’a pas répondu.",
 	"Your teams could not be saved to your account: {error}": "Vos équipes n’ont pas pu être enregistrées sur votre compte : {error}",
 	"(use arrow keys)": "(flèches du clavier)",
-	"Others": null, // NEEDS TRANSLATION
-	"text": null, // NEEDS TRANSLATION
-	"Player {1}": null, // NEEDS TRANSLATION
-	"Note that win/loss should not be used to estimate skill, since who you play against is much more important than how many times you win or lose. Our other stats like Elo and GXE are much better for estimating skill.": null, // NEEDS TRANSLATION
-	"How the ladder works": null, // NEEDS TRANSLATION
-	"Our ladder displays three ratings: Elo, GXE, and Glicko-1.": null, // NEEDS TRANSLATION
-	"{ELO} is the main ladder rating. It's a pretty normal ladder rating: goes up when you win and down when you lose.": null, // NEEDS TRANSLATION
-	"{GXE} (Glicko X-Act Estimate) is an estimate of your win chance against an average ladder player.": null, // NEEDS TRANSLATION
-	"{GLICKO} is {LINK}. It has rating and deviation values.": null, // NEEDS TRANSLATION
-	"another rating system": null, // NEEDS TRANSLATION
-	"{COIL} (Converging Order Invariant Ladder) is used for suspect tests. The more games you play, the closer it will get to your GXE × 4000. How fast it reaches GXE × 4000 depends on {LINK} which is different for each suspect test.": null, // NEEDS TRANSLATION
-	"a custom B value": null, // NEEDS TRANSLATION
-	"seeking...": null, // NEEDS TRANSLATION
-	"[Play (sound off)]": null, // NEEDS TRANSLATION
-	"Rating": null, // NEEDS TRANSLATION
-	"User is Top {threshold} on the {format} Ladder": null, // NEEDS TRANSLATION
-	"{sideName}'s team:": null, // NEEDS TRANSLATION
-	"[Join Battle]": null, // NEEDS TRANSLATION
-	"Damage": null, // NEEDS TRANSLATION
-	"Heal": null, // NEEDS TRANSLATION
-	"BRN": null, // NEEDS TRANSLATION
-	"PSN": null, // NEEDS TRANSLATION
-	"TOX": null, // NEEDS TRANSLATION
-	"SLP": null, // NEEDS TRANSLATION
-	"PAR": null, // NEEDS TRANSLATION
-	"FRZ": null, // NEEDS TRANSLATION
-	"Dynamaxed": null, // NEEDS TRANSLATION
-	"Drowsy": null, // NEEDS TRANSLATION
-	"Imprisoning foe": null, // NEEDS TRANSLATION
-	"Lightened": null, // NEEDS TRANSLATION
-	"Transformed": null, // NEEDS TRANSLATION
-	"Infatuation": null, // NEEDS TRANSLATION
-	"Perish now": null, // NEEDS TRANSLATION
-	"Perish next turn": null, // NEEDS TRANSLATION
-	"Perish in 2": null, // NEEDS TRANSLATION
-	"Perish in 3": null, // NEEDS TRANSLATION
-	"Balloon": null, // NEEDS TRANSLATION
-	"Must recharge": null, // NEEDS TRANSLATION
-	"Critical Hit Boost": null, // NEEDS TRANSLATION
-	"Fallen": null, // NEEDS TRANSLATION
-	"Syrupy": null, // NEEDS TRANSLATION
-	"Landed": null, // NEEDS TRANSLATION
-	"Focusing": null, // NEEDS TRANSLATION
-	"Trap set": null, // NEEDS TRANSLATION
+	"Others": "Autres",
+	"text": "text",
+	"Player {1}": "Joueur {1}",
+	"Note that win/loss should not be used to estimate skill, since who you play against is much more important than how many times you win or lose. Our other stats like Elo and GXE are much better for estimating skill.": "Notez que le ratio victoires/défaites ne permet pas d’estimer le niveau d’un joueur : vos adversaires comptent bien plus que le nombre de fois où vous gagnez ou perdez. Nos autres statistiques, comme l’Elo et le GXE, sont bien plus fiables pour estimer le niveau.",
+	"How the ladder works": "Fonctionnement du classement",
+	"Our ladder displays three ratings: Elo, GXE, and Glicko-1.": "Notre classement affiche trois scores : Elo, GXE et Glicko-1.",
+	"{ELO} is the main ladder rating. It's a pretty normal ladder rating: goes up when you win and down when you lose.": "{ELO} est le score principal du classement. C’est un score assez classique : il augmente quand vous gagnez et baisse quand vous perdez.",
+	"{GXE} (Glicko X-Act Estimate) is an estimate of your win chance against an average ladder player.": "{GXE} (Glicko X-Act Estimate) est une estimation de vos chances de victoire contre un joueur moyen du classement.",
+	"{GLICKO} is {LINK}. It has rating and deviation values.": "{GLICKO} est {LINK}. Il comporte un score et un écart.",
+	"another rating system": "un autre système de classement",
+	"{COIL} (Converging Order Invariant Ladder) is used for suspect tests. The more games you play, the closer it will get to your GXE × 4000. How fast it reaches GXE × 4000 depends on {LINK} which is different for each suspect test.": "{COIL} (Converging Order Invariant Ladder) est utilisé pour les suspect tests. Plus vous jouez de parties, plus il se rapproche de votre GXE × 4000. La vitesse à laquelle il atteint GXE × 4000 dépend d’{LINK}, propre à chaque suspect test.",
+	"a custom B value": "une valeur B personnalisée",
+	"seeking...": "avance rapide...",
+	"[Play (sound off)]": "Lecture (sans son)",
+	"Rating": "Score",
+	"User is Top {threshold} on the {format} Ladder": "Top {threshold} du classement {format}",
+	"{sideName}'s team:": "Équipe de {sideName} :",
+	"[Join Battle]": "Rejoindre le combat",
+	"Damage": "Dégâts",
+	"Heal": "Soin",
+	"BRN": "BRÛ",
+	"PSN": "PSN",
+	"TOX": "TOX",
+	"SLP": "SOM",
+	"PAR": "PAR",
+	"FRZ": "GEL",
+	"Dynamaxed": "Dynamaxé",
+	"Drowsy": "Somnolent",
+	"Imprisoning foe": "Possessif actif",
+	"Lightened": "Allégé",
+	"Transformed": "Transformé",
+	"Infatuation": "Attraction",
+	"Perish now": "K.O. imminent",
+	"Perish next turn": "K.O. au prochain tour",
+	"Perish in 2": "K.O. dans 2 tours",
+	"Perish in 3": "K.O. dans 3 tours",
+	"Balloon": "Ballon",
+	"Must recharge": "Doit se recharger",
+	"Critical Hit Boost": "Taux de critique accru",
+	"Fallen": "Alliés K.O.",
+	"Syrupy": "Couvert de sirop",
+	"Landed": "Au sol",
+	"Focusing": "Se concentre",
+	"Trap set": "Piège posé",
 	"L": {
-		"level": null, // NEEDS TRANSLATION
-		"losses": null, // NEEDS TRANSLATION
+		"level": "N.",
+		"losses": "D",
 	},
-	"(active)": null, // NEEDS TRANSLATION
-	"(fainted)": null, // NEEDS TRANSLATION
-	"Evasion": null, // NEEDS TRANSLATION
-	"This replay ends here.": null, // NEEDS TRANSLATION
-	"Loafing around": null, // NEEDS TRANSLATION
-	"Lost focus": null, // NEEDS TRANSLATION
-	"Trap failed": null, // NEEDS TRANSLATION
-	"Flinched": null, // NEEDS TRANSLATION
-	"Immobilized": null, // NEEDS TRANSLATION
-	"already {poke.getBoost(stat)}": null, // NEEDS TRANSLATION
-	"Stats swapped": null, // NEEDS TRANSLATION
-	"Boosts lost": null, // NEEDS TRANSLATION
-	"Restored": null, // NEEDS TRANSLATION
-	"Stats copied": null, // NEEDS TRANSLATION
-	"Stats reset": null, // NEEDS TRANSLATION
-	"Stats inverted": null, // NEEDS TRANSLATION
-	"Critical hit": null, // NEEDS TRANSLATION
-	"Super-effective": null, // NEEDS TRANSLATION
-	"Resisted": null, // NEEDS TRANSLATION
-	"Missed": null, // NEEDS TRANSLATION
-	"Already burned": null, // NEEDS TRANSLATION
-	"Already poisoned": null, // NEEDS TRANSLATION
-	"Failed": null, // NEEDS TRANSLATION
-	"Already asleep": null, // NEEDS TRANSLATION
-	"Already paralyzed": null, // NEEDS TRANSLATION
-	"Already frozen": null, // NEEDS TRANSLATION
-	"Stat drop blocked": null, // NEEDS TRANSLATION
-	"Protected": null, // NEEDS TRANSLATION
-	"Toxic poison": null, // NEEDS TRANSLATION
-	"Burn cured": null, // NEEDS TRANSLATION
-	"Poison cured": null, // NEEDS TRANSLATION
-	"Woke up": null, // NEEDS TRANSLATION
-	"Paralysis cured": null, // NEEDS TRANSLATION
-	"Thawed": null, // NEEDS TRANSLATION
-	"Cured": null, // NEEDS TRANSLATION
-	"Team Cured": null, // NEEDS TRANSLATION
-	"Item Stolen": null, // NEEDS TRANSLATION
-	"Item knocked off": null, // NEEDS TRANSLATION
-	"Balloon popped": null, // NEEDS TRANSLATION
-	"Sash": null, // NEEDS TRANSLATION
-	"Identified": null, // NEEDS TRANSLATION
-	"Taunted": null, // NEEDS TRANSLATION
-	"Imprisoning": null, // NEEDS TRANSLATION
-	"Disabled": null, // NEEDS TRANSLATION
-	"Tormented": null, // NEEDS TRANSLATION
-	"Ingrained": null, // NEEDS TRANSLATION
-	"Encored": null, // NEEDS TRANSLATION
-	"Attracted": null, // NEEDS TRANSLATION
-	"+Crit rate": null, // NEEDS TRANSLATION
-	"Cursed": null, // NEEDS TRANSLATION
-	"Smacked Down": null, // NEEDS TRANSLATION
-	"Blocked": null, // NEEDS TRANSLATION
-	"Telekinesis ended": null, // NEEDS TRANSLATION
-	"Confusion ended": null, // NEEDS TRANSLATION
-	"De-seeded": null, // NEEDS TRANSLATION
-	"Heal Block ended": null, // NEEDS TRANSLATION
-	"Attract ended": null, // NEEDS TRANSLATION
-	"Taunt ended": null, // NEEDS TRANSLATION
-	"Disable ended": null, // NEEDS TRANSLATION
-	"Embargo ended": null, // NEEDS TRANSLATION
-	"Torment ended": null, // NEEDS TRANSLATION
-	"Encore ended": null, // NEEDS TRANSLATION
-	"Illusion ended": null, // NEEDS TRANSLATION
-	"Slow Start ended": null, // NEEDS TRANSLATION
-	"Faded": null, // NEEDS TRANSLATION
-	"Enduring": null, // NEEDS TRANSLATION
-	"Protection broken": null, // NEEDS TRANSLATION
-	" calls rather than ": null, // NEEDS TRANSLATION
-	" markers: the build only inlines\n * ": null, // NEEDS TRANSLATION
-	" and ": null, // NEEDS TRANSLATION
-	"Wrong password.": null, // NEEDS TRANSLATION
-	"Too many unrecognized login attempts have been made against this account. Please try again later.": null, // NEEDS TRANSLATION
-	"For security reasons, logins must happen with POST data.": null, // NEEDS TRANSLATION
-	"incorrect login data, you need \"name\" and \"pass\" fields": null, // NEEDS TRANSLATION
-	"incorrect login data, userid must contain at least one letter or number": null, // NEEDS TRANSLATION
-	"Your username cannot start with 'guest'.": null, // NEEDS TRANSLATION
-	"Your username must be less than 19 characters long.": null, // NEEDS TRANSLATION
-	"Your username contains disallowed text.": null, // NEEDS TRANSLATION
-	"Your username is no longer available.": null, // NEEDS TRANSLATION
-	"Your username must contain at least one letter.": null, // NEEDS TRANSLATION
-	"Corrupt challenge": null, // NEEDS TRANSLATION
-	"This server is requesting an invalid login key. This probably means that either you are not connected to a server, or the server is set up incorrectly.": null, // NEEDS TRANSLATION
-	"Unknown key ID": null, // NEEDS TRANSLATION
-	"You must specify a username.": null, // NEEDS TRANSLATION
-	"Your username must include at least one letter.": null, // NEEDS TRANSLATION
-	"Your username is already taken.": null, // NEEDS TRANSLATION
-	"You must specify a password.": null, // NEEDS TRANSLATION
-	"Your password must have at least 5 characters.": null, // NEEDS TRANSLATION
-	"Your passwords do not match.": null, // NEEDS TRANSLATION
-	"Answer the anti-spam question.": null, // NEEDS TRANSLATION
-	"You cannot register more than 2 names every 2 hours.": null, // NEEDS TRANSLATION
-	"Invalid challenge string argument.": null, // NEEDS TRANSLATION
-	"'changepassword' requests can only be made with POST data.": null, // NEEDS TRANSLATION
-	"Specify your current password.": null, // NEEDS TRANSLATION
-	"Specify your new password.": null, // NEEDS TRANSLATION
-	"Repeat your new password.": null, // NEEDS TRANSLATION
-	"Your session has expired. Please log in again.": null, // NEEDS TRANSLATION
-	"Your new passwords do not match.": null, // NEEDS TRANSLATION
-	"Your old password was incorrect.": null, // NEEDS TRANSLATION
-	"Your new password must be at least 5 characters long.": null, // NEEDS TRANSLATION
-	"Invalid request (username changing must be done through POST requests).": null, // NEEDS TRANSLATION
-	"Specify a username.": null, // NEEDS TRANSLATION
-	"You're not logged in as that user.": null, // NEEDS TRANSLATION
-	"The server could not load your teams. Please try again later.": null, // NEEDS TRANSLATION
-	"Invalid team ID": null, // NEEDS TRANSLATION
-	"Failed to fetch team. Please try again later.": null, // NEEDS TRANSLATION
-	"This server is using login key {keyid}, which is no longer supported. Please tell the server operator to update their config.js file.": null, // NEEDS TRANSLATION
-	"Your version of Chrome has a bug that makes animated GIFs freeze games sometimes, so certain animations have been disabled. Only some people have the problem, so you can experiment and enable them in the Options menu setting \"Disable GIFs for Chrome 64 bug\".": null, // NEEDS TRANSLATION
-	"Usernames must contain at least one letter.": null, // NEEDS TRANSLATION
-	"Password can't be empty.": null, // NEEDS TRANSLATION
-	"Room '{roomid}' not found.": null, // NEEDS TRANSLATION
-	"'{roomid}' is already maximized.": null, // NEEDS TRANSLATION
-	"'{roomid}' is a popup and can't be maximized.": null, // NEEDS TRANSLATION
-	"You are already connecting.": null, // NEEDS TRANSLATION
-	"You are already connected.": null, // NEEDS TRANSLATION
-	"You are already offline.": null, // NEEDS TRANSLATION
-	"Search cancelled.": null, // NEEDS TRANSLATION
-	"You're not currently searching.": null, // NEEDS TRANSLATION
-	"Format {id} does not exist": null, // NEEDS TRANSLATION
-	"Added format {id} to favourites": null, // NEEDS TRANSLATION
-	"{id} is not in your favourites!": null, // NEEDS TRANSLATION
-	"Removed format {id} from favourites": null, // NEEDS TRANSLATION
-	"You are not able to ignore yourself.": null, // NEEDS TRANSLATION
-	"User '{target}' is already on your ignore list. (Moderator messages will not be ignored.)": null, // NEEDS TRANSLATION
-	"User '{target}' ignored. (Moderator messages will not be ignored.)": null, // NEEDS TRANSLATION
-	"User '{target}' isn't on your ignore list.": null, // NEEDS TRANSLATION
-	"User '{target}' no longer ignored.": null, // NEEDS TRANSLATION
-	"Are you sure you want to clear your ignore list?": null, // NEEDS TRANSLATION
-	"If you're sure, use <code>/clearignore confirm</code>": null, // NEEDS TRANSLATION
-	"You have no ignored users.": null, // NEEDS TRANSLATION
-	"Your ignore list was cleared.": null, // NEEDS TRANSLATION
-	"You are currently not ignoring anyone.": null, // NEEDS TRANSLATION
-	"You are currently ignoring: {ignoringList}": null, // NEEDS TRANSLATION
-	"Join/leave messages in room {room}: ALWAYS ON": null, // NEEDS TRANSLATION
-	"Join/leave messages: ALWAYS ON": null, // NEEDS TRANSLATION
-	"Join/leave messages on room {room}: OFF": null, // NEEDS TRANSLATION
-	"Join/leave messages: OFF": null, // NEEDS TRANSLATION
-	"Debug battle messages: ON": null, // NEEDS TRANSLATION
-	"Debug battle messages: OFF": null, // NEEDS TRANSLATION
-	"Battle Messages: ON": null, // NEEDS TRANSLATION
-	"Battle Messages: HIDDEN": null, // NEEDS TRANSLATION
-	"April Fools' Day mode set to SPRITES.": null, // NEEDS TRANSLATION
-	"April Fools' Day mode set to OFF temporarily.": null, // NEEDS TRANSLATION
-	"Trying to turn it off permanently? Use /afd never": null, // NEEDS TRANSLATION
-	"April Fools' Day mode set to DEFAULT (Currently {currentMode}).": null, // NEEDS TRANSLATION
-	"April Fools' Day mode set to FULL.": null, // NEEDS TRANSLATION
-	"April Fools' Day mode set to NEVER.": null, // NEEDS TRANSLATION
-	"You're using the AFD URL, which will still override this setting and enable AFD mode on refresh.": null, // NEEDS TRANSLATION
-	"AFD option \"{target}\" not recognized": null, // NEEDS TRANSLATION
-	"DEFAULT (currently {currentMode})": null, // NEEDS TRANSLATION
-	"AFD is currently set to {curMode}": null, // NEEDS TRANSLATION
-	"You do not have any DM windows open.": null, // NEEDS TRANSLATION
-	"All DM windows cleared and closed.": null, // NEEDS TRANSLATION
-	"(Already visible.)": null, // NEEDS TRANSLATION
-	"Locked/banned users' chat messages: VISIBLE": null, // NEEDS TRANSLATION
-	"(Already hidden.)": null, // NEEDS TRANSLATION
-	"Locked/banned users' chat messages: HIDDEN": null, // NEEDS TRANSLATION
-	"Someone is already using the name {takenName}.": null, // NEEDS TRANSLATION
-	"You've already chosen for this turn; cancel to change your choice": null, // NEEDS TRANSLATION
-	"You do not need to manually choose to pass; the client handles it for you automatically": null, // NEEDS TRANSLATION
-	"You are trapped and cannot switch out": null, // NEEDS TRANSLATION
-	"You've already chosen to switch that Pokémon in": null, // NEEDS TRANSLATION
-	"Unexpected bug, please report this": null, // NEEDS TRANSLATION
-	"Only Pokémon not already in the center can shift to the center": null, // NEEDS TRANSLATION
-	"It's not your turn to choose anything": null, // NEEDS TRANSLATION
-	"You must switch in a Pokémon, not move.": null, // NEEDS TRANSLATION
-	"Move choice has multiple targets": null, // NEEDS TRANSLATION
-	"Move \"{moveName}\" is disabled": null, // NEEDS TRANSLATION
-	"Move {moveName} is disabled": null, // NEEDS TRANSLATION
-	"You cannot decide for your partner!": null, // NEEDS TRANSLATION
-	"Couldn't find Pokémon \"{choice}\" to switch to": null, // NEEDS TRANSLATION
-	"Couldn't find Pokémon \"{choice}\" to switch to!": null, // NEEDS TRANSLATION
-	"That Pokémon is already in battle!": null, // NEEDS TRANSLATION
-	"{targetName} still has energy to battle!": null, // NEEDS TRANSLATION
-	"{targetName} is fainted and cannot battle!": null, // NEEDS TRANSLATION
-	"Unrecognized choice \"{choice}\"": null, // NEEDS TRANSLATION
-	"This room is not designed to connect to a server room": null, // NEEDS TRANSLATION
-	"Now highlighting on (everywhere): {list}": null, // NEEDS TRANSLATION
-	"Now highlighting on (in {key}): {list}": null, // NEEDS TRANSLATION
-	"Current highlight list (everywhere): {list}": null, // NEEDS TRANSLATION
-	"Current highlight list (in {key}): {list}": null, // NEEDS TRANSLATION
-	"Invalid regular expression: /{word}/: {message}": null, // NEEDS TRANSLATION
-	"{word} is already on your highlights list.": null, // NEEDS TRANSLATION
-	"Invalid /highlight command.": null, // NEEDS TRANSLATION
-	"All highlights (everywhere) cleared.": null, // NEEDS TRANSLATION
-	"All highlights (in {key}) cleared.": null, // NEEDS TRANSLATION
-	"All highlights (in all rooms and globally) cleared.": null, // NEEDS TRANSLATION
-	"Your highlight list is empty.": null, // NEEDS TRANSLATION
-	"Your highlight list in {key} is empty.": null, // NEEDS TRANSLATION
-	"/challenge - Open a prompt to challenge a user to a battle.": null, // NEEDS TRANSLATION
-	"/challenge [user] - Challenge the user [user] to a battle.": null, // NEEDS TRANSLATION
-	"/challenge [user], [format] - Challenge the user [user] to a battle in the specified [format].": null, // NEEDS TRANSLATION
-	"/challenge [user], [format] @@@ [rules] - Challenge the user [user] to a battle with custom rules.": null, // NEEDS TRANSLATION
-	"{rules} can be a comma-separated list of: [added rule], ![removed rule], -[banned thing], *[restricted thing], +[unbanned/unrestricted thing]": null, // NEEDS TRANSLATION
-	"If used in the DMs of a user, no [user] parameter can be used and it will challenge that user.": null, // NEEDS TRANSLATION
-	"/battlerules - Detailed information on what can go in [rules].": null, // NEEDS TRANSLATION
-	"/accept - Accept a challenge if only one is pending.": null, // NEEDS TRANSLATION
-	"/accept [user] - Accept a challenge from the specified user.": null, // NEEDS TRANSLATION
-	"/reject - Reject a challenge if only one is pending.": null, // NEEDS TRANSLATION
-	"/reject [user] - Reject a challenge from the specified user.": null, // NEEDS TRANSLATION
-	"/user [user] - Open a popup containing the user [user]'s avatar, name, rank, and chatroom list.": null, // NEEDS TRANSLATION
-	"/news - Opens a popup containing the news.": null, // NEEDS TRANSLATION
-	"/ignore [user] - Ignore all messages from the user [user].": null, // NEEDS TRANSLATION
-	"/unignore [user] - Remove the user [user] from your ignore list.": null, // NEEDS TRANSLATION
-	"/ignorelist - List all the users that you currently ignore.": null, // NEEDS TRANSLATION
-	"/clearignore - Remove all users on your ignore list.": null, // NEEDS TRANSLATION
-	"Note that staff messages cannot be ignored.": null, // NEEDS TRANSLATION
-	"/nick [new username] - Change your username.": null, // NEEDS TRANSLATION
-	"/clear - Clear the room's chat log.": null, // NEEDS TRANSLATION
-	"/showdebug - Receive debug messages from battle events.": null, // NEEDS TRANSLATION
-	"/hidedebug - Ignore debug messages from battle events.": null, // NEEDS TRANSLATION
-	"/showjoins [room] - Receive users' join/leave messages.": null, // NEEDS TRANSLATION
-	"/hidejoins [room] - Ignore users' join/leave messages.": null, // NEEDS TRANSLATION
-	"If no [room] is provided, changes the global setting.": null, // NEEDS TRANSLATION
-	"/showbattles - Receive links to new battles in Lobby.": null, // NEEDS TRANSLATION
-	"/hidebattles - Ignore links to new battles in Lobby.": null, // NEEDS TRANSLATION
-	"/ffto [turn] - Skip to turn [turn] in the current battle.": null, // NEEDS TRANSLATION
-	"/ffto +[turn] - Skip forward [turn] turns.": null, // NEEDS TRANSLATION
-	"/ffto -[turn] - Skip backward [turn] turns.": null, // NEEDS TRANSLATION
-	"/ffto 0 - Skip to the start of the battle.": null, // NEEDS TRANSLATION
-	"/ffto end - Skip to the end of the battle.": null, // NEEDS TRANSLATION
-	"/unpackhidden - Suppress hiding locked or banned users' chat messages after the fact.": null, // NEEDS TRANSLATION
-	"/packhidden - Hide locked or banned users' chat messages after the fact.": null, // NEEDS TRANSLATION
-	"Hidden messages from a user can be restored by clicking the button underneath their lock/ban reason.": null, // NEEDS TRANSLATION
-	"Set your timestamps preference:": null, // NEEDS TRANSLATION
-	"/timestamps [all|lobby|pms], [minutes|seconds|off]": null, // NEEDS TRANSLATION
-	"all - Change all timestamps preferences, lobby - Change only lobby chat preferences, pms - Change only PM preferences.": null, // NEEDS TRANSLATION
-	"off - Set timestamps off, minutes - Show timestamps of the form [hh:mm], seconds - Show timestamps of the form [hh:mm:ss].": null, // NEEDS TRANSLATION
-	"Set up highlights:": null, // NEEDS TRANSLATION
-	"/highlight add [word 1], [word 2], [...] - Add the provided list of words to your highlight list.": null, // NEEDS TRANSLATION
-	"/highlight roomadd [word 1], [word 2], [...] - Add the provided list of words to the highlight list of whichever room you used the command in.": null, // NEEDS TRANSLATION
-	"/highlight list - List all words that currently highlight you.": null, // NEEDS TRANSLATION
-	"/highlight roomlist - List all words that currently highlight you in whichever room you used the command in.": null, // NEEDS TRANSLATION
-	"/highlight delete [word 1], [word 2], [...] - Delete the provided list of words from your entire highlight list.": null, // NEEDS TRANSLATION
-	"/highlight roomdelete [word 1], [word 2], [...] - Delete the provided list of words from the highlight list of whichever room you used the command in.": null, // NEEDS TRANSLATION
-	"/highlight clear - Clear your global highlight list.": null, // NEEDS TRANSLATION
-	"/highlight roomclear - Clear the highlight list of whichever room you used the command in.": null, // NEEDS TRANSLATION
-	"/highlight clearall - Clear your entire highlight list (all rooms and globally).": null, // NEEDS TRANSLATION
-	"/rank [user] - Shows all ladder ranks for the given [user].": null, // NEEDS TRANSLATION
-	"/rank [user], [format] - Shows the rank of [user] in the given [format].": null, // NEEDS TRANSLATION
-	"If no user is given, it defaults to the user of the command.": null, // NEEDS TRANSLATION
-	"/afd full - Enable all April Fools' Day jokes.": null, // NEEDS TRANSLATION
-	"/afd sprites - Enable April Fools' Day sprites.": null, // NEEDS TRANSLATION
-	"/afd default - Set April Fools' Day to default (full on April 1st, off otherwise).": null, // NEEDS TRANSLATION
-	"/afd off - Disable April Fools' Day jokes until the next refresh, and set /afd default.": null, // NEEDS TRANSLATION
-	"/afd never - Disable April Fools' Day jokes permanently.": null, // NEEDS TRANSLATION
-	"This is a PS system command; do not use it.": null, // NEEDS TRANSLATION
-	"This room has been deleted (you can't chat in it anymore)": null, // NEEDS TRANSLATION
-	"This room doesn't exist": null, // NEEDS TRANSLATION
-	"Are you sure you want to leave?": null, // NEEDS TRANSLATION
-	"(Autoreconnect in {secs}s)": null, // NEEDS TRANSLATION
-	"(Reconnecting...)": null, // NEEDS TRANSLATION
-	" (nor load the translation catalog). Without it,\n * this stand-in keeps the replay controls working, in English.\n */\nfunction ensureTL() {\n\tconst win = window as any;\n\tif (typeof win.TL === 'function') return;\n\twin.TL = (strings: string | readonly string[], ...values: unknown[]) => {\n\t\tlet source = typeof strings === 'string' ? strings :\n\t\t\tstrings.map((part, i) => (i ? ": null, // NEEDS TRANSLATION
-	"Color scheme:": null, // NEEDS TRANSLATION
-	"Speed:": null, // NEEDS TRANSLATION
-	"Hyperfast": null, // NEEDS TRANSLATION
-	"Fast": null, // NEEDS TRANSLATION
-	"Normal": null, // NEEDS TRANSLATION
-	"Slow": null, // NEEDS TRANSLATION
-	"Really Slow": null, // NEEDS TRANSLATION
-	"Music:": null, // NEEDS TRANSLATION
-	"On": null, // NEEDS TRANSLATION
-	"This replay was uploaded from a third-party server ({server}). It contains errors.": null, // NEEDS TRANSLATION
-	"Replays uploaded from third-party servers can contain errors if the server is running custom code, or the server operator has otherwise incorrectly configured their server.": null, // NEEDS TRANSLATION
-	"[Reset]": null, // NEEDS TRANSLATION
-	"[Last turn]": null, // NEEDS TRANSLATION
-	"[Next turn]": null, // NEEDS TRANSLATION
-	"[Go to turn...]": null, // NEEDS TRANSLATION
-	"[Switch sides]": null, // NEEDS TRANSLATION
-	"Turn?": null, // NEEDS TRANSLATION
-	"Invalid turn": null, // NEEDS TRANSLATION
+	"(active)": "(au combat)",
+	"(fainted)": "(K.O.)",
+	"Evasion": "Esquive",
+	"This replay ends here.": "Ce replay s’arrête ici.",
+	"Loafing around": "Paresse",
+	"Lost focus": "Concentration perdue",
+	"Trap failed": "Piège raté",
+	"Flinched": "Apeuré",
+	"Immobilized": "Immobilisé",
+	"already {poke.getBoost(stat)}": "déjà {poke.getBoost(stat)}",
+	"Stats swapped": "Stats échangées",
+	"Boosts lost": "Hausses perdues",
+	"Restored": "Baisses annulées",
+	"Stats copied": "Stats copiées",
+	"Stats reset": "Stats réinitialisées",
+	"Stats inverted": "Stats inversées",
+	"Critical hit": "Coup critique",
+	"Super-effective": "Super efficace",
+	"Resisted": "Peu efficace",
+	"Missed": "Raté",
+	"Already burned": "Déjà brûlé",
+	"Already poisoned": "Déjà empoisonné",
+	"Failed": "Échec",
+	"Already asleep": "Déjà endormi",
+	"Already paralyzed": "Déjà paralysé",
+	"Already frozen": "Déjà gelé",
+	"Stat drop blocked": "Baisse de stats bloquée",
+	"Protected": "Protégé",
+	"Toxic poison": "Gravement empoisonné",
+	"Burn cured": "Brûlure soignée",
+	"Poison cured": "Empoisonnement soigné",
+	"Woke up": "Réveillé",
+	"Paralysis cured": "Paralysie soignée",
+	"Thawed": "Dégelé",
+	"Cured": "Soigné",
+	"Team Cured": "Équipe soignée",
+	"Item Stolen": "Objet volé",
+	"Item knocked off": "Objet perdu",
+	"Balloon popped": "Ballon éclaté",
+	"Sash": "Ceinture Force",
+	"Identified": "Identifié",
+	"Taunted": "Provoqué",
+	"Imprisoning": "Possessif",
+	"Disabled": "Entravé",
+	"Tormented": "Tourmenté",
+	"Ingrained": "Enraciné",
+	"Encored": "Sous Encore",
+	"Attracted": "Amoureux",
+	"+Crit rate": "+Taux de critique",
+	"Cursed": "Maudit",
+	"Smacked Down": "Cloué au sol",
+	"Blocked": "Bloqué",
+	"Telekinesis ended": "Fin de Lévikinésie",
+	"Confusion ended": "Fin de la confusion",
+	"De-seeded": "Vampigraine retirée",
+	"Heal Block ended": "Fin d’Anti-Soin",
+	"Attract ended": "Fin d’Attraction",
+	"Taunt ended": "Fin de Provoc",
+	"Disable ended": "Fin d’Entrave",
+	"Embargo ended": "Fin d’Embargo",
+	"Torment ended": "Fin de Tourmente",
+	"Encore ended": "Fin d’Encore",
+	"Illusion ended": "Illusion dissipée",
+	"Slow Start ended": "Fin de Début Calme",
+	"Faded": "Clone disparu",
+	"Enduring": "Tient le coup",
+	"Protection broken": "Protection brisée",
+	"Wrong password.": "Mot de passe incorrect.",
+	"Too many unrecognized login attempts have been made against this account. Please try again later.": "Trop de tentatives de connexion non reconnues ont été effectuées sur ce compte. Veuillez réessayer plus tard.",
+	"For security reasons, logins must happen with POST data.": "Pour des raisons de sécurité, la connexion doit se faire par une requête POST.",
+	"incorrect login data, you need \"name\" and \"pass\" fields": "données de connexion incorrectes, les champs « name » et « pass » sont requis",
+	"incorrect login data, userid must contain at least one letter or number": "données de connexion incorrectes, l’identifiant doit contenir au moins une lettre ou un chiffre",
+	"Your username cannot start with 'guest'.": "Votre pseudo ne peut pas commencer par « guest ».",
+	"Your username must be less than 19 characters long.": "Votre pseudo doit faire moins de 19 caractères.",
+	"Your username contains disallowed text.": "Votre pseudo contient du texte interdit.",
+	"Your username is no longer available.": "Votre pseudo n’est plus disponible.",
+	"Your username must contain at least one letter.": "Votre pseudo doit contenir au moins une lettre.",
+	"Corrupt challenge": "Jeton de connexion corrompu",
+	"This server is requesting an invalid login key. This probably means that either you are not connected to a server, or the server is set up incorrectly.": "Ce serveur demande une clé de connexion invalide. Cela signifie probablement que vous n’êtes connecté à aucun serveur, ou que le serveur est mal configuré.",
+	"Unknown key ID": "Identifiant de clé inconnu",
+	"You must specify a username.": "Vous devez indiquer un pseudo.",
+	"Your username must include at least one letter.": "Votre pseudo doit comporter au moins une lettre.",
+	"Your username is already taken.": "Ce pseudo est déjà pris.",
+	"You must specify a password.": "Vous devez indiquer un mot de passe.",
+	"Your password must have at least 5 characters.": "Votre mot de passe doit comporter au moins 5 caractères.",
+	"Your passwords do not match.": "Vos mots de passe ne correspondent pas.",
+	"Answer the anti-spam question.": "Répondez à la question anti-spam.",
+	"You cannot register more than 2 names every 2 hours.": "Vous ne pouvez pas enregistrer plus de 3 pseudos toutes les 2 heures.",
+	"Invalid challenge string argument.": "Jeton de connexion invalide.",
+	"'changepassword' requests can only be made with POST data.": "Les requêtes « changepassword » doivent se faire par une requête POST.",
+	"Specify your current password.": "Indiquez votre mot de passe actuel.",
+	"Specify your new password.": "Indiquez votre nouveau mot de passe.",
+	"Repeat your new password.": "Confirmez votre nouveau mot de passe.",
+	"Your session has expired. Please log in again.": "Votre session a expiré. Veuillez vous reconnecter.",
+	"Your new passwords do not match.": "Vos nouveaux mots de passe ne correspondent pas.",
+	"Your old password was incorrect.": "Votre ancien mot de passe est incorrect.",
+	"Your new password must be at least 5 characters long.": "Votre nouveau mot de passe doit comporter au moins 5 caractères.",
+	"Invalid request (username changing must be done through POST requests).": "Requête invalide (le changement de pseudo doit se faire par une requête POST).",
+	"Specify a username.": "Indiquez un pseudo.",
+	"You're not logged in as that user.": "Vous n’êtes pas connecté sous ce pseudo.",
+	"The server could not load your teams. Please try again later.": "Le serveur n’a pas pu charger vos équipes. Veuillez réessayer plus tard.",
+	"Invalid team ID": "Identifiant d’équipe invalide",
+	"Failed to fetch team. Please try again later.": "Impossible de récupérer l’équipe. Veuillez réessayer plus tard.",
+	"This server is using login key {keyid}, which is no longer supported. Please tell the server operator to update their config.js file.": "Ce serveur utilise la clé de connexion {keyid}, qui n’est plus prise en charge. Demandez à l’administrateur du serveur de mettre à jour son fichier config.js.",
+	"Your version of Chrome has a bug that makes animated GIFs freeze games sometimes, so certain animations have been disabled. Only some people have the problem, so you can experiment and enable them in the Options menu setting \"Disable GIFs for Chrome 64 bug\".": "Votre version de Chrome comporte un bug qui fige parfois les combats à cause des GIF animés : certaines animations ont donc été désactivées. Seules certaines personnes sont touchées ; vous pouvez faire l’essai de les réactiver dans le menu Options avec le réglage « Disable GIFs for Chrome 64 bug ».",
+	"Usernames must contain at least one letter.": "Les pseudos doivent contenir au moins une lettre.",
+	"Password can't be empty.": "Le mot de passe ne peut pas être vide.",
+	"Room '{roomid}' not found.": "Salon « {roomid} » introuvable.",
+	"'{roomid}' is already maximized.": "« {roomid} » est déjà agrandi.",
+	"'{roomid}' is a popup and can't be maximized.": "« {roomid} » est une fenêtre pop-up et ne peut pas être agrandi.",
+	"You are already connecting.": "Connexion déjà en cours.",
+	"You are already connected.": "Vous êtes déjà connecté.",
+	"You are already offline.": "Vous êtes déjà hors ligne.",
+	"Search cancelled.": "Recherche annulée.",
+	"You're not currently searching.": "Vous n’êtes pas en recherche de combat.",
+	"Format {id} does not exist": "Le format {id} n’existe pas",
+	"Added format {id} to favourites": "Format {id} ajouté aux favoris",
+	"{id} is not in your favourites!": "{id} n’est pas dans vos favoris !",
+	"Removed format {id} from favourites": "Format {id} retiré des favoris",
+	"You are not able to ignore yourself.": "Vous ne pouvez pas vous ignorer vous-même.",
+	"User '{target}' is already on your ignore list. (Moderator messages will not be ignored.)": "L’utilisateur « {target} » est déjà dans votre liste d’ignorés. (Les messages des modérateurs ne seront pas ignorés.)",
+	"User '{target}' ignored. (Moderator messages will not be ignored.)": "Utilisateur « {target} » ignoré. (Les messages des modérateurs ne seront pas ignorés.)",
+	"User '{target}' isn't on your ignore list.": "L’utilisateur « {target} » n’est pas dans votre liste d’ignorés.",
+	"User '{target}' no longer ignored.": "L’utilisateur « {target} » n’est plus ignoré.",
+	"Are you sure you want to clear your ignore list?": "Voulez-vous vraiment vider votre liste d’ignorés ?",
+	"If you're sure, use <code>/clearignore confirm</code>": "Si vous êtes sûr, utilisez <code>/clearignore confirm</code>",
+	"You have no ignored users.": "Vous n’ignorez aucun utilisateur.",
+	"Your ignore list was cleared.": "Votre liste d’ignorés a été vidée.",
+	"You are currently not ignoring anyone.": "Vous n’ignorez actuellement personne.",
+	"You are currently ignoring: {ignoringList}": "Vous ignorez actuellement : {ignoringList}",
+	"Join/leave messages in room {room}: ALWAYS ON": "Messages d’arrivée/départ dans le salon {room} : TOUJOURS ACTIVÉS",
+	"Join/leave messages: ALWAYS ON": "Messages d’arrivée/départ : TOUJOURS ACTIVÉS",
+	"Join/leave messages on room {room}: OFF": "Messages d’arrivée/départ dans le salon {room} : DÉSACTIVÉS",
+	"Join/leave messages: OFF": "Messages d’arrivée/départ : DÉSACTIVÉS",
+	"Debug battle messages: ON": "Messages de débogage des combats : ACTIVÉS",
+	"Debug battle messages: OFF": "Messages de débogage des combats : DÉSACTIVÉS",
+	"Battle Messages: ON": "Messages de combat : ACTIVÉS",
+	"Battle Messages: HIDDEN": "Messages de combat : MASQUÉS",
+	"April Fools' Day mode set to SPRITES.": "Mode Poisson d’avril réglé sur SPRITES.",
+	"April Fools' Day mode set to OFF temporarily.": "Mode Poisson d’avril temporairement réglé sur OFF.",
+	"Trying to turn it off permanently? Use /afd never": "Vous voulez le désactiver définitivement ? Utilisez /afd never",
+	"April Fools' Day mode set to DEFAULT (Currently {currentMode}).": "Mode Poisson d’avril réglé sur DEFAULT (actuellement {currentMode}).",
+	"April Fools' Day mode set to FULL.": "Mode Poisson d’avril réglé sur FULL.",
+	"April Fools' Day mode set to NEVER.": "Mode Poisson d’avril réglé sur NEVER.",
+	"You're using the AFD URL, which will still override this setting and enable AFD mode on refresh.": "Vous utilisez l’URL Poisson d’avril (AFD), qui reste prioritaire sur ce réglage et réactivera le mode Poisson d’avril à l’actualisation.",
+	"AFD option \"{target}\" not recognized": "Option AFD « {target} » non reconnue",
+	"DEFAULT (currently {currentMode})": "DEFAULT (actuellement {currentMode})",
+	"AFD is currently set to {curMode}": "Le mode poisson d’avril (AFD) est actuellement réglé sur {curMode}",
+	"You do not have any DM windows open.": "Vous n’avez aucune fenêtre de MP ouverte.",
+	"All DM windows cleared and closed.": "Toutes les fenêtres de MP ont été vidées et fermées.",
+	"(Already visible.)": "(Déjà visibles.)",
+	"Locked/banned users' chat messages: VISIBLE": "Messages des utilisateurs verrouillés/bannis : VISIBLES",
+	"(Already hidden.)": "(Déjà masqués.)",
+	"Locked/banned users' chat messages: HIDDEN": "Messages des utilisateurs verrouillés/bannis : MASQUÉS",
+	"Someone is already using the name {takenName}.": "Quelqu’un utilise déjà le pseudo {takenName}.",
+	"You've already chosen for this turn; cancel to change your choice": "Vous avez déjà fait votre choix pour ce tour ; annulez pour le modifier",
+	"You do not need to manually choose to pass; the client handles it for you automatically": "Inutile de choisir de passer manuellement ; le client s’en charge automatiquement",
+	"You are trapped and cannot switch out": "Votre Pokémon est piégé et ne peut pas être remplacé",
+	"You've already chosen to switch that Pokémon in": "Vous avez déjà choisi de faire entrer ce Pokémon au combat",
+	"Unexpected bug, please report this": "Bug inattendu, merci de le signaler",
+	"Only Pokémon not already in the center can shift to the center": "Seuls les Pokémon qui ne sont pas déjà au centre peuvent se déplacer au centre",
+	"It's not your turn to choose anything": "Ce n’est pas à vous de choisir pour le moment",
+	"You must switch in a Pokémon, not move.": "Vous devez faire entrer un Pokémon au combat, pas attaquer.",
+	"Move choice has multiple targets": "La capacité choisie a plusieurs cibles",
+	"Move \"{moveName}\" is disabled": "La capacité « {moveName} » est désactivée",
+	"Move {moveName} is disabled": "La capacité {moveName} est désactivée",
+	"You cannot decide for your partner!": "Vous ne pouvez pas choisir à la place de votre partenaire !",
+	"Couldn't find Pokémon \"{choice}\" to switch to": "Impossible de trouver le Pokémon « {choice} » à faire entrer au combat",
+	"Couldn't find Pokémon \"{choice}\" to switch to!": "Impossible de trouver le Pokémon « {choice} » à faire entrer au combat !",
+	"That Pokémon is already in battle!": "Ce Pokémon est déjà au combat !",
+	"{targetName} still has energy to battle!": "{targetName} est encore en état de se battre !",
+	"{targetName} is fainted and cannot battle!": "{targetName} est K.O. et ne peut pas se battre !",
+	"Unrecognized choice \"{choice}\"": "Choix « {choice} » non reconnu",
+	"This room is not designed to connect to a server room": "Ce salon n’est pas conçu pour se connecter à un salon du serveur",
+	"Now highlighting on (everywhere): {list}": "Mots désormais surlignés (partout) : {list}",
+	"Now highlighting on (in {key}): {list}": "Mots désormais surlignés (dans {key}) : {list}",
+	"Current highlight list (everywhere): {list}": "Liste de surlignage actuelle (partout) : {list}",
+	"Current highlight list (in {key}): {list}": "Liste de surlignage actuelle (dans {key}) : {list}",
+	"Invalid regular expression: /{word}/: {message}": "Expression régulière invalide : /{word}/ : {message}",
+	"{word} is already on your highlights list.": "{word} est déjà dans votre liste de surlignage.",
+	"Invalid /highlight command.": "Commande /highlight invalide.",
+	"All highlights (everywhere) cleared.": "Tous les mots surlignés (partout) ont été effacés.",
+	"All highlights (in {key}) cleared.": "Tous les mots surlignés (dans {key}) ont été effacés.",
+	"All highlights (in all rooms and globally) cleared.": "Tous les mots surlignés (dans tous les salons et globalement) ont été effacés.",
+	"Your highlight list is empty.": "Votre liste de surlignage est vide.",
+	"Your highlight list in {key} is empty.": "Votre liste de surlignage dans {key} est vide.",
+	"/challenge - Open a prompt to challenge a user to a battle.": "/challenge - Ouvre une fenêtre pour défier un utilisateur en combat.",
+	"/challenge [user] - Challenge the user [user] to a battle.": "/challenge [utilisateur] - Défie l’utilisateur [utilisateur] en combat.",
+	"/challenge [user], [format] - Challenge the user [user] to a battle in the specified [format].": "/challenge [utilisateur], [format] - Défie l’utilisateur [utilisateur] en combat dans le [format] indiqué.",
+	"/challenge [user], [format] @@@ [rules] - Challenge the user [user] to a battle with custom rules.": "/challenge [utilisateur], [format] @@@ [rules] - Défie l’utilisateur [utilisateur] en combat avec des règles personnalisées.",
+	"{rules} can be a comma-separated list of: [added rule], ![removed rule], -[banned thing], *[restricted thing], +[unbanned/unrestricted thing]": "{rules} peut être une liste séparée par des virgules de : [règle ajoutée], ![règle retirée], -[élément banni], *[élément restreint], +[élément débanni/non restreint]",
+	"If used in the DMs of a user, no [user] parameter can be used and it will challenge that user.": "Utilisée dans les MP d’un utilisateur, la commande ne prend pas de paramètre [utilisateur] et défie cet utilisateur.",
+	"/battlerules - Detailed information on what can go in [rules].": "/battlerules - Informations détaillées sur ce que peut contenir [rules].",
+	"/accept - Accept a challenge if only one is pending.": "/accept - Accepte un défi s’il n’y en a qu’un en attente.",
+	"/accept [user] - Accept a challenge from the specified user.": "/accept [utilisateur] - Accepte le défi de l’utilisateur indiqué.",
+	"/reject - Reject a challenge if only one is pending.": "/reject - Refuse un défi s’il n’y en a qu’un en attente.",
+	"/reject [user] - Reject a challenge from the specified user.": "/reject [utilisateur] - Refuse le défi de l’utilisateur indiqué.",
+	"/user [user] - Open a popup containing the user [user]'s avatar, name, rank, and chatroom list.": "/user [utilisateur] - Ouvre une fenêtre affichant l’avatar, le pseudo, le rang et la liste des salons de l’utilisateur [utilisateur].",
+	"/news - Opens a popup containing the news.": "/news - Ouvre une fenêtre affichant les actualités.",
+	"/ignore [user] - Ignore all messages from the user [user].": "/ignore [utilisateur] - Ignore tous les messages de l’utilisateur [utilisateur].",
+	"/unignore [user] - Remove the user [user] from your ignore list.": "/unignore [utilisateur] - Retire l’utilisateur [utilisateur] de votre liste d’utilisateurs ignorés.",
+	"/ignorelist - List all the users that you currently ignore.": "/ignorelist - Affiche tous les utilisateurs que vous ignorez actuellement.",
+	"/clearignore - Remove all users on your ignore list.": "/clearignore - Retire tous les utilisateurs de votre liste d’utilisateurs ignorés.",
+	"Note that staff messages cannot be ignored.": "Remarque : les messages du staff ne peuvent pas être ignorés.",
+	"/nick [new username] - Change your username.": "/nick [nouveau pseudo] - Change votre pseudo.",
+	"/clear - Clear the room's chat log.": "/clear - Efface l’historique du chat du salon.",
+	"/showdebug - Receive debug messages from battle events.": "/showdebug - Affiche les messages de débogage des événements de combat.",
+	"/hidedebug - Ignore debug messages from battle events.": "/hidedebug - Ignore les messages de débogage des événements de combat.",
+	"/showjoins [room] - Receive users' join/leave messages.": "/showjoins [salon] - Affiche les messages d’arrivée et de départ des utilisateurs.",
+	"/hidejoins [room] - Ignore users' join/leave messages.": "/hidejoins [salon] - Ignore les messages d’arrivée et de départ des utilisateurs.",
+	"If no [room] is provided, changes the global setting.": "Si aucun [salon] n’est indiqué, modifie le paramètre global.",
+	"/showbattles - Receive links to new battles in Lobby.": "/showbattles - Affiche les liens vers les nouveaux combats dans le Lobby.",
+	"/hidebattles - Ignore links to new battles in Lobby.": "/hidebattles - Ignore les liens vers les nouveaux combats dans le Lobby.",
+	"/ffto [turn] - Skip to turn [turn] in the current battle.": "/ffto [tour] - Passe au tour [tour] du combat en cours.",
+	"/ffto +[turn] - Skip forward [turn] turns.": "/ffto +[tour] - Avance de [tour] tours.",
+	"/ffto -[turn] - Skip backward [turn] turns.": "/ffto -[tour] - Recule de [tour] tours.",
+	"/ffto 0 - Skip to the start of the battle.": "/ffto 0 - Revient au début du combat.",
+	"/ffto end - Skip to the end of the battle.": "/ffto end - Passe à la fin du combat.",
+	"/unpackhidden - Suppress hiding locked or banned users' chat messages after the fact.": "/unpackhidden - Cesse de masquer a posteriori les messages des utilisateurs verrouillés ou bannis.",
+	"/packhidden - Hide locked or banned users' chat messages after the fact.": "/packhidden - Masque a posteriori les messages des utilisateurs verrouillés ou bannis.",
+	"Hidden messages from a user can be restored by clicking the button underneath their lock/ban reason.": "Les messages masqués d’un utilisateur peuvent être restaurés en cliquant sur le bouton situé sous le motif de son verrouillage ou bannissement.",
+	"Set your timestamps preference:": "Réglez vos préférences d’horodatage :",
+	"/timestamps [all|lobby|pms], [minutes|seconds|off]": "/timestamps [all|lobby|pms], [minutes|seconds|off]",
+	"all - Change all timestamps preferences, lobby - Change only lobby chat preferences, pms - Change only PM preferences.": "all - Modifie toutes les préférences d’horodatage, lobby - Modifie uniquement les préférences du chat du Lobby, pms - Modifie uniquement les préférences des MP.",
+	"off - Set timestamps off, minutes - Show timestamps of the form [hh:mm], seconds - Show timestamps of the form [hh:mm:ss].": "off - Désactive l’horodatage, minutes - Affiche l’heure au format [hh:mm], seconds - Affiche l’heure au format [hh:mm:ss].",
+	"Set up highlights:": "Configurer le surlignage :",
+	"/highlight add [word 1], [word 2], [...] - Add the provided list of words to your highlight list.": "/highlight add [mot 1], [mot 2], [...] - Ajoute les mots indiqués à votre liste de surlignage.",
+	"/highlight roomadd [word 1], [word 2], [...] - Add the provided list of words to the highlight list of whichever room you used the command in.": "/highlight roomadd [mot 1], [mot 2], [...] - Ajoute les mots indiqués à la liste de surlignage du salon dans lequel vous utilisez la commande.",
+	"/highlight list - List all words that currently highlight you.": "/highlight list - Affiche tous les mots qui déclenchent actuellement un surlignage pour vous.",
+	"/highlight roomlist - List all words that currently highlight you in whichever room you used the command in.": "/highlight roomlist - Affiche tous les mots qui déclenchent actuellement un surlignage pour vous dans le salon où vous utilisez la commande.",
+	"/highlight delete [word 1], [word 2], [...] - Delete the provided list of words from your entire highlight list.": "/highlight delete [mot 1], [mot 2], [...] - Supprime les mots indiqués de l’ensemble de votre liste de surlignage.",
+	"/highlight roomdelete [word 1], [word 2], [...] - Delete the provided list of words from the highlight list of whichever room you used the command in.": "/highlight roomdelete [mot 1], [mot 2], [...] - Supprime les mots indiqués de la liste de surlignage du salon dans lequel vous utilisez la commande.",
+	"/highlight clear - Clear your global highlight list.": "/highlight clear - Vide votre liste de surlignage globale.",
+	"/highlight roomclear - Clear the highlight list of whichever room you used the command in.": "/highlight roomclear - Vide la liste de surlignage du salon dans lequel vous utilisez la commande.",
+	"/highlight clearall - Clear your entire highlight list (all rooms and globally).": "/highlight clearall - Vide l’intégralité de votre liste de surlignage (tous les salons et globale).",
+	"/rank [user] - Shows all ladder ranks for the given [user].": "/rank [utilisateur] - Affiche tous les classements de l’utilisateur [utilisateur].",
+	"/rank [user], [format] - Shows the rank of [user] in the given [format].": "/rank [utilisateur], [format] - Affiche le classement de [utilisateur] dans le [format] indiqué.",
+	"If no user is given, it defaults to the user of the command.": "Si aucun utilisateur n’est indiqué, la commande s’applique à vous-même.",
+	"/afd full - Enable all April Fools' Day jokes.": "/afd full - Active toutes les blagues du poisson d’avril.",
+	"/afd sprites - Enable April Fools' Day sprites.": "/afd sprites - Active les sprites du poisson d’avril.",
+	"/afd default - Set April Fools' Day to default (full on April 1st, off otherwise).": "/afd default - Remet le poisson d’avril sur le réglage par défaut (complet le 1er avril, désactivé le reste de l’année).",
+	"/afd off - Disable April Fools' Day jokes until the next refresh, and set /afd default.": "/afd off - Désactive les blagues du poisson d’avril jusqu’à la prochaine actualisation, et applique /afd default.",
+	"/afd never - Disable April Fools' Day jokes permanently.": "/afd never - Désactive définitivement les blagues du poisson d’avril.",
+	"This is a PS system command; do not use it.": "Ceci est une commande système de PS ; ne l’utilisez pas.",
+	"This room has been deleted (you can't chat in it anymore)": "Ce salon a été supprimé (vous ne pouvez plus y discuter)",
+	"This room doesn't exist": "Ce salon n’existe pas",
+	"Are you sure you want to leave?": "Voulez-vous vraiment quitter la page ?",
+	"(Autoreconnect in {secs}s)": "(Reconnexion automatique dans {secs} s)",
+	"(Reconnecting...)": "(Reconnexion...)",
+	"Color scheme:": "Thème :",
+	"Speed:": "Vitesse :",
+	"Hyperfast": "Ultra-rapide",
+	"Fast": "Rapide",
+	"Normal": "Normale",
+	"Slow": "Lente",
+	"Really Slow": "Très lente",
+	"Music:": "Musique :",
+	"On": "Activé",
+	"This replay was uploaded from a third-party server ({server}). It contains errors.": "Ce replay a été mis en ligne depuis un serveur tiers ({server}). Il contient des erreurs.",
+	"Replays uploaded from third-party servers can contain errors if the server is running custom code, or the server operator has otherwise incorrectly configured their server.": "Les replays mis en ligne depuis des serveurs tiers peuvent contenir des erreurs si le serveur exécute du code personnalisé, ou si son administrateur l’a mal configuré d’une autre manière.",
+	"[Reset]": "Recommencer",
+	"[Last turn]": "Tour précédent",
+	"[Next turn]": "Tour suivant",
+	"[Go to turn...]": "Aller au tour...",
+	"[Switch sides]": "Changer de côté",
+	"Turn?": "Tour ?",
+	"Invalid turn": "Tour invalide",
 
 	// #endregion Generic UI
 
@@ -606,87 +602,87 @@ export const translations: TranslationCatalog = {
 	"Moderate in {ROOM}": "Modérer dans {ROOM}",
 	"Global moderation": "Modération globale",
 	"Choose an avatar or": "Choisissez un avatar ou",
-	"Resources": null, // NEEDS TRANSLATION
-	"While this page chiefly documents the ever-shifting set of commands available to PS! users, here are some useful resources for newcomers:": null, // NEEDS TRANSLATION
-	"Within any of the chats, and in private messages, it is possible to type in commands (messages beginning with {SLASH}) to perform a particular action. A great number of these commands exist, with some only available to certain users. For instance, you can broadcast commands to others with the {EXCLAMATION} prefix, but only when you're a player in a battle or a Voice (+) user.": null, // NEEDS TRANSLATION
-	"You can also use the \"chat self\" button on your username in the top right if you need a place to send these commands without joining a room.": null, // NEEDS TRANSLATION
-	"A complete list of commands available to regular users is provided below. Use {COMMAND} for more in-depth information on how to use them.": null, // NEEDS TRANSLATION
-	"PS! Informational Resources": null, // NEEDS TRANSLATION
-	"PS! is a wide and varied site, with more facets than can be covered here easily.": null, // NEEDS TRANSLATION
-	"Beginner's Guide to Pokémon Showdown": null, // NEEDS TRANSLATION
-	"An introduction to competitive Pokémon": null, // NEEDS TRANSLATION
-	"What do 'OU', 'UU', etc mean?": null, // NEEDS TRANSLATION
-	"What are the rules for each format?": null, // NEEDS TRANSLATION
-	"What is 'Sleep Clause' and other clauses?": null, // NEEDS TRANSLATION
-	"Next Steps for Competitive Battling": null, // NEEDS TRANSLATION
-	"Commands": null, // NEEDS TRANSLATION
-	"For more information on ranks, type {COMMAND} in any chat.": null, // NEEDS TRANSLATION
-	"Here's a list of the most useful commands for the average Pokémon Showdown experience:": null, // NEEDS TRANSLATION
-	"COMMANDS": null, // NEEDS TRANSLATION
-	"BATTLE ROOM COMMANDS": null, // NEEDS TRANSLATION
-	"OPTION COMMANDS": null, // NEEDS TRANSLATION
-	"INFORMATIONAL/RESOURCE COMMANDS": null, // NEEDS TRANSLATION
-	"(replace / with ! to broadcast. Broadcasting requires: + % @ # ~)": null, // NEEDS TRANSLATION
-	"DATA COMMANDS": null, // NEEDS TRANSLATION
-	"For an overview of room commands, use {COMMAND}": null, // NEEDS TRANSLATION
-	"For details of a specific command, you can use {COMMAND}, for example {EXAMPLE}.": null, // NEEDS TRANSLATION
-	"Search": null, // NEEDS TRANSLATION
-	"Collapse all": null, // NEEDS TRANSLATION
-	"Filter by command name": null, // NEEDS TRANSLATION
-	"Loading command data, please try again in a few moments...": null, // NEEDS TRANSLATION
-	"Chat plugin": null, // NEEDS TRANSLATION
-	"Core commands": null, // NEEDS TRANSLATION
-	"Namelocked": null, // NEEDS TRANSLATION
-	"Effects": null, // NEEDS TRANSLATION
-	"Music": null, // NEEDS TRANSLATION
-	"Notifications": null, // NEEDS TRANSLATION
-	"Mute all": null, // NEEDS TRANSLATION
-	"Image is too large and can't be saved. It should be under 3.5MB or so.": null, // NEEDS TRANSLATION
-	"Failed to load background image.": null, // NEEDS TRANSLATION
-	"Charizards": null, // NEEDS TRANSLATION
-	"Horizon": null, // NEEDS TRANSLATION
-	"Ocean": null, // NEEDS TRANSLATION
-	"Solid blue": null, // NEEDS TRANSLATION
-	"Upload": null, // NEEDS TRANSLATION
-	"Usable formatting:": null, // NEEDS TRANSLATION
-	"bold": null, // NEEDS TRANSLATION
-	"italics": null, // NEEDS TRANSLATION
-	"code formatting": null, // NEEDS TRANSLATION
-	"strikethrough": null, // NEEDS TRANSLATION
-	"superscript": null, // NEEDS TRANSLATION
-	"subscript": null, // NEEDS TRANSLATION
-	"Suppress {GREENTEXT}": null, // NEEDS TRANSLATION
-	"greentext": null, // NEEDS TRANSLATION
-	"Suppress {ME} {ACTION_FORMATTING}": null, // NEEDS TRANSLATION
-	"action formatting": null, // NEEDS TRANSLATION
-	"Auto-show spoilers": null, // NEEDS TRANSLATION
-	"these things": null, // NEEDS TRANSLATION
-	"Make [[clickable links]] unclickable": null, // NEEDS TRANSLATION
-	"Don't warn for untrusted links": null, // NEEDS TRANSLATION
-	"Close {ROOM}?": null, // NEEDS TRANSLATION
-	"Try vertical tabs": null, // NEEDS TRANSLATION
-	"Follow US laws (PS is based in the US). No porn (minors use PS), don't distribute pirated material, and don't slander others.": null, // NEEDS TRANSLATION
-	"No sex. Don't discuss anything sexually explicit, not even in private messages, not even if you're both adults.": null, // NEEDS TRANSLATION
-	"No cheating. Don't exploit bugs to gain an unfair advantage. Don't game the system (by intentionally losing against yourself or a friend in a ladder match, by timerstalling, etc). Don't impersonate staff if you're not.": null, // NEEDS TRANSLATION
-	"Moderators have discretion to punish any behaviour they deem inappropriate, whether or not it's on this list. If you disagree with a moderator ruling, appeal to an administrator (a user with ~ next to their name) or {LINK}.": null, // NEEDS TRANSLATION
-	"(Note: The First Amendment does not apply to PS, since PS is not a government organization.)": null, // NEEDS TRANSLATION
-	"Do not spam, flame, or troll. This includes advertising, raiding, asking questions with one-word answers in the lobby, and flooding the chat such as by copy/pasting logs in the lobby.": null, // NEEDS TRANSLATION
-	"Don't call unnecessary attention to yourself. Don't be obnoxious. ALL CAPS and {FORMATTING} are acceptable to emphasize things, but should be used sparingly, not all the time.": null, // NEEDS TRANSLATION
-	"No minimodding: don't mod if it's not your job. Don't tell people they'll be muted, don't ask for people to be muted, and don't talk about whether or not people should be muted ('inb4 mute', etc). This applies to bans and other punishments, too.": null, // NEEDS TRANSLATION
-	"We reserve the right to tell you to stop discussing moderator decisions if you become unreasonable or belligerent": null, // NEEDS TRANSLATION
-	"(Note: You can opt out of chat rules in private chat rooms and battle rooms, but only if all ROs or players agree to it.)": null, // NEEDS TRANSLATION
-	"Usernames may not impersonate a recognized user (a user with %, @, #, or ~ next to their name) or a famous person/organization that uses PS or is associated with Pokémon.": null, // NEEDS TRANSLATION
-	"Usernames may not be derogatory or insulting in nature, to an individual or group (insulting yourself is okay as long as it's not too serious).": null, // NEEDS TRANSLATION
-	"Usernames may not directly reference sexual activity, or be excessively disgusting.": null, // NEEDS TRANSLATION
-	"This policy is less restrictive than that of many places, so you might see some \"borderline\" nicknames that might not be accepted elsewhere. You might consider it unfair that they are allowed to keep their nickname. The fact remains that their nickname follows the above rules, and if you were asked to choose a new name, yours does not.": null, // NEEDS TRANSLATION
-	"You have been warned for breaking the rules.": null, // NEEDS TRANSLATION
-	"Pokémon Showdown Rules": null, // NEEDS TRANSLATION
-	"Be nice to people. Respect people. Don't be rude or mean to people.": null, // NEEDS TRANSLATION
-	"Discipline Appeals": null, // NEEDS TRANSLATION
-	"formatting": null, // NEEDS TRANSLATION
-	"English only, unless specified otherwise.": null, // NEEDS TRANSLATION
-	"Usernames": null, // NEEDS TRANSLATION
-	"Your username can be chosen and changed at any time. Keep in mind:": null, // NEEDS TRANSLATION
+	"Resources": "Ressources",
+	"While this page chiefly documents the ever-shifting set of commands available to PS! users, here are some useful resources for newcomers:": "Bien que cette page documente surtout l’ensemble, en constante évolution, des commandes disponibles pour les utilisateurs de PS!, voici quelques ressources utiles pour les nouveaux venus :",
+	"Within any of the chats, and in private messages, it is possible to type in commands (messages beginning with {SLASH}) to perform a particular action. A great number of these commands exist, with some only available to certain users. For instance, you can broadcast commands to others with the {EXCLAMATION} prefix, but only when you're a player in a battle or a Voice (+) user.": "Dans n’importe quel chat, ainsi qu’en messages privés, il est possible de taper des commandes (messages commençant par {SLASH}) pour effectuer une action précise. Il existe un grand nombre de ces commandes, dont certaines ne sont accessibles qu’à certains utilisateurs. Par exemple, vous pouvez diffuser des commandes aux autres avec le préfixe {EXCLAMATION}, mais seulement si vous êtes joueur dans un combat ou utilisateur Voice (+).",
+	"You can also use the \"chat self\" button on your username in the top right if you need a place to send these commands without joining a room.": "Vous pouvez aussi utiliser le bouton « Discuter avec soi-même » sur votre pseudo, en haut à droite, si vous avez besoin d’un endroit où envoyer ces commandes sans rejoindre de salon.",
+	"A complete list of commands available to regular users is provided below. Use {COMMAND} for more in-depth information on how to use them.": "La liste complète des commandes accessibles aux utilisateurs ordinaires figure ci-dessous. Utilisez {COMMAND} pour obtenir des informations détaillées sur leur utilisation.",
+	"PS! Informational Resources": "Ressources et informations de PS!",
+	"PS! is a wide and varied site, with more facets than can be covered here easily.": "PS! est un site vaste et varié, aux facettes trop nombreuses pour être toutes présentées ici.",
+	"Beginner's Guide to Pokémon Showdown": "Guide du débutant sur Pokémon Showdown",
+	"An introduction to competitive Pokémon": "Une introduction au Pokémon compétitif",
+	"What do 'OU', 'UU', etc mean?": "Que signifient « OU », « UU », etc. ?",
+	"What are the rules for each format?": "Quelles sont les règles de chaque format ?",
+	"What is 'Sleep Clause' and other clauses?": "Qu’est-ce que la « Sleep Clause » et les autres clauses ?",
+	"Next Steps for Competitive Battling": "Aller plus loin en combat compétitif",
+	"Commands": "Commandes",
+	"For more information on ranks, type {COMMAND} in any chat.": "Pour en savoir plus sur les rangs, tapez {COMMAND} dans n’importe quel chat.",
+	"Here's a list of the most useful commands for the average Pokémon Showdown experience:": "Voici une liste des commandes les plus utiles pour une utilisation courante de Pokémon Showdown :",
+	"COMMANDS": "COMMANDES",
+	"BATTLE ROOM COMMANDS": "COMMANDES DES SALONS DE COMBAT",
+	"OPTION COMMANDS": "COMMANDES D’OPTIONS",
+	"INFORMATIONAL/RESOURCE COMMANDS": "COMMANDES D’INFORMATION/DE RESSOURCES",
+	"(replace / with ! to broadcast. Broadcasting requires: + % @ # ~)": "(remplacez / par ! pour diffuser. La diffusion nécessite : + % @ # ~)",
+	"DATA COMMANDS": "COMMANDES DE DONNÉES",
+	"For an overview of room commands, use {COMMAND}": "Pour un aperçu des commandes de salon, utilisez {COMMAND}",
+	"For details of a specific command, you can use {COMMAND}, for example {EXAMPLE}.": "Pour le détail d’une commande précise, utilisez {COMMAND}, par exemple {EXAMPLE}.",
+	"Search": "Recherche",
+	"Collapse all": "Tout réduire",
+	"Filter by command name": "Filtrer par nom de commande",
+	"Loading command data, please try again in a few moments...": "Chargement des données des commandes, réessayez dans quelques instants...",
+	"Chat plugin": "Plugin de chat",
+	"Core commands": "Commandes de base",
+	"Namelocked": "Pseudo verrouillé",
+	"Effects": "Effets",
+	"Music": "Musique",
+	"Notifications": "Notifications",
+	"Mute all": "Tout couper",
+	"Image is too large and can't be saved. It should be under 3.5MB or so.": "L’image est trop lourde et ne peut pas être enregistrée. Elle doit faire moins de 3,5 Mo environ.",
+	"Failed to load background image.": "Impossible de charger le fond d’écran.",
+	"Charizards": "Dracaufeu",
+	"Horizon": "Horizon",
+	"Ocean": "Océan",
+	"Solid blue": "Bleu uni",
+	"Upload": "Importer",
+	"Usable formatting:": "Mise en forme disponible :",
+	"bold": "gras",
+	"italics": "italique",
+	"code formatting": "code",
+	"strikethrough": "barré",
+	"superscript": "exposant",
+	"subscript": "indice",
+	"Suppress {GREENTEXT}": "Désactiver le {GREENTEXT}",
+	"greentext": "texte vert",
+	"Suppress {ME} {ACTION_FORMATTING}": "Désactiver la {ACTION_FORMATTING} {ME}",
+	"action formatting": "mise en forme d’action",
+	"Auto-show spoilers": "Afficher automatiquement les spoilers",
+	"these things": "ces choses-là",
+	"Make [[clickable links]] unclickable": "Rendre les [[liens cliquables]] non cliquables",
+	"Don't warn for untrusted links": "Ne pas avertir pour les liens non fiables",
+	"Close {ROOM}?": "Fermer {ROOM} ?",
+	"Try vertical tabs": "Essayer les onglets verticaux",
+	"Follow US laws (PS is based in the US). No porn (minors use PS), don't distribute pirated material, and don't slander others.": "Respectez les lois américaines (PS est basé aux États-Unis). Pas de pornographie (des mineurs utilisent PS), ne diffusez pas de contenu piraté et ne diffamez personne.",
+	"No sex. Don't discuss anything sexually explicit, not even in private messages, not even if you're both adults.": "Pas de sexe. Ne parlez de rien de sexuellement explicite, pas même en messages privés, pas même si vous êtes tous deux adultes.",
+	"No cheating. Don't exploit bugs to gain an unfair advantage. Don't game the system (by intentionally losing against yourself or a friend in a ladder match, by timerstalling, etc). Don't impersonate staff if you're not.": "Pas de triche. N’exploitez pas de bugs pour obtenir un avantage injuste. Ne détournez pas le système (en perdant volontairement contre vous-même ou un ami lors d’un match classé, en jouant la montre, etc.). Ne vous faites pas passer pour un membre du staff si vous n’en êtes pas un.",
+	"Moderators have discretion to punish any behaviour they deem inappropriate, whether or not it's on this list. If you disagree with a moderator ruling, appeal to an administrator (a user with ~ next to their name) or {LINK}.": "Les modérateurs sont libres de sanctionner tout comportement qu’ils jugent inapproprié, qu’il figure ou non sur cette liste. Si vous contestez une décision d’un modérateur, faites appel auprès d’un administrateur (un utilisateur avec ~ à côté de son nom) ou via la page {LINK}.",
+	"(Note: The First Amendment does not apply to PS, since PS is not a government organization.)": "(Remarque : le Premier Amendement ne s’applique pas à PS, car PS n’est pas une organisation gouvernementale.)",
+	"Do not spam, flame, or troll. This includes advertising, raiding, asking questions with one-word answers in the lobby, and flooding the chat such as by copy/pasting logs in the lobby.": "Pas de spam, de flame ni de troll. Cela inclut la publicité, les raids, les questions à réponse d’un seul mot dans le Lobby et le flood du chat, par exemple en copiant-collant des logs dans le Lobby.",
+	"Don't call unnecessary attention to yourself. Don't be obnoxious. ALL CAPS and {FORMATTING} are acceptable to emphasize things, but should be used sparingly, not all the time.": "N’attirez pas inutilement l’attention sur vous. Ne soyez pas pénible. Les MAJUSCULES et la {FORMATTING} sont acceptées pour mettre quelque chose en valeur, mais avec modération, pas en permanence.",
+	"No minimodding: don't mod if it's not your job. Don't tell people they'll be muted, don't ask for people to be muted, and don't talk about whether or not people should be muted ('inb4 mute', etc). This applies to bans and other punishments, too.": "Pas de minimodération : ne modérez pas si ce n’est pas votre rôle. Ne dites pas aux gens qu’ils vont être rendus muets, ne demandez pas qu’ils le soient et ne débattez pas de savoir s’ils devraient l’être (« inb4 mute », etc.). Cela vaut aussi pour les bannissements et les autres sanctions.",
+	"We reserve the right to tell you to stop discussing moderator decisions if you become unreasonable or belligerent": "Nous nous réservons le droit de vous demander d’arrêter de discuter des décisions des modérateurs si vous devenez déraisonnable ou agressif",
+	"(Note: You can opt out of chat rules in private chat rooms and battle rooms, but only if all ROs or players agree to it.)": "(Remarque : vous pouvez déroger aux règles du chat dans les salons privés et les salons de combat, mais seulement si tous les propriétaires du salon (RO) ou tous les joueurs sont d’accord.)",
+	"Usernames may not impersonate a recognized user (a user with %, @, #, or ~ next to their name) or a famous person/organization that uses PS or is associated with Pokémon.": "Les pseudos ne doivent pas usurper l’identité d’un utilisateur reconnu (un utilisateur avec %, @, # ou ~ à côté de son nom) ni d’une personnalité ou organisation célèbre qui utilise PS ou qui est associée à Pokémon.",
+	"Usernames may not be derogatory or insulting in nature, to an individual or group (insulting yourself is okay as long as it's not too serious).": "Les pseudos ne doivent pas être dénigrants ou insultants envers une personne ou un groupe (s’insulter soi-même est toléré tant que ce n’est pas trop grave).",
+	"Usernames may not directly reference sexual activity, or be excessively disgusting.": "Les pseudos ne doivent pas faire directement référence à une activité sexuelle, ni être excessivement répugnants.",
+	"This policy is less restrictive than that of many places, so you might see some \"borderline\" nicknames that might not be accepted elsewhere. You might consider it unfair that they are allowed to keep their nickname. The fact remains that their nickname follows the above rules, and if you were asked to choose a new name, yours does not.": "Cette politique est moins restrictive que celle de nombreux autres sites ; vous verrez donc peut-être des pseudos « limites » qui ne seraient pas acceptés ailleurs. Vous trouverez peut-être injuste qu’ils puissent garder leur pseudo. Il n’en reste pas moins que leur pseudo respecte les règles ci-dessus et que, si l’on vous a demandé d’en choisir un nouveau, ce n’est pas le cas du vôtre.",
+	"You have been warned for breaking the rules.": "Vous avez reçu un avertissement pour avoir enfreint les règles.",
+	"Pokémon Showdown Rules": "Règles de Pokémon Showdown",
+	"Be nice to people. Respect people. Don't be rude or mean to people.": "Soyez gentil avec les autres. Respectez les autres. Ne soyez ni grossier ni méchant envers les autres.",
+	"Discipline Appeals": "Recours disciplinaires",
+	"formatting": "mise en forme",
+	"English only, unless specified otherwise.": "Français uniquement, sauf indication contraire.",
+	"Usernames": "Pseudos",
+	"Your username can be chosen and changed at any time. Keep in mind:": "Vous pouvez choisir et changer de pseudo à tout moment. Gardez à l’esprit les règles suivantes :",
 
 	// #endregion Popups
 
@@ -727,18 +723,18 @@ export const translations: TranslationCatalog = {
 	"You need to go into the Teambuilder and build a team for this format.": "Vous devez aller dans le Teambuilder pour créer une équipe pour ce format.",
 	"Source code": "Code source",
 	"Discussion": "Discussion",
-	"Rock Paper Scissors": null, // NEEDS TRANSLATION
-	"Best-of-{NUMBER}": null, // NEEDS TRANSLATION
-	"Spotlight": null, // NEEDS TRANSLATION
-	"Pokémon Showdown is offline due to a DDoS attack!": null, // NEEDS TRANSLATION
-	"Pokémon Showdown is offline due to technical difficulties!": null, // NEEDS TRANSLATION
-	"Bear with us as we freak out.": null, // NEEDS TRANSLATION
-	"(We'll be back up in a few hours.)": null, // NEEDS TRANSLATION
-	"Start a team-locked best-of-n series": null, // NEEDS TRANSLATION
-	"Tera Type Preview": null, // NEEDS TRANSLATION
-	"Item Clause": null, // NEEDS TRANSLATION
-	"Rules separated by commas or lines": null, // NEEDS TRANSLATION
-	"Custom rules guide": null, // NEEDS TRANSLATION
+	"Rock Paper Scissors": "Pierre-feuille-ciseaux",
+	"Best-of-{NUMBER}": "BO{NUMBER}",
+	"Spotlight": "À la une",
+	"Pokémon Showdown is offline due to a DDoS attack!": "Pokémon Showdown est hors ligne à cause d’une attaque DDoS !",
+	"Pokémon Showdown is offline due to technical difficulties!": "Pokémon Showdown est hors ligne en raison de difficultés techniques !",
+	"Bear with us as we freak out.": "Soyez patients, c’est un peu la panique de notre côté.",
+	"(We'll be back up in a few hours.)": "(Nous serons de retour d’ici quelques heures.)",
+	"Start a team-locked best-of-n series": "Lancer une série BO (au meilleur de n manches) avec une équipe verrouillée",
+	"Tera Type Preview": "Aperçu des types Téra",
+	"Item Clause": "Clause des objets",
+	"Rules separated by commas or lines": "Règles séparées par des virgules ou des retours à la ligne",
+	"Custom rules guide": "Guide des règles personnalisées",
 
 	// #endregion Main Menu
 
@@ -870,59 +866,59 @@ export const translations: TranslationCatalog = {
 	"Unrevealed Illusion user": "Pokémon avec Illusion non révélé",
 	"Not revealed": "Non révélé",
 	"Battle controls": "Commandes de combat",
-	"{effect} suppressed by {suppressor}": null, // NEEDS TRANSLATION
-	"{multiplier}&times; from {label}": null, // NEEDS TRANSLATION
-	"can't miss": null, // NEEDS TRANSLATION
-	"found": null, // NEEDS TRANSLATION
-	"frisked": null, // NEEDS TRANSLATION
-	"stolen": null, // NEEDS TRANSLATION
-	"harvested": null, // NEEDS TRANSLATION
-	"bestowed": null, // NEEDS TRANSLATION
-	"tricked": null, // NEEDS TRANSLATION
-	"knocked off": null, // NEEDS TRANSLATION
-	"disturbed": null, // NEEDS TRANSLATION
-	"shared": null, // NEEDS TRANSLATION
-	"was {item}": null, // NEEDS TRANSLATION
-	"{item} was eaten": null, // NEEDS TRANSLATION
-	"{item} was consumed": null, // NEEDS TRANSLATION
-	"{item} was popped": null, // NEEDS TRANSLATION
-	"{item} was held up": null, // NEEDS TRANSLATION
-	"{item} was flung": null, // NEEDS TRANSLATION
-	"{item} was knocked off": null, // NEEDS TRANSLATION
-	"{item} was stolen": null, // NEEDS TRANSLATION
-	"{item} was incinerated": null, // NEEDS TRANSLATION
-	"{item} was given away": null, // NEEDS TRANSLATION
-	"(Terastallized)": null, // NEEDS TRANSLATION
-	"(Type changed)": null, // NEEDS TRANSLATION
-	"Poison type": null, // NEEDS TRANSLATION
-	"fails if target's Speed is higher": null, // NEEDS TRANSLATION
-	"not Ice-type": null, // NEEDS TRANSLATION
-	"FAILS: target's level is higher": null, // NEEDS TRANSLATION
-	"+1% per level above target": null, // NEEDS TRANSLATION
-	"fails if target's level is higher": null, // NEEDS TRANSLATION
-	"Acrobatics + no item": null, // NEEDS TRANSLATION
-	"Tera Stellar boost": null, // NEEDS TRANSLATION
-	"Brine + target below half HP": null, // NEEDS TRANSLATION
-	"Facade + status": null, // NEEDS TRANSLATION
-	"{moveName} + status": null, // NEEDS TRANSLATION
-	"Smelling Salts + Paralysis": null, // NEEDS TRANSLATION
-	"{moveName} + Poison": null, // NEEDS TRANSLATION
-	"Wake-Up Slap + Sleep": null, // NEEDS TRANSLATION
-	"Terrain Pulse boost": null, // NEEDS TRANSLATION
-	"blocked by target's Dynamax": null, // NEEDS TRANSLATION
-	"{aura} + Aura Break": null, // NEEDS TRANSLATION
-	"Terrain boost": null, // NEEDS TRANSLATION
-	"Misty Terrain + grounded target": null, // NEEDS TRANSLATION
-	"Grassy Terrain + grounded target": null, // NEEDS TRANSLATION
-	"Expanding Force + Psychic Terrain boost": null, // NEEDS TRANSLATION
-	"Misty Explosion + Misty Terrain boost": null, // NEEDS TRANSLATION
-	"Rising Voltage + Electric Terrain boost": null, // NEEDS TRANSLATION
-	"Tera type BP minimum": null, // NEEDS TRANSLATION
-	"Burn": null, // NEEDS TRANSLATION
-	"no Terrain": null, // NEEDS TRANSLATION
-	"{totalTime} total": null, // NEEDS TRANSLATION
-	"Error: Missing BattleChoiceBuilder": null, // NEEDS TRANSLATION
-	"[Download replay]": null, // NEEDS TRANSLATION
+	"{effect} suppressed by {suppressor}": "{suppressor} neutralise {effect}",
+	"{multiplier}&times; from {label}": "{label} : &times;{multiplier}",
+	"can't miss": "touche à coup sûr",
+	"found": "trouvé",
+	"frisked": "révélé par Fouille",
+	"stolen": "volé",
+	"harvested": "récolté",
+	"bestowed": "reçu",
+	"tricked": "échangé",
+	"knocked off": "saboté",
+	"disturbed": "révélé par Esprit Frappeur",
+	"shared": "reçu par Symbiose",
+	"was {item}": "avant : {item}",
+	"{item} was eaten": "a mangé {item}",
+	"{item} was consumed": "a consommé {item}",
+	"{item} was popped": "{item} a éclaté",
+	"{item} was held up": "a brandi {item}",
+	"{item} was flung": "a lancé {item}",
+	"{item} was knocked off": "a perdu {item} par Sabotage",
+	"{item} was stolen": "s’est fait voler {item}",
+	"{item} was incinerated": "{item} a brûlé",
+	"{item} was given away": "a donné {item}",
+	"(Terastallized)": "(Téracristallisé)",
+	"(Type changed)": "(Type modifié)",
+	"Poison type": "type Poison",
+	"fails if target's Speed is higher": "échoue si la cible est plus rapide",
+	"not Ice-type": "lanceur sans le type Glace",
+	"FAILS: target's level is higher": "ÉCHEC : la cible a un niveau supérieur",
+	"+1% per level above target": "+1 % par niveau au-dessus de la cible",
+	"fails if target's level is higher": "échoue si la cible a un niveau supérieur",
+	"Acrobatics + no item": "Acrobatie + aucun objet",
+	"Tera Stellar boost": "bonus Téra Stellaire",
+	"Brine + target below half HP": "Saumure + cible sous la moitié de ses PV",
+	"Facade + status": "Façade + statut altéré",
+	"{moveName} + status": "{moveName} + statut altéré",
+	"Smelling Salts + Paralysis": "Stimulant + paralysie",
+	"{moveName} + Poison": "{moveName} + empoisonnement",
+	"Wake-Up Slap + Sleep": "Réveil Forcé + sommeil",
+	"Terrain Pulse boost": "bonus de Champlification",
+	"blocked by target's Dynamax": "bloqué par le Dynamax de la cible",
+	"{aura} + Aura Break": "{aura} + Aura Inversée",
+	"Terrain boost": "bonus du champ",
+	"Misty Terrain + grounded target": "Champ Brumeux + cible au sol",
+	"Grassy Terrain + grounded target": "Champ Herbu + cible au sol",
+	"Expanding Force + Psychic Terrain boost": "Vaste Pouvoir + bonus du Champ Psychique",
+	"Misty Explosion + Misty Terrain boost": "Explo-Brume + bonus du Champ Brumeux",
+	"Rising Voltage + Electric Terrain boost": "Monte-Tension + bonus du Champ Électrifié",
+	"Tera type BP minimum": "puissance minimale du type Téra",
+	"Burn": "Brûlure",
+	"no Terrain": "aucun champ",
+	"{totalTime} total": "{totalTime} au total",
+	"Error: Missing BattleChoiceBuilder": "Erreur : BattleChoiceBuilder manquant",
+	"[Download replay]": "Télécharger le replay",
 
 	// #endregion Battle
 
@@ -1046,91 +1042,91 @@ export const translations: TranslationCatalog = {
 	"You reconnected.": "Vous êtes reconnecté.",
 	"Note: Scrollback doesn't go all the way back to when you disconnected.": "Remarque : l'historique ne remonte pas jusqu'au moment de votre déconnexion.",
 	"You disconnected.": "Vous avez été déconnecté.",
-	"d3 not loaded yet": null, // NEEDS TRANSLATION
-	"the replay viewer's Smogon thread": null, // NEEDS TRANSLATION
-	"Bug? Report it to {smogonThread}": null, // NEEDS TRANSLATION
-	"Unrecognized": null, // NEEDS TRANSLATION
-	"Standard": null, // NEEDS TRANSLATION
-	"Standard AG": null, // NEEDS TRANSLATION
-	"Standard Doubles": null, // NEEDS TRANSLATION
-	"Standard NatDex": null, // NEEDS TRANSLATION
-	"Flat Rules": null, // NEEDS TRANSLATION
-	"VGC Timer": null, // NEEDS TRANSLATION
-	"Species Clause": null, // NEEDS TRANSLATION
-	"Nickname Clause": null, // NEEDS TRANSLATION
-	"Sleep Clause Mod": null, // NEEDS TRANSLATION
-	"Sleep Moves Clause": null, // NEEDS TRANSLATION
-	"Gravity Sleep Clause": null, // NEEDS TRANSLATION
-	"OHKO Clause": null, // NEEDS TRANSLATION
-	"Evasion Clause": null, // NEEDS TRANSLATION
-	"Evasion Abilities Clause": null, // NEEDS TRANSLATION
-	"Evasion Items Clause": null, // NEEDS TRANSLATION
-	"Evasion Moves Clause": null, // NEEDS TRANSLATION
-	"Endless Battle Clause": null, // NEEDS TRANSLATION
-	"Terastal Clause": null, // NEEDS TRANSLATION
-	"Dynamax Clause": null, // NEEDS TRANSLATION
-	"Mega Rayquaza Clause": null, // NEEDS TRANSLATION
-	"Z-Move Clause": null, // NEEDS TRANSLATION
-	"Same Type Clause": null, // NEEDS TRANSLATION
-	"HP Percentage Mod": null, // NEEDS TRANSLATION
-	"Exact HP Mod": null, // NEEDS TRANSLATION
-	"Cancel Mod": null, // NEEDS TRANSLATION
-	"NatDex Mod": null, // NEEDS TRANSLATION
-	"Obtainable": null, // NEEDS TRANSLATION
-	"Team Preview": null, // NEEDS TRANSLATION
-	"Picked Team Size": null, // NEEDS TRANSLATION
-	"Adjust Level": null, // NEEDS TRANSLATION
-	"Adjust Level Down": null, // NEEDS TRANSLATION
-	"Best Of": null, // NEEDS TRANSLATION
-	"Open Team Sheets": null, // NEEDS TRANSLATION
-	"Force Open Team Sheets": null, // NEEDS TRANSLATION
-	"Blitz": null, // NEEDS TRANSLATION
-	"Little Cup": null, // NEEDS TRANSLATION
-	"Cobblemon No Egg Moves": null, // NEEDS TRANSLATION
-	"Cobblemon New Megas": null, // NEEDS TRANSLATION
-	"Limit one of each Pokémon": null, // NEEDS TRANSLATION
-	"Limit one foe put to sleep": null, // NEEDS TRANSLATION
-	"OHKO moves are banned": null, // NEEDS TRANSLATION
-	"Evasion abilities, items, and moves are banned": null, // NEEDS TRANSLATION
-	"Evasion abilities are banned": null, // NEEDS TRANSLATION
-	"Evasion items are banned": null, // NEEDS TRANSLATION
-	"Evasion moves are banned": null, // NEEDS TRANSLATION
-	"Sleep-inducing moves are banned": null, // NEEDS TRANSLATION
-	"The combination of sleep-inducing moves with imperfect accuracy and Gravity or Gigantamax Orbeetle are banned": null, // NEEDS TRANSLATION
-	"The combination of Gravity and sleep-inducing moves with imperfect accuracy are banned": null, // NEEDS TRANSLATION
-	"Forcing endless battles is banned": null, // NEEDS TRANSLATION
-	"You cannot Terastallize": null, // NEEDS TRANSLATION
-	"You cannot dynamax": null, // NEEDS TRANSLATION
-	"You cannot mega evolve Rayquaza": null, // NEEDS TRANSLATION
-	"Z-Moves are banned": null, // NEEDS TRANSLATION
-	"Pokémon in a team must share a type": null, // NEEDS TRANSLATION
-	"HP is shown in percentages": null, // NEEDS TRANSLATION
-	"Exact HP is shown": null, // NEEDS TRANSLATION
-	"Tera Types are shown at Team Preview": null, // NEEDS TRANSLATION
-	"Super-fast timer": null, // NEEDS TRANSLATION
-	"Limit {count} of each item": null, // NEEDS TRANSLATION
-	"{formatName} (Custom rules: {customRules})": null, // NEEDS TRANSLATION
-	"outdated code no longer supported": null, // NEEDS TRANSLATION
-	"You will need to click Download again once the replay file is at the end.": null, // NEEDS TRANSLATION
-	"Chatroom \"{title}\" not found": null, // NEEDS TRANSLATION
-	"This room has expired (you can't chat in it anymore)": null, // NEEDS TRANSLATION
-	"(Hide {hiddenCount} lines from {userid})": null, // NEEDS TRANSLATION
-	"(Hide {hiddenCount} line from {userid})": null, // NEEDS TRANSLATION
-	"This user has not played any ladder games yet.": null, // NEEDS TRANSLATION
-	"user's percentage chance of winning a random battle (aka GLIXARE)": null, // NEEDS TRANSLATION
-	"Glicko-1 rating: rating ± deviation": null, // NEEDS TRANSLATION
-	"Total": null, // NEEDS TRANSLATION
-	"Suspect reqs possible?": null, // NEEDS TRANSLATION
-	"(provisional)": null, // NEEDS TRANSLATION
-	"No": null, // NEEDS TRANSLATION
-	"This user has not played any ladder games that match {formatsText}.": null, // NEEDS TRANSLATION
-	"This user has no notable ladder activity.": null, // NEEDS TRANSLATION
-	"Show {hiddenCount} hidden format": null, // NEEDS TRANSLATION
-	"Show {hiddenCount} hidden formats": null, // NEEDS TRANSLATION
-	"Reset W/L": null, // NEEDS TRANSLATION
-	"Challenge from {name}": null, // NEEDS TRANSLATION
+	"d3 not loaded yet": "d3 n’est pas encore chargé",
+	"the replay viewer's Smogon thread": "le sujet Smogon du lecteur de replays",
+	"Bug? Report it to {smogonThread}": "Un bug ? Signalez-le sur {smogonThread}",
+	"Unrecognized": "Non reconnu",
+	"Standard": "Standard",
+	"Standard AG": "Standard AG",
+	"Standard Doubles": "Standard Doubles",
+	"Standard NatDex": "Standard NatDex",
+	"Flat Rules": "Flat Rules",
+	"VGC Timer": "Chrono VGC",
+	"Species Clause": "Clause des espèces",
+	"Nickname Clause": "Clause des surnoms",
+	"Sleep Clause Mod": "Clause de sommeil",
+	"Sleep Moves Clause": "Clause des capacités de sommeil",
+	"Gravity Sleep Clause": "Clause Gravité + sommeil",
+	"OHKO Clause": "Clause OHKO",
+	"Evasion Clause": "Clause d’esquive",
+	"Evasion Abilities Clause": "Clause des talents d’esquive",
+	"Evasion Items Clause": "Clause des objets d’esquive",
+	"Evasion Moves Clause": "Clause des capacités d’esquive",
+	"Endless Battle Clause": "Clause du combat sans fin",
+	"Terastal Clause": "Clause Téracristal",
+	"Dynamax Clause": "Clause Dynamax",
+	"Mega Rayquaza Clause": "Clause Méga-Rayquaza",
+	"Z-Move Clause": "Clause des capacités Z",
+	"Same Type Clause": "Clause du type commun",
+	"HP Percentage Mod": "PV en pourcentage",
+	"Exact HP Mod": "PV exacts",
+	"Cancel Mod": "Annulation des choix",
+	"NatDex Mod": "Mod NatDex",
+	"Obtainable": "Obtenable",
+	"Team Preview": "Aperçu des équipes",
+	"Picked Team Size": "Nombre de Pokémon choisis",
+	"Adjust Level": "Ajustement du niveau",
+	"Adjust Level Down": "Ajustement du niveau à la baisse",
+	"Best Of": "Série BO",
+	"Open Team Sheets": "Fiches d’équipe ouvertes",
+	"Force Open Team Sheets": "Fiches d’équipe ouvertes obligatoires",
+	"Blitz": "Blitz",
+	"Little Cup": "Little Cup",
+	"Cobblemon No Egg Moves": "Cobblemon sans egg moves",
+	"Cobblemon New Megas": "Cobblemon avec nouvelles méga-évolutions",
+	"Limit one of each Pokémon": "Un seul exemplaire de chaque Pokémon",
+	"Limit one foe put to sleep": "Un seul Pokémon adverse endormi à la fois",
+	"OHKO moves are banned": "Les capacités qui mettent K.O. en un coup sont interdites",
+	"Evasion abilities, items, and moves are banned": "Les talents, objets et capacités d’esquive sont interdits",
+	"Evasion abilities are banned": "Les talents d’esquive sont interdits",
+	"Evasion items are banned": "Les objets d’esquive sont interdits",
+	"Evasion moves are banned": "Les capacités d’esquive sont interdites",
+	"Sleep-inducing moves are banned": "Les capacités qui endorment sont interdites",
+	"The combination of sleep-inducing moves with imperfect accuracy and Gravity or Gigantamax Orbeetle are banned": "Il est interdit de combiner des capacités qui endorment sans précision parfaite avec Gravité ou Astronelle Gigamax",
+	"The combination of Gravity and sleep-inducing moves with imperfect accuracy are banned": "Il est interdit de combiner Gravité avec des capacités qui endorment sans précision parfaite",
+	"Forcing endless battles is banned": "Il est interdit de provoquer un combat sans fin",
+	"You cannot Terastallize": "Vous ne pouvez pas téracristalliser",
+	"You cannot dynamax": "Vous ne pouvez pas utiliser le Dynamax",
+	"You cannot mega evolve Rayquaza": "Vous ne pouvez pas faire méga-évoluer Rayquaza",
+	"Z-Moves are banned": "Les capacités Z sont interdites",
+	"Pokémon in a team must share a type": "Les Pokémon d’une équipe doivent avoir un type en commun",
+	"HP is shown in percentages": "Les PV sont affichés en pourcentage",
+	"Exact HP is shown": "Les PV exacts sont affichés",
+	"Tera Types are shown at Team Preview": "Les types Téra sont affichés lors de l’aperçu des équipes",
+	"Super-fast timer": "Chrono ultra-rapide",
+	"Limit {count} of each item": "Limite de {count} par objet",
+	"{formatName} (Custom rules: {customRules})": "{formatName} (règles personnalisées : {customRules})",
+	"outdated code no longer supported": "code obsolète, plus pris en charge",
+	"You will need to click Download again once the replay file is at the end.": "Vous devrez cliquer à nouveau sur « Télécharger » une fois le replay arrivé à la fin.",
+	"Chatroom \"{title}\" not found": "Salon « {title} » introuvable",
+	"This room has expired (you can't chat in it anymore)": "Ce salon a expiré (vous ne pouvez plus y discuter)",
+	"(Hide {hiddenCount} lines from {userid})": "(Masquer {hiddenCount} lignes de {userid})",
+	"(Hide {hiddenCount} line from {userid})": "(Masquer {hiddenCount} ligne de {userid})",
+	"This user has not played any ladder games yet.": "Cet utilisateur n’a encore joué aucune partie classée.",
+	"user's percentage chance of winning a random battle (aka GLIXARE)": "probabilité (en %) que l’utilisateur gagne un combat aléatoire (alias GLIXARE)",
+	"Glicko-1 rating: rating ± deviation": "Score Glicko-1 : score ± écart",
+	"Total": "Total",
+	"Suspect reqs possible?": "Reqs de suspect possibles ?",
+	"(provisional)": "(provisoire)",
+	"No": "Non",
+	"This user has not played any ladder games that match {formatsText}.": "Cet utilisateur n’a joué aucune partie classée correspondant à {formatsText}.",
+	"This user has no notable ladder activity.": "Cet utilisateur n’a aucune activité notable dans le classement.",
+	"Show {hiddenCount} hidden format": "Afficher {hiddenCount} format masqué",
+	"Show {hiddenCount} hidden formats": "Afficher {hiddenCount} formats masqués",
+	"Reset W/L": "Réinitialiser V/D",
+	"Challenge from {name}": "Défi de {name}",
 	"W": {
-		"wins": null, // NEEDS TRANSLATION
+		"wins": "V",
 	},
 
 	// #endregion Chat
@@ -1262,49 +1258,49 @@ export const translations: TranslationCatalog = {
 	"Box": "Boîte",
 	"Untitled": "Sans titre",
 	"Team name": "Nom de l’équipe",
-	"Sort": null, // NEEDS TRANSLATION
-	"Cat": null, // NEEDS TRANSLATION
-	"Pow": null, // NEEDS TRANSLATION
-	"Acc": null, // NEEDS TRANSLATION
-	"PP": null, // NEEDS TRANSLATION
-	"Unrecognized pokemon": null, // NEEDS TRANSLATION
-	"Unrecognized item": null, // NEEDS TRANSLATION
-	"Unrecognized ability": null, // NEEDS TRANSLATION
-	"(slot {slot} empty)": null, // NEEDS TRANSLATION
-	"Unrecognized move": null, // NEEDS TRANSLATION
-	"Power": null, // NEEDS TRANSLATION
-	"Accuracy": null, // NEEDS TRANSLATION
-	"(search type)": null, // NEEDS TRANSLATION
-	"(article)": null, // NEEDS TRANSLATION
-	"(egg group)": null, // NEEDS TRANSLATION
-	"(tier)": null, // NEEDS TRANSLATION
-	"Error: not found": null, // NEEDS TRANSLATION
-	"Filters": null, // NEEDS TRANSLATION
-	"(backspace = delete filter)": null, // NEEDS TRANSLATION
-	"Show previous search results": null, // NEEDS TRANSLATION
-	"Show next search results": null, // NEEDS TRANSLATION
-	"{clipboardTeam.team.name} (copy)": null, // NEEDS TRANSLATION
-	"(No moves)": null, // NEEDS TRANSLATION
-	"Clipboard": null, // NEEDS TRANSLATION
-	"Yes": null, // NEEDS TRANSLATION
-	"Paste exported teams, pokepaste URLs, or JSON here": null, // NEEDS TRANSLATION
-	"No {set.species} sets found in boxes": null, // NEEDS TRANSLATION
-	"No Pokemon set found.": null, // NEEDS TRANSLATION
-	"Smogon analysis": null, // NEEDS TRANSLATION
-	"(You probably want to change the team's levels by changing the format, not here)": null, // NEEDS TRANSLATION
-	"Random": null, // NEEDS TRANSLATION
-	"Gigantamax": null, // NEEDS TRANSLATION
-	"Find more helpful resources for {FORMAT} on {LINK}.": null, // NEEDS TRANSLATION
-	"Find helpful resources for {FORMAT} on {LINK}.": null, // NEEDS TRANSLATION
-	"the Smogon Dex": null, // NEEDS TRANSLATION
-	"This is a disconnected team. This could be because you uploaded it on a different account, or because you deleted or un-uploaded it on a different computer. For safety, you can't edit this team. You can, however, delete it, or make a copy (which will be editable).": null, // NEEDS TRANSLATION
-	"Share URL": null, // NEEDS TRANSLATION
-	"Not found in the Teams database. Maybe you uploaded it on a different account?": null, // NEEDS TRANSLATION
-	"Stored in cookies on your computer. Warning: Your browser might delete these. Make sure to use backups.": null, // NEEDS TRANSLATION
-	"Uploaded to the Teams database. You can share with the URL.": null, // NEEDS TRANSLATION
-	"Uploaded to the Teams database publicly. Share with the URL or people can find it by searching.": null, // NEEDS TRANSLATION
-	"Copy of {copyFrom.name}": null, // NEEDS TRANSLATION
-	"Readable": null, // NEEDS TRANSLATION
+	"Sort": "Tri",
+	"Cat": "Cat.",
+	"Pow": "Puiss.",
+	"Acc": "Préc.",
+	"PP": "PP",
+	"Unrecognized pokemon": "Pokémon non reconnu",
+	"Unrecognized item": "Objet non reconnu",
+	"Unrecognized ability": "Talent non reconnu",
+	"(slot {slot} empty)": "(emplacement {slot} vide)",
+	"Unrecognized move": "Capacité non reconnue",
+	"Power": "Puissance",
+	"Accuracy": "Précision",
+	"(search type)": "(type de recherche)",
+	"(article)": "(article)",
+	"(egg group)": "(groupe Œuf)",
+	"(tier)": "(tier)",
+	"Error: not found": "Erreur : introuvable",
+	"Filters": "Filtres",
+	"(backspace = delete filter)": "(retour arrière = supprimer le filtre)",
+	"Show previous search results": "Afficher les résultats précédents",
+	"Show next search results": "Afficher les résultats suivants",
+	"{clipboardTeam.team.name} (copy)": "{clipboardTeam.team.name} (copie)",
+	"(No moves)": "(Aucune capacité)",
+	"Clipboard": "Presse-papiers",
+	"Yes": "Oui",
+	"Paste exported teams, pokepaste URLs, or JSON here": "Collez ici des équipes exportées, des URL pokepaste ou du JSON",
+	"No {set.species} sets found in boxes": "Aucun set de {set.species} trouvé dans les boîtes",
+	"No Pokemon set found.": "Aucun set de Pokémon trouvé.",
+	"Smogon analysis": "Analyse Smogon",
+	"(You probably want to change the team's levels by changing the format, not here)": "(Pour modifier les niveaux de l’équipe, mieux vaut changer de format plutôt que de passer par ici)",
+	"Random": "Aléatoire",
+	"Gigantamax": "Gigamax",
+	"Find more helpful resources for {FORMAT} on {LINK}.": "Trouvez d’autres ressources utiles pour {FORMAT} sur {LINK}.",
+	"Find helpful resources for {FORMAT} on {LINK}.": "Trouvez des ressources utiles pour {FORMAT} sur {LINK}.",
+	"the Smogon Dex": "le Dex de Smogon",
+	"This is a disconnected team. This could be because you uploaded it on a different account, or because you deleted or un-uploaded it on a different computer. For safety, you can't edit this team. You can, however, delete it, or make a copy (which will be editable).": "Cette équipe est déconnectée. Vous l’avez peut-être mise en ligne depuis un autre compte, ou bien supprimée ou retirée du serveur depuis un autre ordinateur. Par sécurité, vous ne pouvez pas modifier cette équipe. Vous pouvez toutefois la supprimer ou en faire une copie (qui sera modifiable).",
+	"Share URL": "URL de partage",
+	"Not found in the Teams database. Maybe you uploaded it on a different account?": "Introuvable dans la base de données des équipes. Vous l’avez peut-être mise en ligne depuis un autre compte ?",
+	"Stored in cookies on your computer. Warning: Your browser might delete these. Make sure to use backups.": "Stockée dans les cookies de votre ordinateur. Attention : votre navigateur peut les supprimer. Pensez à faire des sauvegardes.",
+	"Uploaded to the Teams database. You can share with the URL.": "Mise en ligne dans la base de données des équipes. Vous pouvez la partager avec l’URL.",
+	"Uploaded to the Teams database publicly. Share with the URL or people can find it by searching.": "Mise en ligne publiquement dans la base de données des équipes. Partagez-la avec l’URL ; les autres peuvent aussi la trouver en faisant une recherche.",
+	"Copy of {copyFrom.name}": "Copie de {copyFrom.name}",
+	"Readable": "Lisible",
 
 	// #endregion Teambuilder
 
@@ -1320,10 +1316,10 @@ export const translations: TranslationCatalog = {
 	"user's percentage chance of winning a random battle (Glicko X-Act Estimate)": "probabilité (en %) que l’utilisateur gagne un combat aléatoire (estimation Glicko X-Act)",
 	"Glicko-1 rating system: rating±deviation (provisional if deviation>100)": "Système de classement Glicko-1 : score±écart (provisoire si écart>100)",
 	"No one has played any ranked games yet.": "Personne n’a encore joué de partie classée.",
-	"No data returned from server.": null, // NEEDS TRANSLATION
-	"{formatName} Top - '{room.searchValue}'": null, // NEEDS TRANSLATION
-	"{formatName} Top 500": null, // NEEDS TRANSLATION
-	"username prefix": null, // NEEDS TRANSLATION
+	"No data returned from server.": "Aucune donnée renvoyée par le serveur.",
+	"{formatName} Top - '{room.searchValue}'": "Top {formatName} - « {room.searchValue} »",
+	"{formatName} Top 500": "Top 500 {formatName}",
+	"username prefix": "début du pseudo",
 
 	// #endregion Ladder
 

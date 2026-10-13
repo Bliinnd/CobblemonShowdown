@@ -461,9 +461,9 @@ PSConnection.connect();
  * teams are translated here; any other message is shown as the server sent it.
  *
  * Each key must stay identical to the login server's message. (The known
- * messages are `TL` calls rather than `TLkey` markers: the build only inlines
- * `TL` and `eHTML` tagged templates, and any other tagged template compiles to
- * a global `_templateObject` cache shared by every client script.)
+ * messages are TL calls rather than TLkey markers: the build only inlines
+ * TL and eHTML tagged templates, and any other tagged template compiles to
+ * a global _templateObject cache shared by every client script.)
  */
 const LOGIN_SERVER_ERRORS: { [message: string]: (() => string) | undefined } = Object.assign(Object.create(null), {
 	// `login` action (Session#login, Session#passwordVerify)
