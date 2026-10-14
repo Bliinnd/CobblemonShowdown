@@ -730,11 +730,14 @@ export const translations: TranslationCatalog = {
 	"Pokémon Showdown is offline due to technical difficulties!": null,
 	"Bear with us as we freak out.": null,
 	"(We'll be back up in a few hours.)": null,
-	"Start a team-locked best-of-n series": null,
+	"Start a team-locked best-of-n series": null, // NOT USED
 	"Tera Type Preview": null,
 	"Item Clause": null,
 	"Rules separated by commas or lines": null,
 	"Custom rules guide": null,
+	"Number of games": null,
+	"A single battle.": null,
+	"Each game opens in a new tab.": null,
 
 	// #endregion Main Menu
 
@@ -1128,6 +1131,8 @@ export const translations: TranslationCatalog = {
 	"W": {
 		"wins": null,
 	},
+	"Best-of-{bestOf} series: the first to {wins} wins takes it": null,
+	"{formatName}, best-of-{bestOf}": null,
 
 	// #endregion Chat
 

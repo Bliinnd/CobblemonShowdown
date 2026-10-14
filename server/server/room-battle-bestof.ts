@@ -204,7 +204,7 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 		this.nextBattleTimerEnd = null;
 		this.nextBattleTimer = null;
 	}
-	getOptions(): RoomBattleOptions | null {
+	getOptions(): (RoomBattleOptions & Partial<RoomSettings>) | null {
 		const players = this.players.map(player => ({
 			...player.options,
 			user: player.getUser()!,
@@ -223,6 +223,12 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 		this.clearWaiting();
 
 		const options = this.getOptions();
+		if (options) {
+			// "Game 2: Sacha vs. Ondine", so the tab of each game says which game it is
+			const gameNum = this.games.length + 1;
+			const [p1name, p2name] = this.players.map(p => p.name);
+			options.title = this.room.TL`Game ${gameNum}: ${p1name} vs. ${p2name}`;
+		}
 		if (!options) {
 			for (const p of this.players) {
 				if (!p.getUser()) {

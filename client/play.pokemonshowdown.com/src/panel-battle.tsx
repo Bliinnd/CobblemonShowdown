@@ -662,6 +662,8 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 	renderControls(overlayVersion = false, hidePlayerControls = false) {
 		const room = this.props.room;
 		if (!room.battle) return null;
+		// a best-of series room only shows the score: its games are battle rooms of their own
+		if (room.id.startsWith('game-')) return null;
 		if (overlayVersion) {
 			if (!room.side || !room.request || room.battle.ended) return null;
 			return this.renderPlayerControls(room.request, true);

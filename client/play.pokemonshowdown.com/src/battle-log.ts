@@ -1206,14 +1206,34 @@ export class BattleLog {
 		}
 		return desc;
 	}
+	/**
+	 * Splits "Best of = 3" out of a format's custom rules:
+	 * `parseBestOf("Best of = 3, Item Clause = 1")` is `{ bestOf: 3, otherRules: "Item Clause = 1" }`
+	 */
+	static parseBestOf(customRules: string) {
+		let bestOf = 1;
+		const otherRules = customRules.split(',').map(rule => rule.trim()).filter(rule => {
+			const match = /^best[-\s]*of\s*=\s*(\d+)$/i.exec(rule);
+			if (match) bestOf = Number(match[1]);
+			return rule && !match;
+		}).join(', ');
+		return { bestOf, otherRules };
+	}
 	static escapeFormat(formatid = '', fixGen6?: boolean): string {
 		let atIndex = formatid.indexOf('@@@');
 		if (atIndex >= 0) {
-			const customRules = this.escapeHTML(formatid.slice(atIndex + 3));
-			return this.escapeHTML(this.formatName(formatid.slice(0, atIndex), fixGen6)) +
-				'<br />' + TL.label(TL('Custom rules'), customRules);
+			const { bestOf, otherRules } = this.parseBestOf(formatid.slice(atIndex + 3));
+			let buf = this.escapeHTML(this.formatName(formatid.slice(0, atIndex), fixGen6));
+			if (bestOf > 1) buf += '<br />' + this.escapeHTML(this.bestOfDescription(bestOf));
+			if (otherRules) buf += '<br />' + TL.label(TL('Custom rules'), this.escapeHTML(otherRules));
+			return buf;
 		}
 		return this.escapeHTML(this.formatName(formatid, fixGen6));
+	}
+	/** "Best-of-3 series: first to 2 wins" */
+	static bestOfDescription(bestOf: number) {
+		const wins = Math.floor(bestOf / 2) + 1;
+		return TL`Best-of-${bestOf} series: the first to ${wins} wins takes it`;
 	}
 	static formatId(format: string): ID {
 		const atIndex = format.indexOf('@@@');
@@ -1235,8 +1255,11 @@ export class BattleLog {
 
 		let atIndex = formatid.indexOf('@@@');
 		if (atIndex >= 0) {
-			const formatName = this.formatName(formatid.slice(0, atIndex), fixGen6);
-			const customRules = this.escapeHTML(formatid.slice(atIndex + 3));
+			let formatName = this.formatName(formatid.slice(0, atIndex), fixGen6);
+			const { bestOf, otherRules } = this.parseBestOf(formatid.slice(atIndex + 3));
+			if (bestOf > 1) formatName = TL`${formatName}, best-of-${bestOf}`;
+			if (!otherRules) return formatName;
+			const customRules = this.escapeHTML(otherRules);
 			return TL`${formatName} (Custom rules: ${customRules})`;
 		}
 		if (fixGen6 && !formatid.startsWith('gen')) {
@@ -1249,6 +1272,9 @@ export class BattleLog {
 		if (window.NonBattleGames && NonBattleGames[formatid]) {
 			name = NonBattleGames[formatid];
 		}
+		// translated here: the list of games is built before the language is known
+		const bestOf = /^bestof(\d+)$/.exec(formatid);
+		if (bestOf) name = TL`Best-of-{NUMBER}`.replace('{NUMBER}', bestOf[1]);
 		if (name.startsWith('gen')) {
 			name = name.replace(/^gen([0-9])/, '[Gen $1] ');
 		}

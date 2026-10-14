@@ -2535,3 +2535,56 @@ pre.textbox.textbox-empty[placeholder]:before {
 	border-bottom-color: #556677;
 	color: #BBCCDD;
 }
+
+/* CobblemonShowdown : choix BO1 / BO3 / BO5 dans les défis */
+.bestof-picker {
+	margin: 0 0 9px;
+}
+.bestof-buttons {
+	display: flex;
+	gap: 5px;
+	margin: 3px 0 4px;
+	max-width: 260px;
+}
+.bestof-buttons .button {
+	flex: 1;
+	position: relative;
+	min-height: 32px;
+	padding: 0 6px;
+	line-height: 32px;
+	font-weight: bold;
+}
+.bestof-buttons input {
+	position: absolute;
+	opacity: 0;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	pointer-events: none;
+}
+.bestof-buttons .button:focus-within {
+	outline: 2px solid #6688CC;
+	outline-offset: 1px;
+}
+.bestof-buttons .button.cur,
+.bestof-buttons .button.cur:hover {
+	color: #FFFFFF;
+	text-shadow: 0 -1px 0 #223355;
+	border-color: #335588;
+	background: linear-gradient(to bottom, #6688CC, #4466AA);
+	box-shadow: inset 0 1px 2px rgba(0,0,0,.3);
+}
+.bestof-hint {
+	display: block;
+	color: #555555;
+}
+.dark .bestof-hint {
+	color: #AAAAAA;
+}
+.bestof-badge {
+	display: inline-block;
+	padding: 0 4px;
+	border-radius: 3px;
+	color: #FFFFFF;
+	background: #4466AA;
+}

@@ -3194,5 +3194,6 @@ export const translations: TranslationCatalog = {
 	"BST": null, // NEEDS TRANSLATION
 	"Power": null, // NEEDS TRANSLATION
 	"Accuracy": null, // NEEDS TRANSLATION
+	"Game {gameNum}: {p1name} vs. {p2name}": null, // NEEDS TRANSLATION
 
 };

@@ -735,6 +735,9 @@ export const translations: TranslationCatalog = {
 	"Item Clause": "Clause des objets",
 	"Rules separated by commas or lines": "Règles séparées par des virgules ou des retours à la ligne",
 	"Custom rules guide": "Guide des règles personnalisées",
+	"Number of games": "Nombre de manches",
+	"A single battle.": "Un seul combat.",
+	"Each game opens in a new tab.": "Chaque manche s'ouvre dans un nouvel onglet.",
 
 	// #endregion Main Menu
 
@@ -1128,6 +1131,8 @@ export const translations: TranslationCatalog = {
 	"W": {
 		"wins": "V",
 	},
+	"Best-of-{bestOf} series: the first to {wins} wins takes it": "Série en BO{bestOf} : le premier à {wins} victoires l'emporte",
+	"{formatName}, best-of-{bestOf}": "{formatName}, en BO{bestOf}",
 
 	// #endregion Chat
 

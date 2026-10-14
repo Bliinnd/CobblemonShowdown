@@ -1960,10 +1960,12 @@ export class Battle {
 			this.checkEVBalance();
 		}
 
-		if (format.customRules) {
-			const plural = format.customRules.length === 1 ? '' : 's';
-			const open = format.customRules.length <= 5 ? ' open' : '';
-			this.add(`raw|<div class="infobox"><details class="readmore"${open}><summary><strong>${format.customRules.length} custom rule${plural}:</strong></summary> ${format.customRules.join(', ')}</details></div>`);
+		// "Best of = 3" is already announced by the series header of each game
+		const customRules = format.customRules?.filter(rule => !/^best\s*of\s*=/i.test(rule));
+		if (customRules?.length) {
+			const plural = customRules.length === 1 ? '' : 's';
+			const open = customRules.length <= 5 ? ' open' : '';
+			this.add(`raw|<div class="infobox"><details class="readmore"${open}><summary><strong>${customRules.length} custom rule${plural}:</strong></summary> ${customRules.join(', ')}</details></div>`);
 		}
 
 		this.runPickTeam();
