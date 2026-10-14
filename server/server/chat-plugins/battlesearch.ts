@@ -7,6 +7,7 @@ import * as ConfigLoader from '../config-loader';
 
 import * as path from 'path';
 import * as child_process from 'child_process';
+import { TLkey, type Translator } from '../../sim/dex-text';
 
 const BATTLESEARCH_PROCESS_TIMEOUT = 3 * 60 * 60 * 1000; // 3 hours
 
@@ -180,25 +181,36 @@ export async function runBattleSearch(userids: ID[], month: string, tierid: ID, 
 	return results;
 }
 
+/** "and the battle lasted less than [turnLimit] turns" */
+function turnLimitClause(TL: Translator, turnLimit: number) {
+	return turnLimit === 1 ?
+		TL`and the battle lasted less than ${turnLimit} turn` :
+		TL`and the battle lasted less than ${turnLimit} turns`;
+}
+
 function buildResults(
 	data: { [k: string]: BattleSearchResults }, userids: ID[],
-	month: string, tierid: ID, turnLimit?: number
+	month: string, tierid: ID, TL: Translator, turnLimit?: number
 ) {
-	let buf = `>view-battlesearch-${userids.join('-')}--${turnLimit}--${month}--${tierid}--confirm\n|init|html\n|title|[Battle Search][${userids.join('-')}][${tierid}][${month}]\n`;
+	const searchTitle = TL`Battle Search`;
+	let buf = `>view-battlesearch-${userids.join('-')}--${turnLimit}--${month}--${tierid}--confirm\n|init|html\n|title|[${searchTitle}][${userids.join('-')}][${tierid}][${month}]\n`;
 	buf += `|pagehtml|<div class="pad ladder"><p>`;
-	buf += `${tierid} battles on ${month} where `;
-	buf += userids.length > 1 ? `the users ${userids.join(', ')} were players` : `the user ${userids[0]} was a player`;
-	buf += turnLimit ? ` and the battle lasted less than ${turnLimit} turn${Chat.plural(turnLimit)}` : '';
-	buf += `:</p><li style="display: inline; list-style: none"><a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}--${tierid}" target="replace">`;
-	buf += `<button class="button">Back</button></a></li><br />`;
+	const userList = userids.join(', ');
+	const players = userids.length > 1 ?
+		TL`the users ${userList} were players` :
+		TL`the user ${userids[0]} was a player`;
+	const turnsClause = turnLimit ? ` ${turnLimitClause(TL, turnLimit)}` : '';
+	buf += TL`${tierid} battles on ${month} where ${players}${turnsClause}:`;
+	buf += `</p><li style="display: inline; list-style: none"><a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}--${tierid}" target="replace">`;
+	buf += `<button class="button">${TL`Back`}</button></a></li><br />`;
 	if (userids.length > 1) {
 		const outcomes: BattleOutcome[] = [];
 		for (const day in data) {
 			const curOutcomes = data[day].totalOutcomes;
 			if (curOutcomes) outcomes.push(...curOutcomes);
 		}
-		buf += `<table><tbody><tr><h3 style="margin: 5px auto">Full summary</h3></tr>`;
-		buf += `<tr><th>Won</th><th>Lost</th><th>Turns</th></tr>`;
+		buf += `<table><tbody><tr><h3 style="margin: 5px auto">${TL`Full summary`}</h3></tr>`;
+		buf += `<tr><th>${TL`Won`}</th><th>${TL`Lost`}</th><th>${TL`Turns`}</th></tr>`;
 		for (const battle of outcomes) {
 			const { won, lost, turns } = battle;
 			buf += `<tr><td>${won}</td><td>${lost}</td><td>${turns}</td></tr>`;
@@ -210,17 +222,17 @@ function buildResults(
 		buf += `<p style="text-align:left">`;
 		const { totalWins, totalLosses } = dayStats;
 		buf += `<table style=""><tbody><tr><th colspan="2"><h3 style="margin: 5px auto">${day}</h3>`;
-		buf += `</th></tr><tr><th>Category</th><th>Number</th></tr>`;
-		buf += `<tr><td>Total Battles</td><td>${dayStats.totalBattles}</td></tr>`;
+		buf += `</th></tr><tr><th>${TL`Category`}</th><th>${TL`Number`}</th></tr>`;
+		buf += `<tr><td>${TL`Total Battles`}</td><td>${dayStats.totalBattles}</td></tr>`;
 		for (const id in totalWins) {
 			// hide userids if we're only searching for 1
-			buf += `<tr><td>Total Wins${userids.length > 1 ? ` (${id}) ` : ''}</td><td>${totalWins[id]}</td></tr>`;
+			buf += `<tr><td>${TL`Total Wins`}${userids.length > 1 ? ` (${id}) ` : ''}</td><td>${totalWins[id]}</td></tr>`;
 		}
 		for (const id in totalLosses) {
-			buf += `<tr><td>Total Losses${userids.length > 1 ? ` (${id}) ` : ''}</td><td>${totalLosses[id]}</td></tr>`;
+			buf += `<tr><td>${TL`Total Losses`}${userids.length > 1 ? ` (${id}) ` : ''}</td><td>${totalLosses[id]}</td></tr>`;
 		}
 		if (userids.length < 2) {
-			buf += `<tr><th>Opponent</th><th>Times Battled</th></tr>`;
+			buf += `<tr><th>${TL`Opponent`}</th><th>${TL`Times Battled`}</th></tr>`;
 			const [userid] = userids;
 			for (const foe in dayStats.timesBattled) {
 				buf += `<tr><td>`;
@@ -237,17 +249,18 @@ function buildResults(
 async function rustBattleSearch(
 	context: Chat.PageContext, targetUser: string, daysString: string, format: ID
 ) {
+	const { TL } = context;
 	const days = parseInt(daysString);
 	if (days < 1 || days > 15) {
-		throw new Chat.ErrorMessage(`Days must be between 1 and 15. To search longer ranges, use psbattletools manually on sim3.`);
+		throw new Chat.ErrorMessage(TL`Days must be between 1 and 15. To search longer ranges, use psbattletools manually on sim3.`);
 	}
 	if (!targetUser) {
-		throw new Chat.ErrorMessage(`No user specified.`);
+		throw new Chat.ErrorMessage(TL`No user specified.`);
 	}
 	const { connection, user } = context;
 	const currentDayOfMonth = (new Date()).getDate();
 	if (days < 1 || days > 15) {
-		throw new Chat.ErrorMessage(`Days must be between 1 and 15. To search longer ranges, use psbattletools manually on sim3.`);
+		throw new Chat.ErrorMessage(TL`Days must be between 1 and 15. To search longer ranges, use psbattletools manually on sim3.`);
 	}
 
 	try {
@@ -255,13 +268,13 @@ async function rustBattleSearch(
 			env: { PATH: `${process.env.PATH}:${process.env.HOME}/.cargo/bin` },
 		});
 	} catch {
-		throw new Chat.ErrorMessage(`You must install <a href="https://crates.io/crates/psbattletools">psbattletools</a> to use the alternate battlesearch.`);
+		throw new Chat.ErrorMessage(TL`You must install <a href="https://crates.io/crates/psbattletools">psbattletools</a> to use the alternate battlesearch.`);
 	}
 	if (user.lastCommand !== '/battlesearch' && [30, 31, 1].includes(currentDayOfMonth)) {
-		const buf = [`Warning: Usage stats may be running currently.`];
-		buf.push(`Battlesearch can interfere with usage stats processing due to high computational load.`);
-		buf.push(`Please exercise caution.`);
-		buf.push(`Type the command again to confirm.`);
+		const buf = [TL`Warning: Usage stats may be running currently.`];
+		buf.push(TL`Battlesearch can interfere with usage stats processing due to high computational load.`);
+		buf.push(TL`Please exercise caution.`);
+		buf.push(TL`Type the command again to confirm.`);
 		user.lastCommand = '/battlesearch';
 		throw new Chat.ErrorMessage(buf);
 	}
@@ -280,10 +293,11 @@ async function rustBattleSearch(
 	}
 
 	// TODO: implement flag?
-	let buf = `>view-battlesearch-${toID(targetUser)}\n|init|html\n|title|[Battlesearch] ${targetUser} in ${format}\n`;
-	buf += `|pagehtml|<div class="pad"><h2>Battlesearch for ${targetUser} in ${format} in the last ${days} days</h2>`;
+	let buf = `>view-battlesearch-${toID(targetUser)}\n|init|html\n|title|[${TL`Battlesearch`}] ${TL`${targetUser} in ${format}`}\n`;
+	buf += `|pagehtml|<div class="pad"><h2>${TL`Battlesearch for ${targetUser} in ${format} in the last ${days} days`}</h2>`;
 	buf += `<div style="white-space:pre-wrap;display:block;"></div>`;
-	buf += `<p>Searching...</p>`;
+	const searching = `<p>${TL`Searching...`}</p>`;
+	buf += searching;
 	buf += `</div>`;
 	connection.send(buf);
 
@@ -297,7 +311,7 @@ async function rustBattleSearch(
 		connection.send(buf);
 	});
 	search.on('close', () => {
-		buf = buf.replace('Searching...', 'Done!');
+		buf = buf.replace(searching, `<p>${TL`Done!`}</p>`);
 		connection.send(buf);
 	});
 }
@@ -308,10 +322,10 @@ async function fsBattleSearch(
 ) {
 	userids = userids.map(toID);
 	const user = connection.user;
-	if (!user.can('forcewin')) return connection.popup(`/battlesearch - Access Denied`);
+	if (!user.can('forcewin')) return connection.popup(user.TL`/battlesearch - Access Denied`);
 
 	const response = await PM.query({ userids, turnLimit, month, tierid });
-	connection.send(buildResults(response, userids as ID[], month, tierid, turnLimit));
+	connection.send(buildResults(response, userids as ID[], month, tierid, user.TL, turnLimit));
 }
 
 export const pages: Chat.PageTable = {
@@ -319,7 +333,7 @@ export const pages: Chat.PageTable = {
 		if (!user.named) return Rooms.RETRY_AFTER_LOGIN;
 		this.checkCan('forcewin');
 		if (Config.nobattlesearch === true) {
-			throw new Chat.ErrorMessage(`Battlesearch has been temporarily disabled due to load issues.`);
+			throw new Chat.ErrorMessage(this.TL`Battlesearch has been temporarily disabled due to load issues.`);
 		}
 		if (Config.nobattlesearch === 'psbattletools') {
 			return rustBattleSearch(this, args[0], args[1], toID(args[2]));
@@ -329,12 +343,14 @@ export const pages: Chat.PageTable = {
 		if (isNaN(turnLimit)) turnLimit = undefined;
 		const userids = ids.split('-');
 		if (!ids || turnLimit && turnLimit < 1) {
-			return user.popup(`Some arguments are missing or invalid for battlesearch. Use /battlesearch to start over.`);
+			return user.popup(this.TL`Some arguments are missing or invalid for battlesearch. Use /battlesearch to start over.`);
 		}
-		this.title = `[Battle Search][${userids.join(', ')}]`;
-		let buf = `<div class="pad ladder"><h2>Battle Search</h2><p>Userid${Chat.plural(userids)}: ${userids.join(', ')}</p><p>`;
+		const userList = userids.join(', ');
+		this.title = `[${this.TL`Battle Search`}][${userList}]`;
+		const useridsText = userids.length === 1 ? this.TL`Userid: ${userList}` : this.TL`Userids: ${userList}`;
+		let buf = `<div class="pad ladder"><h2>${this.TL`Battle Search`}</h2><p>${useridsText}</p><p>`;
 		if (turnLimit) {
-			buf += `Maximum Turns: ${turnLimit}`;
+			buf += this.TL`Maximum Turns: ${turnLimit}`;
 		}
 		buf += `</p>`;
 
@@ -343,16 +359,16 @@ export const pages: Chat.PageTable = {
 			name => ({ reverse: name })
 		);
 		if (!month) {
-			buf += `<p>Please select a month:</p><ul style="list-style: none; display: block; padding: 0">`;
+			buf += `<p>${this.TL`Please select a month:`}</p><ul style="list-style: none; display: block; padding: 0">`;
 			for (const i of months) {
 				buf += `<li style="display: inline; list-style: none"><a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${i}" target="replace"><button class="button">${i}</button></li>`;
 			}
 			return `${buf}</ul></div>`;
 		} else {
 			if (!months.includes(month)) {
-				return `${buf}Invalid month selected. <a href="/view-battlesearch-${userids.join('-')}--${turnLimit}" target="replace"><button class="button">Back to month selection</button></a></div>`;
+				return `${buf}${this.TL`Invalid month selected.`} <a href="/view-battlesearch-${userids.join('-')}--${turnLimit}" target="replace"><button class="button">${this.TL`Back to month selection`}</button></a></div>`;
 			}
-			buf += `<p><a href="/view-battlesearch-${userids.join('-')}--${turnLimit}" target="replace"><button class="button">Back</button></a> <button class="button disabled">${month}</button></p>`;
+			buf += `<p><a href="/view-battlesearch-${userids.join('-')}--${turnLimit}" target="replace"><button class="button">${this.TL`Back`}</button></a> <button class="button disabled">${month}</button></p>`;
 		}
 
 		const tierid = toID(formatid);
@@ -372,7 +388,7 @@ export const pages: Chat.PageTable = {
 			return tier;
 		});
 		if (!tierid) {
-			buf += `<p>Please select the tier to search:</p><ul style="list-style: none; display: block; padding: 0">`;
+			buf += `<p>${this.TL`Please select the tier to search:`}</p><ul style="list-style: none; display: block; padding: 0">`;
 			for (const tier of tiers) {
 				buf += `<li style="display: inline; list-style: none">`;
 				buf += `<a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}--${toID(tier)}" target="replace">`;
@@ -381,29 +397,30 @@ export const pages: Chat.PageTable = {
 			return `${buf}</ul></div>`;
 		} else {
 			if (!tiers.map(toID).includes(tierid)) {
-				return `${buf}Invalid tier selected. <a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}" target="replace"><button class="button">Back to tier selection</button></a></div>`;
+				return `${buf}${this.TL`Invalid tier selected.`} <a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}" target="replace"><button class="button">${this.TL`Back to tier selection`}</button></a></div>`;
 			}
 			this.title += `[${tierid}]`;
-			buf += `<p><a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}" target="replace"><button class="button">Back</button></a> <button class="button disabled">${tierid}</button></p>`;
+			buf += `<p><a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}" target="replace"><button class="button">${this.TL`Back`}</button></a> <button class="button disabled">${tierid}</button></p>`;
 		}
 
 		const [userid] = userids;
+		const players = userids.length > 1 ?
+			this.TL`user(s) ${userList} were players` :
+			this.TL`the user ${userid} was a player`;
 		if (toID(confirmation) !== 'confirm') {
-			buf += `<p>Are you sure you want to run a battle search for for ${tierid} battles on ${month} `;
-			buf += `where the ${userids.length > 1 ? `user(s) ${userids.join(', ')} were players` : `the user ${userid} was a player`}`;
-			if (turnLimit) buf += ` and the battle lasted less than ${turnLimit} turn${Chat.plural(turnLimit)}`;
-			buf += `?</p><p><a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}--${tierid}--confirm" target="replace"><button class="button notifying">Yes, run the battle search</button></a> <a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}--${tierid}" target="replace"><button class="button">No, go back</button></a></p>`;
+			const turns = turnLimit ? ` ${turnLimitClause(this.TL, turnLimit)}` : '';
+			buf += `<p>${this.TL`Are you sure you want to run a battle search for for ${tierid} battles on ${month} where the ${players}${turns}?`}`;
+			buf += `</p><p><a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}--${tierid}--confirm" target="replace"><button class="button notifying">${this.TL`Yes, run the battle search`}</button></a> <a href="/view-battlesearch-${userids.join('-')}--${turnLimit}--${month}--${tierid}" target="replace"><button class="button">${this.TL`No, go back`}</button></a></p>`;
 			return `${buf}</div>`;
 		}
 
 		// Run search
 		void fsBattleSearch(connection, userids, month, tierid, turnLimit);
+		const turns = turnLimit ? `${turnLimitClause(this.TL, turnLimit)}.` : '';
 		return (
-			`<div class="pad ladder"><h2>Battle Search</h2><p>` +
-			`Searching for ${tierid} battles on ${month} where the ` +
-			`${userids.length > 1 ? `user(s) ${userids.join(', ')} were players` : `the user ${userid} was a player`} ` +
-			(turnLimit ? `and the battle lasted less than ${turnLimit} turn${Chat.plural(turnLimit)}.` : '') +
-			`</p><p>Loading... (this will take a while)</p></div>`
+			`<div class="pad ladder"><h2>${this.TL`Battle Search`}</h2><p>` +
+			this.TL`Searching for ${tierid} battles on ${month} where the ${players} ${turns}` +
+			`</p><p>${this.TL`Loading... (this will take a while)`}</p></div>`
 		);
 	},
 };
@@ -420,7 +437,8 @@ export const commands: Chat.ChatCommands = {
 			if (part.startsWith('limit=')) {
 				const n = parseInt(part.slice('limit='.length).trim());
 				if (isNaN(n)) {
-					throw new Chat.ErrorMessage(`Invalid limit: ${part.slice('limit='.length)}`);
+					const limit = part.slice('limit='.length);
+					throw new Chat.ErrorMessage(this.TL`Invalid limit: ${limit}`);
 				}
 				turnLimit = n;
 				continue;
@@ -438,12 +456,12 @@ export const commands: Chat.ChatCommands = {
 
 		this.runBroadcast();
 		return this.sendReply(
-			'/battlesearch [args] - Searches rated battle history for the provided [args] and returns information on battles between the userids given.\n' +
-			`If a number is provided in the [args], it is assumed to be a turn limit, else they're assumed to be userids. Requires ~`
+			this.TL`/battlesearch [args] - Searches rated battle history for the provided [args] and returns information on battles between the userids given.` + '\n' +
+			this.TL`If a number is provided in the [args], it is assumed to be a turn limit, else they're assumed to be userids. Requires ~`
 		);
 	},
 	rustbattlesearchhelp: [
-		`/battlesearch <user>, <format>, <days> - Searches for battles played by <user> in the past <days> days. Requires: ~`,
+		TLkey`/battlesearch <user>, <format>, <days> - Searches for battles played by <user> in the past <days> days. Requires: ~`,
 	],
 };
 

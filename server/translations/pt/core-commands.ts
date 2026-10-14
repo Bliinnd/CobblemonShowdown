@@ -156,4 +156,141 @@ export const translations: TranslationCatalog = {
 	"unlocked": null, // NEEDS TRANSLATION
 	"friended": null, // NEEDS TRANSLATION
 	"The player in slot {SLOT} has already been eliminated.": null, // NEEDS TRANSLATION
+	"Section Leader": null, // NEEDS TRANSLATION
+	"/version - Get the current server version.": null, // NEEDS TRANSLATION
+	"There is {count} user in this room:": null, // NEEDS TRANSLATION
+	"There are {count} users in this room:": null, // NEEDS TRANSLATION
+	"/userlist - Displays a list of users who are currently in the room.": null, // NEEDS TRANSLATION
+	"/me [action] - Adds the given [action] into chat, attributed to the user.": null, // NEEDS TRANSLATION
+	"/shrug [message] - Sends the given message, if any, appended with ¯\\_(ツ)_/¯": null, // NEEDS TRANSLATION
+	"/tableflip [message] - Sends the given message, if any, appended with (╯°□°）╯︵ ┻━┻": null, // NEEDS TRANSLATION
+	"/tableunflip [message] - Sends the given message, if any, appended with ┬──┬◡ﾉ(° -°ﾉ)": null, // NEEDS TRANSLATION
+	"/battle! [format] - Starts a battle in the given [format].": null, // NEEDS TRANSLATION
+	"If none is given, defaults to current generation random battle.": null, // NEEDS TRANSLATION
+	"/logout - Logs you out and ends your session.": null, // NEEDS TRANSLATION
+	"/noreply [command] - Runs the command without displaying the response.": null, // NEEDS TRANSLATION
+	"You must be registered in order to use this command. If you just registered, please refresh and try again.": null, // NEEDS TRANSLATION
+	"Linking...": null, // NEEDS TRANSLATION
+	"malformed name received": null, // NEEDS TRANSLATION
+	"Error while verifying username: {error}": null, // NEEDS TRANSLATION
+	"If the page failed to open, you may link your Smogon and PS accounts by clicking <a href=\"{link}\">this link</a>.": null, // NEEDS TRANSLATION
+	"Room not found.": null, // NEEDS TRANSLATION
+	"Please do not nest /msgroom inside itself.": null, // NEEDS TRANSLATION
+	"/msgroom [room], [command] - Runs the [command] in the given [room].": null, // NEEDS TRANSLATION
+	"/reply OR /r [message] - Send a message to the last user you got a message from, or sent a message to.": null, // NEEDS TRANSLATION
+	"{targetUsername} is offline.": null, // NEEDS TRANSLATION
+	"/msg OR /whisper OR /w [username], [message] - Send a private message.": null, // NEEDS TRANSLATION
+	"Commands sent to offline users run immediately, with replies displayed in that user's PM window.": null, // NEEDS TRANSLATION
+	"Offline private messages have been disabled.": null, // NEEDS TRANSLATION
+	"You cannot send offline PMs to yourself.": null, // NEEDS TRANSLATION
+	"You cannot send offline PMs to guests.": null, // NEEDS TRANSLATION
+	"That user is online, so a normal PM is being sent.": null, // NEEDS TRANSLATION
+	"Invalid userid. Must be <=18 characters in length.": null, // NEEDS TRANSLATION
+	"/offlinemsg [username], [message] - Sends a message to the offline [username], to be received when they log in.": null, // NEEDS TRANSLATION
+	"/offlinepms - View your recently received offline PMs.": null, // NEEDS TRANSLATION
+	"You do not have permission to mass-invite users.": null, // NEEDS TRANSLATION
+	"You cannot invite more than 10 users at once.": null, // NEEDS TRANSLATION
+	"This user is currently blocking room invites.": null, // NEEDS TRANSLATION
+	"/invite [username] - Invites the player [username] to join the room you sent the command to.": null, // NEEDS TRANSLATION
+	"/invite [comma-separated usernames] - Invites multiple users to join the room you sent the command to. Requires trusted": null, // NEEDS TRANSLATION
+	"/invite [username], [roomname] - Invites the player [username] to join the room [roomname].": null, // NEEDS TRANSLATION
+	"(in a PM) /invite [roomname] - Invites the player you're PMing to join the room [roomname].": null, // NEEDS TRANSLATION
+	"/blockpms - Blocks private messages except from staff. Unblock them with /unblockpms.": null, // NEEDS TRANSLATION
+	"/blockpms [unlocked, ac, trusted, friends, +] - Blocks PMs, except for staff, friends, and the specified group(s).": null, // NEEDS TRANSLATION
+	"/unblockpms - Unblocks private messages. Block them with /blockpms.": null, // NEEDS TRANSLATION
+	"/unblockofflinepms - Unblocks offline private messages. Block them with /blockofflinepms.": null, // NEEDS TRANSLATION
+	"You are not blocking room invites! To block, use /blockinvites.": null, // NEEDS TRANSLATION
+	"You are no longer blocking room invites.": null, // NEEDS TRANSLATION
+	"You are already blocking room invites - to unblock, use /unblockinvites": null, // NEEDS TRANSLATION
+	"/blockinvites [rank] - Allows only users with the given [rank] to invite you to rooms.": null, // NEEDS TRANSLATION
+	"Valid settings: autoconfirmed, trusted, unlocked, +, %, @, ~.": null, // NEEDS TRANSLATION
+	"/unblockinvites - Allows anyone to invite you to rooms.": null, // NEEDS TRANSLATION
+	"/status [note] - Sets a short note as your status, visible when users click your username.": null, // NEEDS TRANSLATION
+	"Use /clearstatus to clear your status message.": null, // NEEDS TRANSLATION
+	"/busy OR /donotdisturb - Marks you as busy.": null, // NEEDS TRANSLATION
+	"Use /donotdisturb to also block private messages and challenges.": null, // NEEDS TRANSLATION
+	"Use /back to mark yourself as back.": null, // NEEDS TRANSLATION
+	"/away - Marks you as away. Send a message or use /back to indicate you are back.": null, // NEEDS TRANSLATION
+	"/clearstatus - Clears your status message.": null, // NEEDS TRANSLATION
+	"/clearstatus user, reason - Clears another person's status message. Requires: % @ ~": null, // NEEDS TRANSLATION
+	"/back - Marks you as back if you are away.": null, // NEEDS TRANSLATION
+	"User:": null, // NEEDS TRANSLATION
+	"/rank [user] - Shows all ladder ranks for the given [user].": null, // NEEDS TRANSLATION
+	"If no user is given, it defaults to the user of the command.": null, // NEEDS TRANSLATION
+	"/hiderank - Access denied.": null, // NEEDS TRANSLATION
+	"/hiderank [rank] - Displays your global rank as the given [rank].": null, // NEEDS TRANSLATION
+	"/showrank - Displays your true global rank instead of the rank you're hidden as.": null, // NEEDS TRANSLATION
+	"/language - View your current language setting.": null, // NEEDS TRANSLATION
+	"/language [language] - Changes the language Pokémon Showdown will be displayed to you in.": null, // NEEDS TRANSLATION
+	"/updatesettings [settings] - Update your settings to match the given JSON settings blob.": null, // NEEDS TRANSLATION
+	"/allowexportinputlog [user] - Consents to sharing teams and choices from the current battle with the specified user.": null, // NEEDS TRANSLATION
+	"Share your team and choices with \"{name}\"": null, // NEEDS TRANSLATION
+	"/exportinputlog - Asks players in a battle for permission to export an inputlog. Requires: + % @ ~": null, // NEEDS TRANSLATION
+	"This is an imported replay": null, // NEEDS TRANSLATION
+	"Players will need to be manually added with <code>/invitebattle</code> or <code>/restoreplayers</code>": null, // NEEDS TRANSLATION
+	"/importinputlog [inputlog] - Starts a battle with a given inputlog. Requires: + % @ ~": null, // NEEDS TRANSLATION
+	"!showteam - show the team you're using in the current battle (must be used in a battle you're a player in).": null, // NEEDS TRANSLATION
+	"!showteam hidestats - show the team you're using in the current battle, without displaying any stat-related information.": null, // NEEDS TRANSLATION
+	"!showset [number] - shows the set of the pokemon corresponding to that number (in original Team Preview order, not necessarily current order)": null, // NEEDS TRANSLATION
+	"/acceptopenteamsheets - Agrees to an open team sheet opportunity during Team Preview, where all information on a team except stats is shared with the opponent. Requires: ☆": null, // NEEDS TRANSLATION
+	"/rejectopenteamsheetshelp - Rejects an open team sheet opportunity during Team Preview, where all information on a team except stats is shared with the opponent. Requires: ☆": null, // NEEDS TRANSLATION
+	"/offertie - Offers a tie to all players in a battle; if all accept, it ties. Can only be used after 100+ turns have passed. Requires: ☆ @ # ~": null, // NEEDS TRANSLATION
+	"/rejecttie - Rejects a tie offered by another player in a battle.": null, // NEEDS TRANSLATION
+	"/forfeit - Forfeits your currently active game, if it supports that.": null, // NEEDS TRANSLATION
+	"/choose [text] - Make a choice for the currently active game.": null, // NEEDS TRANSLATION
+	"/move [move] - Make a move for the current game.": null, // NEEDS TRANSLATION
+	"/switch [pokemon] - Make a switch for the current game.": null, // NEEDS TRANSLATION
+	"/team [pokemon] - Change your team for the current game.": null, // NEEDS TRANSLATION
+	"/undo - Reverts the last move of the player in the current game, if it supports it.": null, // NEEDS TRANSLATION
+	"/savereplay - Saves the replay for the current battle.": null, // NEEDS TRANSLATION
+	"Must be used in a battle.": null, // NEEDS TRANSLATION
+	"/hidereplay - Hides the replay of the current battle. Requires: ☆ ~": null, // NEEDS TRANSLATION
+	"This battle does not support having players in {slot}": null, // NEEDS TRANSLATION
+	"Someone else ({player.invite}) has already been invited to be {slot}!": null, // NEEDS TRANSLATION
+	"You're invited to join a battle (with {playerNames})": null, // NEEDS TRANSLATION
+	"Invite sent to {targetUser.name}!": null, // NEEDS TRANSLATION
+	"/addplayer [username], [p1|p2|p3|p4] - Invites the player to join your current battle.": null, // NEEDS TRANSLATION
+	"Room {chall.roomid} not found": null, // NEEDS TRANSLATION
+	"You haven't been invited to that battle.": null, // NEEDS TRANSLATION
+	"You accepted the battle invite": null, // NEEDS TRANSLATION
+	"/acceptbattle - Accept an invite from someone to join a battle.": null, // NEEDS TRANSLATION
+	"User {target} is not currently invited to the battle": null, // NEEDS TRANSLATION
+	"The battle invite was changed to someone else; sorry!": null, // NEEDS TRANSLATION
+	"/uninvitebattle [username] - Revokes an invite from a user to join a battle.": null, // NEEDS TRANSLATION
+	"Requires: ☆ ~": null, // NEEDS TRANSLATION
+	"/restoreplayers - Restore previous players in an imported input log.": null, // NEEDS TRANSLATION
+	"/joingame [username] - Join the game being played in the current room.": null, // NEEDS TRANSLATION
+	"/leavegame - Leave the current game.": null, // NEEDS TRANSLATION
+	"/kickbattle - User isn't in battle.": null, // NEEDS TRANSLATION
+	"/kickbattle [username], [reason] - Kicks a user from a battle with reason. Requires: % @ ~": null, // NEEDS TRANSLATION
+	"/kickinactive - Activates the inactive timer, if the game supports it.": null, // NEEDS TRANSLATION
+	"/timer [start|stop] - Starts or stops the game timer. Requires: ☆ % @ ~": null, // NEEDS TRANSLATION
+	"/forcetimer [start|stop] - Forces all battles to have the inactive timer enabled. Requires: ~": null, // NEEDS TRANSLATION
+	"/forcewin - This is not a battle room.": null, // NEEDS TRANSLATION
+	"/forcetie - Forces the current match to end in a tie. Requires: ~": null, // NEEDS TRANSLATION
+	"/forcewin [user] - Forces the current match to end in a win for a user. Requires: ~": null, // NEEDS TRANSLATION
+	"/search [format] - Searches for a battle in the specified format.": null, // NEEDS TRANSLATION
+	"/cancelsearch [format] - Cancels a search for a battle in the specified format.": null, // NEEDS TRANSLATION
+	"If no format is given, cancels searches for all formats.": null, // NEEDS TRANSLATION
+	"/challenge [user], [format] - Challenges the given [user] to a battle in the given [format].": null, // NEEDS TRANSLATION
+	"/blockchallenges - Blocks challenges so no one can challenge you. Unblock them with /unblockchallenges.": null, // NEEDS TRANSLATION
+	"/unblockchallenges - Unblocks challenges so you can be challenged again. Block them with /blockchallenges.": null, // NEEDS TRANSLATION
+	"You are not challenging {this.pmTarget.name}. Maybe they accepted/rejected before you cancelled?": null, // NEEDS TRANSLATION
+	"{user.name} cancelled the challenge.": null, // NEEDS TRANSLATION
+	"/cancelchallenge [user] - Cancels a pending challenge to the given [user].": null, // NEEDS TRANSLATION
+	"{this.pmTarget.id} is not challenging you. Maybe they cancelled before you accepted?": null, // NEEDS TRANSLATION
+	"{accepterName} accepted the challenge, starting {gameLink}": null, // NEEDS TRANSLATION
+	"/accept [user] - Accepts a challenge from the given user.": null, // NEEDS TRANSLATION
+	"{this.pmTarget.id} is not challenging you. Maybe they cancelled before you rejected?": null, // NEEDS TRANSLATION
+	"{user.name} rejected the challenge.": null, // NEEDS TRANSLATION
+	"/reject [user] - Rejects a challenge from the given user.": null, // NEEDS TRANSLATION
+	"/useteam [packed team] - Sets your team for your next battles to the given [team].": null, // NEEDS TRANSLATION
+	"/vtm [format] - Validates your current team (set with /utm).": null, // NEEDS TRANSLATION
+	"/hidebattlesfromtrainercard OR /hbtc - Hides your battles in your trainer card.": null, // NEEDS TRANSLATION
+	"/showbattlesintrainercard OR /sbtc - Displays your battles in your trainer card.": null, // NEEDS TRANSLATION
+	"/trn [username], [registered], [token] - Finishes a rename to the [username] with a given [token].": null, // NEEDS TRANSLATION
+	"/help [command] - Gives you help for a specific command.": null, // NEEDS TRANSLATION
+	"[Received PMs]": null, // NEEDS TRANSLATION
+	"Offline PMs are presently disabled.": null, // NEEDS TRANSLATION
+
 };
