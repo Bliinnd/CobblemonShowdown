@@ -111,7 +111,7 @@ export const Avatars = new class {
 		if (avatar.startsWith('#') && avatar.includes('.')) return avatar.slice(1);
 		return avatar;
 	}
-	/** `options.TL` translates the error messages (for the user of the command) */
+	/** options.TL translates the error messages (for the user of the command) */
 	async validate(avatar: string, options?: { rejectOfficial?: boolean, TL?: Translator }) {
 		const TL = options?.TL || Chat.getTranslator();
 		avatar = this.convert(avatar);

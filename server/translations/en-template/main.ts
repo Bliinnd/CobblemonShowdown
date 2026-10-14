@@ -465,7 +465,6 @@ export const translations: TranslationCatalog = {
 	"\"{bot}\" is not a bot.": null,
 	"Custom avatars start with '#', like '#splxraiders'.": null,
 	"Custom avatars look like 'example.png'. Custom avatars should be put in `config/avatars/`. Your server must be registered for custom avatars to work.": null,
-	" translates the error messages (for the user of the command) */\n\tasync validate(avatar: string, options?: { rejectOfficial?: boolean, TL?: Translator }) {\n\t\tconst TL = options?.TL || Chat.getTranslator();\n\t\tavatar = this.convert(avatar);\n\t\tif (!/^#?[a-z0-9-]+$/.test(avatar) && !/^[a-z0-9.-]+$/.test(avatar)) {\n\t\t\tthrow new Chat.ErrorMessage(": null,
 	"Avatar \"{avatar}\" is not in a valid format.": null,
 	"Avatar \"{avatar}\" doesn't exist.": null,
 	"Avatar \"{avatar}\" is an official avatar that all users already have access to.": null,
@@ -3193,5 +3192,9 @@ export const translations: TranslationCatalog = {
 	"Syntax: {syntax}": null,
 	"Syntax for word filters: {syntax}": null,
 	"{command} has been deprecated. Instead, use \"{replacement}\".": null,
+	"{command} - Access denied.": null,
+	"BST": null,
+	"Power": null,
+	"Accuracy": null,
 
 };
