@@ -45,6 +45,8 @@ function writeServerConfig(settings, keys) {
 		`exports.reportbattles = false;`,
 		// Liste d'amis de Showdown (base SQLite intégrée à Node, server/databases/friends.db).
 		`exports.usesqlitefriends = 'unlocked';`,
+		// Site en français : langue des salons sans langue choisie (salons de combat...).
+		`exports.defaultlanguage = 'french';`,
 		'',
 	].join('\n'));
 }

@@ -11,6 +11,7 @@
 import * as net from 'net';
 import { YouTube, Twitch } from '../chat-plugins/youtube';
 import { Net, Utils } from '../../lib';
+import { TLkey } from '../../sim/dex-text';
 import { RoomSections } from './room-settings';
 
 const ONLINE_SYMBOL = ` \u25C9 `;
@@ -106,42 +107,45 @@ export const commands: Chat.ChatCommands = {
 	profile: 'whois',
 	whois(target, room, user, connection, cmd) {
 		if (room?.roomid === 'staff' && !this.runBroadcast()) return;
+		const TL = this.TL;
 		const targetUser = this.getUserOrSelf(target, { exactName: user.tempGroup === ' ' });
 		const showAll = (cmd === 'ip' || cmd === 'whoare' || cmd === 'alt' || cmd === 'alts' || cmd === 'altsnorecurse');
 		const showRecursiveAlts = showAll && (cmd !== 'altsnorecurse');
 		if (!targetUser) {
 			if (showAll) return this.parse('/offlinewhois ' + target);
-			throw new Chat.ErrorMessage(`User ${target} not found.`);
+			throw new Chat.ErrorMessage(this.TL`User ${target} not found.`);
 		}
 		if (showAll && !user.trusted && targetUser !== user) {
-			throw new Chat.ErrorMessage(`/${cmd} - Access denied.`);
+			throw new Chat.ErrorMessage(this.TL`/${cmd} - Access denied.`);
 		}
 
 		let buf = Utils.html`<strong class="username"><small style="display:none">${targetUser.tempGroup}</small>${targetUser.name}</strong> `;
 		const ac = targetUser.autoconfirmed;
 		if (ac && showAll) {
-			buf += ` <small style="color:gray">(ac${targetUser.id === ac ? `` : `: <span class="username">${ac}</span>`})</small>`;
+			buf += ` <small style="color:gray">(${TL`ac`}${targetUser.id === ac ? `` : `: <span class="username">${ac}</span>`})</small>`;
 		}
 		const trusted = targetUser.trusted;
 		if (trusted && showAll) {
-			buf += ` <small style="color:gray">(trusted${targetUser.id === trusted ? `` : `: <span class="username">${trusted}</span>`})</small>`;
+			buf += ` <small style="color:gray">(${TL`trusted`}${targetUser.id === trusted ? `` : `: <span class="username">${trusted}</span>`})</small>`;
 		}
-		if (!targetUser.connected) buf += ` <em style="color:gray">(offline)</em>`;
+		if (!targetUser.connected) buf += ` <em style="color:gray">${TL`(offline)`}</em>`;
 		const roomauth = room?.auth.getDirect(targetUser.id);
 		if (roomauth && Config.groups[roomauth]?.name) {
 			buf += Utils.html`<br />${Config.groups[roomauth].name} (${roomauth})`;
 		}
 		if (Config.groups[targetUser.tempGroup]?.name) {
-			buf += Utils.html`<br />Global ${Config.groups[targetUser.tempGroup].name} (${targetUser.tempGroup})`;
+			const groupName = Config.groups[targetUser.tempGroup].name;
+			buf += Utils.html`<br />${TL`Global ${groupName} (${targetUser.tempGroup})`}`;
 		}
 		if (Users.globalAuth.sectionLeaders.has(targetUser.id)) {
-			buf += Utils.html`<br />Section Leader (${RoomSections.sectionNames[Users.globalAuth.sectionLeaders.get(targetUser.id)!]})`;
+			const sectionName = RoomSections.sectionNames[Users.globalAuth.sectionLeaders.get(targetUser.id)!];
+			buf += Utils.html`<br />${TL`Section Leader (${sectionName})`}`;
 		}
 		if (targetUser.isSysop) {
-			buf += `<br />(Pok&eacute;mon Showdown System Operator)`;
+			buf += `<br />${TL`(Pok&eacute;mon Showdown System Operator)`}`;
 		}
 		if (!targetUser.registered) {
-			buf += `<br />(Unregistered)`;
+			buf += `<br />${TL`(Unregistered)`}`;
 		}
 		let publicrooms = ``;
 		let hiddenrooms = ``;
@@ -164,7 +168,7 @@ export const commands: Chat.ChatCommands = {
 				publicrooms += output;
 			}
 		}
-		buf += `<br />Rooms: ${publicrooms || `<em>(no public rooms)</em>`}`;
+		buf += `<br />${TL`Rooms:`} ${publicrooms || `<em>${TL`(no public rooms)`}</em>`}`;
 
 		if (!showAll) {
 			return this.sendReplyBox(buf);
@@ -175,18 +179,22 @@ export const commands: Chat.ChatCommands = {
 		const canViewSecretRooms = user === targetUser || (canViewAlts && targetUser.locked) || user.can('makeroom');
 		buf += `<br />`;
 
+		/** "locked as [userid]" */
+		const punishedAs = (type: string, punishedId: string, ownId: string) => {
+			const desc = Punishments.punishmentTypes.get(type)?.desc || TL`punished`;
+			return punishedId !== ownId ? TL`${desc} as ${punishedId}` : desc;
+		};
 		if (canViewAlts) {
 			let prevNames = targetUser.previousIDs.map(userid => {
 				const punishments = Punishments.userids.get(userid);
 				if (!punishments || !user.can('alts')) return userid;
 				return punishments.map(
 					punishment => (
-						`${userid}${punishment ? ` (${Punishments.punishmentTypes.get(punishment.type)?.desc || `punished`}` +
-						`${punishment.id !== targetUser.id ? ` as ${punishment.id}` : ``})` : ``}`
+						`${userid}${punishment ? ` (${punishedAs(punishment.type, punishment.id, targetUser.id)})` : ``}`
 					)
 				).join(' | ');
 			}).join(", ");
-			if (prevNames) buf += Utils.html`<br />Previous names: ${prevNames}`;
+			if (prevNames) buf += Utils.html`<br />${TL`Previous names:`} ${prevNames}`;
 
 			for (const targetAlt of targetUser.getAltUsers(true)) {
 				if (!targetAlt.named && !targetAlt.connected) continue;
@@ -194,72 +202,77 @@ export const commands: Chat.ChatCommands = {
 
 				const punishments = Punishments.userids.get(targetAlt.id) || [];
 				const punishMsg = !user.can('alts') ? '' : punishments.map(punishment => (
-					` (${Punishments.punishmentTypes.get(punishment.type)?.desc || 'punished'}` +
-					`${punishment.id !== targetAlt.id ? ` as ${punishment.id}` : ''})`
+					` (${punishedAs(punishment.type, punishment.id, targetAlt.id)})`
 				)).join(' | ');
-				buf += Utils.html`<br />Alt: <span class="username">${targetAlt.name}</span>${punishMsg}`;
-				if (!targetAlt.connected) buf += ` <em style="color:gray">(offline)</em>`;
+				buf += Utils.html`<br />${TL`Alt:`} <span class="username">${targetAlt.name}</span>${punishMsg}`;
+				if (!targetAlt.connected) buf += ` <em style="color:gray">${TL`(offline)`}</em>`;
 				prevNames = targetAlt.previousIDs.map(userid => {
 					const p = Punishments.userids.get(userid);
 					if (!p || !user.can('alts')) return userid;
 					return p.map(
-						cur => `${userid} (${Punishments.punishmentTypes.get(cur.type)?.desc || 'punished'}` + `${cur.id !== targetAlt.id ? ` as ${cur.id}` : ``})`
+						cur => `${userid} (${punishedAs(cur.type, cur.id, targetAlt.id)})`
 					).join(' | ');
 				}).join(", ");
-				if (prevNames) buf += `<br />Previous names: ${prevNames}`;
+				if (prevNames) buf += `<br />${TL`Previous names:`} ${prevNames}`;
 			}
 		}
 		if (canViewPunishments) {
+			/** " (reason: ...)", HTML-escaped */
+			const reasonText = (reason: string) => ` ${Utils.escapeHTML(TL`(reason: ${reason})`)}`;
 			if (targetUser.namelocked) {
-				buf += `<br />NAMELOCKED: ${targetUser.namelocked}`;
+				buf += `<br />${TL`NAMELOCKED:`} ${targetUser.namelocked}`;
 				const punishment = Punishments.userids.getByType(targetUser.locked!, 'NAMELOCK');
 				if (punishment) {
 					const expiresIn = Punishments.checkLockExpiration(targetUser.locked);
 					if (expiresIn) buf += expiresIn;
-					if (punishment.reason) buf += Utils.html` (reason: ${punishment.reason})`;
+					if (punishment.reason) buf += reasonText(punishment.reason);
 				}
 			} else if (targetUser.locked) {
-				buf += `<br />LOCKED: ${targetUser.locked}`;
+				buf += `<br />${TL`LOCKED:`} ${targetUser.locked}`;
 				switch (targetUser.locked) {
 				case '#rangelock':
-					buf += ` - IP or host is in a temporary range-lock`;
+					buf += ` - ${TL`IP or host is in a temporary range-lock`}`;
 					break;
 				case '#hostfilter':
-					buf += ` - host is permanently locked for being a proxy`;
+					buf += ` - ${TL`host is permanently locked for being a proxy`}`;
 					break;
 				}
 				const punishment = Punishments.userids.getByType(targetUser.locked, 'LOCK');
 				if (punishment) {
 					const expiresIn = Punishments.checkLockExpiration(targetUser.locked);
 					if (expiresIn) buf += expiresIn;
-					if (punishment.reason) buf += Utils.html` (reason: ${punishment.reason})`;
+					if (punishment.reason) buf += reasonText(punishment.reason);
 				}
 			}
 
 			if (user.can('lock')) {
 				const battlebanned = Punishments.isBattleBanned(targetUser);
 				if (battlebanned) {
-					buf += `<br />BATTLEBANNED: ${battlebanned.id}`;
+					buf += `<br />${TL`BATTLEBANNED:`} ${battlebanned.id}`;
 					buf += ` ${Punishments.checkPunishmentExpiration(battlebanned)}`;
-					if (battlebanned.reason) buf += Utils.html` (reason: ${battlebanned.reason})`;
+					if (battlebanned.reason) buf += reasonText(battlebanned.reason);
 				}
 
 				const groupchatbanned = Punishments.isGroupchatBanned(targetUser);
 				if (groupchatbanned) {
-					buf += `<br />Banned from using groupchats${groupchatbanned.id !== targetUser.id ? `: ${groupchatbanned.id}` : ``}`;
+					const bannedId = groupchatbanned.id;
+					buf += `<br />${bannedId !== targetUser.id ?
+						TL`Banned from using groupchats: ${bannedId}` : TL`Banned from using groupchats`}`;
 					buf += ` ${Punishments.checkPunishmentExpiration(groupchatbanned)}`;
-					if (groupchatbanned.reason) buf += Utils.html` (reason: ${groupchatbanned.reason})`;
+					if (groupchatbanned.reason) buf += reasonText(groupchatbanned.reason);
 				}
 
 				const ticketbanned = Punishments.isTicketBanned(targetUser.id);
 				if (ticketbanned) {
-					buf += `<br />Banned from creating help tickets${ticketbanned.id !== targetUser.id ? `: ${ticketbanned.id}` : ``}`;
+					const bannedId = ticketbanned.id;
+					buf += `<br />${bannedId !== targetUser.id ?
+						TL`Banned from creating help tickets: ${bannedId}` : TL`Banned from creating help tickets`}`;
 					buf += ` ${Punishments.checkPunishmentExpiration(ticketbanned)}`;
-					if (ticketbanned.reason) buf += Utils.html` (reason: ${ticketbanned.reason})`;
+					if (ticketbanned.reason) buf += reasonText(ticketbanned.reason);
 				}
 			}
 			if (targetUser.semilocked) {
-				buf += `<br />Semilocked: ${user.can('lock') ? targetUser.semilocked : "(reason hidden)"}`;
+				buf += `<br />${TL`Semilocked:`} ${user.can('lock') ? targetUser.semilocked : TL`(reason hidden)`}`;
 			}
 		}
 		if (user === targetUser ? user.can('ipself') : user.can('ip', targetUser)) {
@@ -270,31 +283,28 @@ export const commands: Chat.ChatCommands = {
 					for (const punishment of punishments) {
 						const { type, id } = punishment;
 						let punishMsg = Punishments.punishmentTypes.get(type)?.desc || type;
-						if (id !== targetUser.id) punishMsg += ` as ${id}`;
+						if (id !== targetUser.id) punishMsg = TL`${punishMsg} as ${id}`;
 						status.push(punishMsg);
 					}
 				}
 				if (Punishments.isSharedIp(ip)) {
-					let sharedStr = 'shared';
-					if (Punishments.sharedIps.get(ip)) {
-						sharedStr += `: ${Punishments.sharedIps.get(ip)}`;
-					}
-					status.push(sharedStr);
+					const sharedNote = Punishments.sharedIps.get(ip);
+					status.push(sharedNote ? TL`shared: ${sharedNote}` : TL`shared`);
 				}
 				return `<a href="https://whatismyipaddress.com/ip/${ip}" target="_blank">${ip}</a>` + (status.length ? ` (${status.join('; ')})` : '');
 			});
-			buf += `<br /> IP${Chat.plural(ips)}: ${ips.join(", ")}`;
+			buf += `<br /> ${ips.length === 1 ? TL`IP:` : TL`IPs:`} ${ips.join(", ")}`;
 			if (user.tempGroup !== ' ' && targetUser.latestHost) {
-				buf += Utils.html`<br />Host: ${targetUser.latestHost} [${targetUser.latestHostType}]`;
+				buf += Utils.html`<br />${TL`Host:`} ${targetUser.latestHost} [${targetUser.latestHostType}]`;
 			}
 		} else if (user === targetUser) {
-			buf += `<br /> IP: <a href="https://whatismyipaddress.com/ip/${connection.ip}" target="_blank">${connection.ip}</a>`;
+			buf += `<br /> ${TL`IP:`} <a href="https://whatismyipaddress.com/ip/${connection.ip}" target="_blank">${connection.ip}</a>`;
 		}
 		if ((user === targetUser || canViewAlts) && hiddenrooms) {
-			buf += `<br />Hidden rooms: ${hiddenrooms}`;
+			buf += `<br />${TL`Hidden rooms:`} ${hiddenrooms}`;
 		}
 		if (canViewSecretRooms && privaterooms) {
-			buf += `<br />Secret rooms: ${privaterooms}`;
+			buf += `<br />${TL`Secret rooms:`} ${privaterooms}`;
 		}
 
 		const gameRooms = [];
@@ -309,7 +319,7 @@ export const commands: Chat.ChatCommands = {
 			}
 		}
 		if (gameRooms.length) {
-			buf += `<br />Recent games: ${gameRooms.map(id => {
+			buf += `<br />${TL`Recent games:`} ${gameRooms.map(id => {
 				const shortId = id.startsWith('battle-') ? id.slice(7) : id;
 				return Utils.html`<a href="/${id}">${shortId}</a>`;
 			}).join(' | ')}`;
@@ -319,15 +329,15 @@ export const commands: Chat.ChatCommands = {
 			const punishments = Punishments.getRoomPunishments(targetUser, { checkIps: true });
 
 			if (punishments.length) {
-				buf += `<br />Room punishments: `;
+				buf += `<br />${TL`Room punishments:`} `;
 
 				buf += punishments.map(([curRoom, curPunishment]) => {
 					const { type: punishType, id: punishUserid, expireTime, reason } = curPunishment;
 					let punishDesc = Punishments.roomPunishmentTypes.get(punishType)?.desc || punishType;
-					if (punishUserid !== targetUser.id) punishDesc += ` as ${punishUserid}`;
+					if (punishUserid !== targetUser.id) punishDesc = TL`${punishDesc} as ${punishUserid}`;
 					const expiresIn = new Date(expireTime).getTime() - Date.now();
 					const expireString = Chat.toDurationString(expiresIn, { precision: 1 });
-					punishDesc += ` for ${expireString}`;
+					punishDesc = TL`${punishDesc} for ${expireString}`;
 
 					if (reason) punishDesc += `: ${reason}`;
 					return `<a href="/${curRoom}">${curRoom}</a> (${punishDesc})`;
@@ -346,21 +356,22 @@ export const commands: Chat.ChatCommands = {
 		}
 	},
 	whoishelp: [
-		`/whois - Get details on yourself: alts, group, IP address, and rooms.`,
-		`/whois [username] - Get details on a username: alts (Requires: % @ ~), group, IP address (Requires: @ ~), and rooms.`,
+		TLkey`/whois - Get details on yourself: alts, group, IP address, and rooms.`,
+		TLkey`/whois [username] - Get details on a username: alts (Requires: % @ ~), group, IP address (Requires: @ ~), and rooms.`,
 	],
 
 	'chp': 'offlinewhois',
 	checkpunishment: 'offlinewhois',
 	offlinewhois(target, room, user) {
 		if (!user.trusted) {
-			throw new Chat.ErrorMessage("/offlinewhois - Access denied.");
+			throw new Chat.ErrorMessage(this.TL`/offlinewhois - Access denied.`);
 		}
+		const TL = this.TL;
 		const userid = toID(target);
-		if (!userid) throw new Chat.ErrorMessage("Please enter a valid username.");
+		if (!userid) throw new Chat.ErrorMessage(this.TL`Please enter a valid username.`);
 		const targetUser = Users.get(userid);
 		let buf = Utils.html`<strong class="username">${target}</strong>`;
-		if (!targetUser?.connected) buf += ` <em style="color:gray">(offline)</em>`;
+		if (!targetUser?.connected) buf += ` <em style="color:gray">${TL`(offline)`}</em>`;
 
 		const roomauth = room?.auth.getDirect(userid);
 		if (roomauth && Config.groups[roomauth]?.name) {
@@ -368,10 +379,12 @@ export const commands: Chat.ChatCommands = {
 		}
 		const group = Users.globalAuth.get(userid);
 		if (Config.groups[group]?.name) {
-			buf += `<br />Global ${Config.groups[group].name} (${group})`;
+			const groupName = Config.groups[group].name;
+			buf += `<br />${TL`Global ${groupName} (${group})`}`;
 		}
 		if (Users.globalAuth.sectionLeaders.has(userid)) {
-			buf += `<br />Section Leader (${RoomSections.sectionNames[Users.globalAuth.sectionLeaders.get(userid)!]})`;
+			const sectionName = RoomSections.sectionNames[Users.globalAuth.sectionLeaders.get(userid)!];
+			buf += `<br />${TL`Section Leader (${sectionName})`}`;
 		}
 
 		buf += `<br /><br />`;
@@ -386,7 +399,7 @@ export const commands: Chat.ChatCommands = {
 				buf += `${punishDesc}: ${punishUserid}`;
 				const expiresIn = Punishments.checkLockExpiration(userid);
 				if (expiresIn) buf += expiresIn;
-				if (reason) buf += Utils.html` (reason: ${reason})`;
+				if (reason) buf += ` ${Utils.escapeHTML(TL`(reason: ${reason})`)}`;
 				buf += '<br />';
 				atLeastOne = true;
 			}
@@ -395,22 +408,22 @@ export const commands: Chat.ChatCommands = {
 		if (!user.can('alts') && !atLeastOne) {
 			const hasJurisdiction = room && user.can('mute', null, room) && Punishments.roomUserids.nestedHas(room.roomid, userid);
 			if (!hasJurisdiction) {
-				throw new Chat.ErrorMessage("/checkpunishment - User not found.");
+				throw new Chat.ErrorMessage(this.TL`/checkpunishment - User not found.`);
 			}
 		}
 
 		const punishments = Punishments.getRoomPunishments(targetUser || { id: userid } as User);
 
 		if (punishments?.length) {
-			buf += `<br />Room punishments: `;
+			buf += `<br />${TL`Room punishments:`} `;
 
 			buf += punishments.map(([curRoom, curPunishment]) => {
 				const { type: punishType, id: punishUserid, expireTime, reason } = curPunishment;
 				let punishDesc = Punishments.roomPunishmentTypes.get(punishType)?.desc || punishType;
-				if (punishUserid !== userid) punishDesc += ` as ${punishUserid}`;
+				if (punishUserid !== userid) punishDesc = TL`${punishDesc} as ${punishUserid}`;
 				const expiresIn = new Date(expireTime).getTime() - Date.now();
 				const expireString = Chat.toDurationString(expiresIn, { precision: 1 });
-				punishDesc += ` for ${expireString}`;
+				punishDesc = TL`${punishDesc} for ${expireString}`;
 
 				if (reason) punishDesc += `: ${reason}`;
 				return `<a href="/${curRoom}">${curRoom}</a> (${punishDesc})`;
@@ -418,13 +431,13 @@ export const commands: Chat.ChatCommands = {
 			atLeastOne = true;
 		}
 		if (!atLeastOne) {
-			buf += `This username has no punishments associated with it.`;
+			buf += TL`This username has no punishments associated with it.`;
 		}
 		this.sendReplyBox(buf);
 	},
 	offlinewhoishelp: [
-		`/offlinewhois [username] - Get details on a username without requiring them to be online.`,
-		`Requires: trusted user. `,
+		TLkey`/offlinewhois [username] - Get details on a username without requiring them to be online.`,
+		TLkey`Requires: trusted user. `,
 	],
 
 	sbtl: 'sharedbattles',
@@ -440,42 +453,43 @@ export const commands: Chat.ChatCommands = {
 
 		const battles = getCommonBattles(userID1, user1, userID2, user2, this.connection);
 
-		if (!battles.length) return this.sendReply(`${targetUsername1} and ${targetUsername2} have no common battles.`);
+		if (!battles.length) return this.sendReply(this.TL`${targetUsername1} and ${targetUsername2} have no common battles.`);
 
-		this.sendReplyBox(Utils.html`Common battles between ${targetUsername1} and ${targetUsername2}:<br />` + battles.map(id => {
+		this.sendReplyBox(Utils.html`${this.TL`Common battles between ${targetUsername1} and ${targetUsername2}:`}<br />` + battles.map(id => {
 			const shortId = id.startsWith('battle-') ? id.slice(7) : id;
 			return Utils.html`<a href="/${id}">${shortId}</a>`;
 		}).join(' | '));
 	},
-	sharedbattleshelp: [`/sharedbattles [user1], [user2] - Finds recent battles common to [user1] and [user2]. Requires % @ ~`],
+	sharedbattleshelp: [TLkey`/sharedbattles [user1], [user2] - Finds recent battles common to [user1] and [user2]. Requires % @ ~`],
 
 	sp: 'showpunishments',
 	showpunishments(target, room, user) {
 		room = this.requireRoom();
 		if (!room.persist) {
-			throw new Chat.ErrorMessage("This command is unavailable in temporary rooms.");
+			throw new Chat.ErrorMessage(this.TL`This command is unavailable in temporary rooms.`);
 		}
 		return this.parse(`/join view-punishments-${room}`);
 	},
-	showpunishmentshelp: [`/showpunishments - Shows the current punishments in the room. Requires: % @ # ~`],
+	showpunishmentshelp: [TLkey`/showpunishments - Shows the current punishments in the room. Requires: % @ # ~`],
 
 	sgp: 'showglobalpunishments',
 	showglobalpunishments(target, room, user) {
 		this.checkCan('lock');
 		return this.parse(`/join view-globalpunishments`);
 	},
-	showglobalpunishmentshelp: [`/showpunishments - Shows the current global punishments. Requires: % @ # ~`],
+	showglobalpunishmentshelp: [TLkey`/showpunishments - Shows the current global punishments. Requires: % @ # ~`],
 
 	async host(target, room, user, connection, cmd) {
 		if (!target) return this.parse('/help host');
 		this.checkCan('alts');
 		target = target.trim();
-		if (!net.isIPv4(target)) throw new Chat.ErrorMessage('You must pass a valid IPv4 IP to /host.');
+		if (!net.isIPv4(target)) throw new Chat.ErrorMessage(this.TL`You must pass a valid IPv4 IP to /host.`);
 		const { dnsbl, host, hostType } = await IPTools.lookup(target);
 		const dnsblMessage = dnsbl ? ` [${dnsbl}]` : ``;
-		this.sendReply(`IP ${target}: ${host || "ERROR"} [${hostType}]${dnsblMessage}`);
+		const hostName = host || "ERROR";
+		this.sendReply(this.TL`IP ${target}: ${hostName} [${hostType}]${dnsblMessage}`);
 	},
-	hosthelp: [`/host [ip] - Gets the host for a given IP. Requires: % @ ~`],
+	hosthelp: [TLkey`/host [ip] - Gets the host for a given IP. Requires: % @ ~`],
 
 	searchip: 'ipsearch',
 	ipsearchall: 'ipsearch',
@@ -487,14 +501,16 @@ export const commands: Chat.ChatCommands = {
 		const [ipOrHost, roomid] = this.splitOne(target);
 		const targetRoom = roomid ? Rooms.get(roomid) : null;
 		if (typeof targetRoom === 'undefined') {
-			throw new Chat.ErrorMessage(`The room "${roomid}" does not exist.`);
+			throw new Chat.ErrorMessage(this.TL`The room "${roomid}" does not exist.`);
 		}
 		const results: string[] = [];
 		const isAll = (cmd === 'ipsearchall');
 
 		if (/[a-z]/.test(ipOrHost)) {
 			// host
-			this.sendReply(`Users with host ${ipOrHost}${targetRoom ? ` in the room ${targetRoom.title}` : ``}:`);
+			this.sendReply(targetRoom ?
+				this.TL`Users with host ${ipOrHost} in the room ${targetRoom.title}:` :
+				this.TL`Users with host ${ipOrHost}:`);
 			for (const curUser of Users.users.values()) {
 				if (results.length > 100 && !isAll) break;
 				if (!curUser.latestHost?.endsWith(ipOrHost)) continue;
@@ -503,7 +519,9 @@ export const commands: Chat.ChatCommands = {
 			}
 		} else if (IPTools.ipRegex.test(ipOrHost)) {
 			// ip
-			this.sendReply(`Users with IP ${ipOrHost}${targetRoom ? ` in the room ${targetRoom.title}` : ``}:`);
+			this.sendReply(targetRoom ?
+				this.TL`Users with IP ${ipOrHost} in the room ${targetRoom.title}:` :
+				this.TL`Users with IP ${ipOrHost}:`);
 			for (const curUser of Users.users.values()) {
 				if (!curUser.ips.some(ip => ip === ipOrHost)) continue;
 				if (targetRoom && !curUser.inRooms.has(targetRoom.roomid)) continue;
@@ -511,7 +529,9 @@ export const commands: Chat.ChatCommands = {
 			}
 		} else if (IPTools.isValidRange(ipOrHost)) {
 			// range
-			this.sendReply(`Users in IP range ${ipOrHost}${targetRoom ? ` in the room ${targetRoom.title}` : ``}:`);
+			this.sendReply(targetRoom ?
+				this.TL`Users in IP range ${ipOrHost} in the room ${targetRoom.title}:` :
+				this.TL`Users in IP range ${ipOrHost}:`);
 			const checker = IPTools.checker(ipOrHost);
 			for (const curUser of Users.users.values()) {
 				if (results.length > 100 && !isAll) continue;
@@ -520,25 +540,25 @@ export const commands: Chat.ChatCommands = {
 				results.push(`${curUser.connected ? ONLINE_SYMBOL : OFFLINE_SYMBOL} ${curUser.name}`);
 			}
 		} else {
-			throw new Chat.ErrorMessage(`${ipOrHost} is not a valid IP, IP range, or host.`);
+			throw new Chat.ErrorMessage(this.TL`${ipOrHost} is not a valid IP, IP range, or host.`);
 		}
 
 		if (!results.length) {
-			return this.sendReply(`No users found.`);
+			return this.sendReply(this.TL`No users found.`);
 		}
 		this.sendReply(results.slice(0, 100).join('; '));
 		if (results.length > 100 && !isAll) {
-			this.sendReply(`More than 100 users found. Use /ipsearchall for the full list.`);
+			this.sendReply(this.TL`More than 100 users found. Use /ipsearchall for the full list.`);
 		}
 	},
-	ipsearchhelp: [`/ipsearch [ip|range|host], (room) - Find all users with specified IP, IP range, or host. If a room is provided only users in the room will be shown. Requires: ~`],
+	ipsearchhelp: [TLkey`/ipsearch [ip|range|host], (room) - Find all users with specified IP, IP range, or host. If a room is provided only users in the room will be shown. Requires: ~`],
 
 	checkchallenges(target, room, user) {
 		room = this.requireRoom();
 		if (!user.can('addhtml', null, room)) this.checkCan('ban', null, room);
 		if (!this.runBroadcast(true)) return;
 		if (!this.broadcasting) {
-			this.errorReply(`This command must be broadcast:`);
+			this.errorReply(this.TL`This command must be broadcast:`);
 			return this.parse(`/help checkchallenges`);
 		}
 		if (!target?.includes(',')) return this.parse(`/help checkchallenges`);
@@ -546,17 +566,22 @@ export const commands: Chat.ChatCommands = {
 		const { targetUser: user2, rest: rest2 } = this.requireUser(rest);
 		if (user1 === user2 || rest2) return this.parse(`/help checkchallenges`);
 		if (!(user1.id in room.users) || !(user2.id in room.users)) {
-			throw new Chat.ErrorMessage(`Both users must be in this room.`);
+			throw new Chat.ErrorMessage(this.TL`Both users must be in this room.`);
 		}
 		const chall = Ladders.challenges.search(user1.id, user2.id);
 
 		if (!chall) {
-			return this.sendReplyBox(Utils.html`${user1.name} and ${user2.name} are not challenging each other.`);
+			const name1 = Utils.escapeHTML(user1.name);
+			const name2 = Utils.escapeHTML(user2.name);
+			return this.sendReplyBox(this.TL`${name1} and ${name2} are not challenging each other.`);
 		}
 		const [from, to] = user1.id === chall.from ? [user1, user2] : [user2, user1];
-		this.sendReplyBox(Utils.html`${from.name} is challenging ${to.name} in ${Dex.formats.get(chall.format).name}.`);
+		const fromName = Utils.escapeHTML(from.name);
+		const toName = Utils.escapeHTML(to.name);
+		const formatName = Utils.escapeHTML(Dex.formats.get(chall.format).name);
+		this.sendReplyBox(this.TL`${fromName} is challenging ${toName} in ${formatName}.`);
 	},
-	checkchallengeshelp: [`!checkchallenges [user1], [user2] - Check if the specified users are challenging each other. Requires: * @ # ~`],
+	checkchallengeshelp: [TLkey`!checkchallenges [user1], [user2] - Check if the specified users are challenging each other. Requires: * @ # ~`],
 
 	/*********************************************************
 	 * Client fallback
@@ -565,11 +590,13 @@ export const commands: Chat.ChatCommands = {
 	unignore: 'ignore',
 	ignore(target, room, user) {
 		if (!room) {
-			this.errorReply(`In PMs, this command can only be used by itself to ignore the person you're talking to: "/${this.cmd}", not "/${this.cmd} ${target}"`);
+			const cmd = this.cmd;
+			const cmdWithTarget = `${cmd} ${target}`;
+			this.errorReply(this.TL`In PMs, this command can only be used by itself to ignore the person you're talking to: "/${cmd}", not "/${cmdWithTarget}"`);
 		}
-		this.errorReply(`You're using a custom client that doesn't support the ignore command.`);
+		this.errorReply(this.TL`You're using a custom client that doesn't support the ignore command.`);
 	},
-	ignorehelp: [`/ignore [user] - Ignore the given [user].`],
+	ignorehelp: [TLkey`/ignore [user] - Ignore the given [user].`],
 
 	/*********************************************************
 	 * Data Search Dex
@@ -606,26 +633,33 @@ export const commands: Chat.ChatCommands = {
 		const textLanguage = Chat.getDexLanguage(this.language);
 		const TL = this.TL;
 		if (!newTargets?.length) {
-			throw new Chat.ErrorMessage(`'${target}' doesn't match any Pok\u00e9mon, item, move, ability or nature${Dex.gen > dex.gen ? ` in Gen ${dex.gen}` : ""}. (Check your spelling?)`);
+			throw new Chat.ErrorMessage(Dex.gen > dex.gen ?
+				TL`'${target}' doesn't match any Pok\u00e9mon, item, move, ability or nature in Gen ${dex.gen}. (Check your spelling?)` :
+				TL`'${target}' doesn't match any Pok\u00e9mon, item, move, ability or nature. (Check your spelling?)`);
 		}
 		if (newTargets.length > 2) {
-			throw new Chat.ErrorMessage(`'${target}' has no exact match. Too many approximate matches: ${newTargets.map(t => t.name).join(', ')}`);
+			const matchNames = newTargets.map(t => t.name).join(', ');
+			throw new Chat.ErrorMessage(this.TL`'${target}' has no exact match. Too many approximate matches: ${matchNames}`);
 		}
 
 		for (const [i, newTarget] of newTargets.entries()) {
 			if (newTarget.isInexact && !i) {
-				buffer = `'${target}' has no exact match${Dex.gen > dex.gen ? ` in Gen ${dex.gen}` : ""}. Approximate match${newTargets.length === 1 ? '' : 'es'}:\n`;
+				buffer = (Dex.gen > dex.gen ?
+					TL`'${target}' has no exact match in Gen ${dex.gen}.` :
+					TL`'${target}' has no exact match.`) +
+					' ' + (newTargets.length === 1 ? TL`Approximate match:` : TL`Approximate matches:`) + '\n';
 			}
 			let details: { [k: string]: string } = {};
 			let description = '';
 			switch (newTarget.searchType) {
 			case 'nature':
 				const nature = Dex.natures.get(newTarget.name);
-				buffer += `${nature.name} nature: `;
 				if (nature.plus) {
-					buffer += `+10% ${Dex.stats.names[nature.plus]}, -10% ${Dex.stats.names[nature.minus!]}.`;
+					const plusStat = Dex.stats.names[nature.plus];
+					const minusStat = Dex.stats.names[nature.minus!];
+					buffer += TL`${nature.name} nature: +10% ${plusStat}, -10% ${minusStat}.`;
 				} else {
-					buffer += `No effect.`;
+					buffer += TL`${nature.name} nature: No effect.`;
 				}
 				return this.sendReply(buffer);
 			case 'pokemon':
@@ -667,7 +701,8 @@ export const commands: Chat.ChatCommands = {
 						[TL`Generation`]: String(pokemon.gen) || 'CAP',
 						[TL`Height`]: TL`${pokemon.heightm} m`,
 					};
-					details[TL`Weight`] = `${TL`${pokemon.weighthg / 10} kg`} <em>(${weighthit} BP)</em>`;
+					const weightKg = pokemon.weighthg / 10;
+					details[TL`Weight`] = `${TL`${weightKg} kg`} <em>(${weighthit} BP)</em>`;
 					const gmaxMove = pokemon.canGigantamax || dex.species.get(pokemon.changesFrom).canGigantamax;
 					if (gmaxMove && dex.gen === 8) details[TL.tag.gmaxmove] = gmaxMove;
 					if (dex.gen === 1) details[TL`Crit rate`] = `${((pokemon.baseStats.spe * 100) / 512).toFixed(2)}%`;
@@ -679,9 +714,11 @@ export const commands: Chat.ChatCommands = {
 						details[TL`Gender`] = TL.gender[pokemon.gender];
 					} else if (pokemon.genderRatio && dex.gen >= 2) {
 						const g = pokemon.genderRatio;
+						const malePercent = g.M * 100;
+						const femalePercent = g.F * 100;
 						details[TL`Gender`] = TL.commaList([
-							TL.label(TL.gender.M, TL`${g.M * 100}%`),
-							TL.label(TL.gender.F, TL`${g.F * 100}%`),
+							TL.label(TL.gender.M, TL`${malePercent}%`),
+							TL.label(TL.gender.F, TL`${femalePercent}%`),
 						]);
 					};
 
@@ -693,25 +730,27 @@ export const commands: Chat.ChatCommands = {
 							const condition = evo.evoCondition ? ` ${evo.evoCondition}` : ``;
 							switch (evo.evoType) {
 							case 'levelExtra':
-								evos.push(`${name} (level-up${condition})`);
+								evos.push(TL`${name} (level-up${condition})`);
 								break;
 							case 'levelFriendship':
-								evos.push(`${name} (level-up with high Friendship${condition})`);
+								evos.push(TL`${name} (level-up with high Friendship${condition})`);
 								break;
 							case 'levelHold':
-								evos.push(`${name} (level-up holding ${evo.evoItem}${condition})`);
+								evos.push(TL`${name} (level-up holding ${evo.evoItem}${condition})`);
 								break;
 							case 'useItem':
 								evos.push(`${name} (${evo.evoItem})`);
 								break;
 							case 'levelMove':
-								evos.push(`${name} (level-up with ${evo.evoMove}${condition})`);
+								evos.push(TL`${name} (level-up with ${evo.evoMove}${condition})`);
 								break;
 							case 'other':
 								evos.push(`${name} (${evo.evoCondition})`);
 								break;
 							case 'trade':
-								evos.push(`${name} (trade${evo.evoItem ? ` holding ${evo.evoItem}` : condition})`);
+								evos.push(evo.evoItem ?
+									TL`${name} (trade holding ${evo.evoItem})` :
+									TL`${name} (trade${condition})`);
 								break;
 							default:
 								evos.push(`${name} (${evo.evoLevel}${condition})`);
@@ -846,7 +885,7 @@ export const commands: Chat.ChatCommands = {
 						details[TL`Dynamax power`] = String(move.maxMove.basePower);
 					}
 
-					details[TL`Target`] = TL.target[move.target] || "Unknown";
+					details[TL`Target`] = TL.target[move.target] || TL`Unknown`;
 
 					if (move.id === 'snatch' && dex.gen >= 3) {
 						const nonsnatchableMoves = TL.ui.tagMoves.replace('{TAG}', TL.tag.nonsnatchable);
@@ -871,8 +910,8 @@ export const commands: Chat.ChatCommands = {
 					details = {
 						[TL`Generation`]: String(ability.gen) || 'CAP',
 					};
-					if (ability.flags['cantsuppress']) details["&#10003; Not affected by Gastro Acid"] = "";
-					if (ability.flags['breakable']) details["&#10003; Ignored by Mold Breaker"] = "";
+					if (ability.flags['cantsuppress']) details[`&#10003; ${TL`Not affected by Gastro Acid`}`] = "";
+					if (ability.flags['breakable']) details[`&#10003; ${TL`Ignored by Mold Breaker`}`] = "";
 					if (ability.isNonstandard) {
 						details[TL.ui.unobtainableInGen.replace('{NUMBER}', `${dex.gen}`)] = "";
 					}
@@ -894,9 +933,9 @@ export const commands: Chat.ChatCommands = {
 		this.sendReply(buffer);
 	},
 	datahelp: [
-		`/data [pokemon/item/move/ability/nature] - Get details on this pokemon/item/move/ability/nature.`,
-		`/data [pokemon/item/move/ability/nature], Gen [generation number/format name] - Get details on this pokemon/item/move/ability/nature for that generation/format.`,
-		`!data [pokemon/item/move/ability/nature] - Show everyone these details. Requires: + % @ # ~`,
+		TLkey`/data [pokemon/item/move/ability/nature] - Get details on this pokemon/item/move/ability/nature.`,
+		TLkey`/data [pokemon/item/move/ability/nature], Gen [generation number/format name] - Get details on this pokemon/item/move/ability/nature for that generation/format.`,
+		TLkey`!data [pokemon/item/move/ability/nature] - Show everyone these details. Requires: + % @ # ~`,
 	],
 
 	dt: 'details',
@@ -914,13 +953,13 @@ export const commands: Chat.ChatCommands = {
 		this.run('data');
 	},
 	detailshelp() {
-		this.sendReplyBox(
-			`<code>/details [Pok\u00e9mon/item/move/ability/nature]</code>: get additional details on this Pok\u00e9mon/item/move/ability/nature.<br />` +
-			`<code>/details [Pok\u00e9mon/item/move/ability/nature], Gen [generation number]</code>: get details on this Pok\u00e9mon/item/move/ability/nature in that generation.<br />` +
-			`You can also append the generation number to <code>/dt</code>; for example, <code>/dt1 Mewtwo</code> gets details on Mewtwo in Gen 1.<br />` +
-			`<code>/details [Pok\u00e9mon/item/move/ability/nature], [format]</code>: get details on this Pok\u00e9mon/item/move/ability/nature in that format.<br />` +
-			`<code>!details [Pok\u00e9mon/item/move/ability/nature]</code>: show everyone these details. Requires: + % @ # ~`
-		);
+		this.sendReplyBox([
+			this.TL`<code>/details [Pok\u00e9mon/item/move/ability/nature]</code>: get additional details on this Pok\u00e9mon/item/move/ability/nature.`,
+			this.TL`<code>/details [Pok\u00e9mon/item/move/ability/nature], Gen [generation number]</code>: get details on this Pok\u00e9mon/item/move/ability/nature in that generation.`,
+			this.TL`You can also append the generation number to <code>/dt</code>; for example, <code>/dt1 Mewtwo</code> gets details on Mewtwo in Gen 1.`,
+			this.TL`<code>/details [Pok\u00e9mon/item/move/ability/nature], [format]</code>: get details on this Pok\u00e9mon/item/move/ability/nature in that format.`,
+			this.TL`<code>!details [Pok\u00e9mon/item/move/ability/nature]</code>: show everyone these details. Requires: + % @ # ~`,
+		].join(`<br />`));
 	},
 
 	weaknesses: 'weakness',
@@ -940,6 +979,10 @@ export const commands: Chat.ChatCommands = {
 		}
 
 		const originalSearch = target;
+		const searchHTML = Utils.escapeHTML(originalSearch);
+		const notRecognized = () => (Dex.gen > dex.gen ?
+			this.TL`${searchHTML} isn't a recognized type or Pokemon in Gen ${dex.gen}.` :
+			this.TL`${searchHTML} isn't a recognized type or Pokemon.`);
 		let imperfectMatch = false;
 		let isMatch = false;
 		let species = dex.species.get(targets[0]);
@@ -956,7 +999,7 @@ export const commands: Chat.ChatCommands = {
 				species = dex.species.get(speciesSearchResults[0].name);
 				imperfectMatch = true;
 			} else {
-				return this.sendReplyBox(Utils.html`${originalSearch} isn't a recognized type or Pokemon${Dex.gen > dex.gen ? ` in Gen ${dex.gen}` : ""}.`);
+				return this.sendReplyBox(notRecognized());
 			}
 		}
 
@@ -966,7 +1009,7 @@ export const commands: Chat.ChatCommands = {
 				type2 = dex.types.get(searchResults[0].name);
 				imperfectMatch = true;
 			} else {
-				return this.sendReplyBox(Utils.html`${originalSearch} isn't a recognized type or Pokemon${Dex.gen > dex.gen ? ` in Gen ${dex.gen}` : ""}.`);
+				return this.sendReplyBox(notRecognized());
 			}
 		}
 
@@ -976,7 +1019,7 @@ export const commands: Chat.ChatCommands = {
 				type3 = dex.types.get(searchResults[0].name);
 				imperfectMatch = true;
 			} else {
-				return this.sendReplyBox(Utils.html`${originalSearch} isn't a recognized type or Pokemon${Dex.gen > dex.gen ? ` in Gen ${dex.gen}` : ""}.`);
+				return this.sendReplyBox(notRecognized());
 			}
 		}
 
@@ -1017,7 +1060,9 @@ export const commands: Chat.ChatCommands = {
 		}
 
 		if (imperfectMatch) {
-			this.sendReply(`No Pok\u00e9mon or type named '${originalSearch}' was found${Dex.gen > dex.gen ? ` in Gen ${dex.gen}` : ""}. Searching for '${target}' instead.`);
+			this.sendReply(Dex.gen > dex.gen ?
+				this.TL`No Pok\u00e9mon or type named '${originalSearch}' was found in Gen ${dex.gen}. Searching for '${target}' instead.` :
+				this.TL`No Pok\u00e9mon or type named '${originalSearch}' was found. Searching for '${target}' instead.`);
 		}
 		const weaknesses = [];
 		const resistances = [];
@@ -1053,15 +1098,15 @@ export const commands: Chat.ChatCommands = {
 		}
 
 		const statuses: { [k: string]: string } = {
-			brn: "Burn",
-			frz: "Frozen",
-			hail: "Hail damage",
-			par: "Paralysis",
-			powder: "Powder moves",
-			prankster: "Prankster",
-			sandstorm: "Sandstorm damage",
-			tox: "Toxic",
-			trapped: "Trapping",
+			brn: this.TL`Burn`,
+			frz: this.TL`Frozen`,
+			hail: this.TL`Hail damage`,
+			par: this.TL`Paralysis`,
+			powder: this.TL`Powder moves`,
+			prankster: this.TL`Prankster`,
+			sandstorm: this.TL`Sandstorm damage`,
+			tox: this.TL`Toxic`,
+			trapped: this.TL`Trapping`,
 		};
 		for (const status in statuses) {
 			if (!dex.getImmunity(status, types)) {
@@ -1070,19 +1115,20 @@ export const commands: Chat.ChatCommands = {
 		}
 
 		const buffer = [];
-		buffer.push(`${species.exists ? `${target} (ignoring abilities):` : `${target}:`}`);
-		buffer.push(`<span class="message-effect-weak">Weaknesses</span>: ${weaknesses.join(', ') || '<span class="gray">None</span>'}`);
-		buffer.push(`<span class="message-effect-resist">Resistances</span>: ${resistances.join(', ') || '<span class="gray">None</span>'}`);
-		buffer.push(`<span class="message-effect-immune">Immunities</span>: ${immunities.join(', ') || '<span class="gray">None</span>'}`);
+		const none = `<span class="gray">${this.TL`None`}</span>`;
+		buffer.push(species.exists ? this.TL`${target} (ignoring abilities):` : `${target}:`);
+		buffer.push(`<span class="message-effect-weak">${this.TL`Weaknesses`}</span>: ${weaknesses.join(', ') || none}`);
+		buffer.push(`<span class="message-effect-resist">${this.TL`Resistances`}</span>: ${resistances.join(', ') || none}`);
+		buffer.push(`<span class="message-effect-immune">${this.TL`Immunities`}</span>: ${immunities.join(', ') || none}`);
 		this.sendReplyBox(buffer.join('<br />'));
 	},
 	weaknesshelp: [
-		`/weakness [pokemon] - Provides a Pok\u00e9mon's resistances, weaknesses, and immunities, ignoring abilities.`,
-		`/weakness [type 1], [type 2] - Provides a type or type combination's resistances, weaknesses, and immunities, ignoring abilities.`,
-		`/weakness [pokemon], [type 1], [type 2] - Provides a Pok\u00e9mon's type and type combination's resistances, weaknesses, and immunities, ignoring abilities.`,
-		`!weakness [pokemon] - Shows everyone a Pok\u00e9mon's resistances, weaknesses, and immunities, ignoring abilities. Requires: + % @ # &`,
-		`!weakness [type 1], [type 2] - Shows everyone a type or type combination's resistances, weaknesses, and immunities, ignoring abilities. Requires: + % @ # &`,
-		`!weakness [pokemon], [type 1], [type 2] - Shows everyone a Pok\u00e9mon's type and type combination's resistances, weaknesses, and immunities, ignoring abilities. Requires: + % @ # &`,
+		TLkey`/weakness [pokemon] - Provides a Pok\u00e9mon's resistances, weaknesses, and immunities, ignoring abilities.`,
+		TLkey`/weakness [type 1], [type 2] - Provides a type or type combination's resistances, weaknesses, and immunities, ignoring abilities.`,
+		TLkey`/weakness [pokemon], [type 1], [type 2] - Provides a Pok\u00e9mon's type and type combination's resistances, weaknesses, and immunities, ignoring abilities.`,
+		TLkey`!weakness [pokemon] - Shows everyone a Pok\u00e9mon's resistances, weaknesses, and immunities, ignoring abilities. Requires: + % @ # &`,
+		TLkey`!weakness [type 1], [type 2] - Shows everyone a type or type combination's resistances, weaknesses, and immunities, ignoring abilities. Requires: + % @ # &`,
+		TLkey`!weakness [pokemon], [type 1], [type 2] - Shows everyone a Pok\u00e9mon's type and type combination's resistances, weaknesses, and immunities, ignoring abilities. Requires: + % @ # &`,
 	],
 
 	eff: 'effectiveness',
@@ -1090,7 +1136,7 @@ export const commands: Chat.ChatCommands = {
 	matchup: 'effectiveness',
 	effectiveness(target, room, user) {
 		const { dex, targets } = this.splitFormat(target.split(/[,/]/));
-		if (targets.length !== 2) throw new Chat.ErrorMessage("Attacker and defender must be separated with a comma.");
+		if (targets.length !== 2) throw new Chat.ErrorMessage(this.TL`Attacker and defender must be separated with a comma.`);
 
 		let searchMethods = ['types', 'moves', 'species'];
 		const sourceMethods = ['types', 'moves'];
@@ -1123,7 +1169,7 @@ export const commands: Chat.ChatCommands = {
 			} else if (!defender && targetMethods.includes(method)) {
 				if (foundData.types) {
 					defender = foundData;
-					defName = `${foundData.name} (not counting abilities)`;
+					defName = this.TL`${foundData.name} (not counting abilities)`;
 				} else {
 					defender = { types: [foundData.name] };
 					defName = foundData.name;
@@ -1149,13 +1195,14 @@ export const commands: Chat.ChatCommands = {
 		}
 
 		const hasThousandArrows = source.id === 'thousandarrows' && defender.types.includes('Flying');
-		const additionalInfo = hasThousandArrows ? "<br />However, Thousand Arrows will be 1x effective on the first hit." : "";
+		const additionalInfo = hasThousandArrows ?
+			"<br />" + this.TL`However, Thousand Arrows will be 1x effective on the first hit.` : "";
 
-		this.sendReplyBox(`${atkName} is ${factor}x effective against ${defName}.${additionalInfo}`);
+		this.sendReplyBox(this.TL`${atkName} is ${factor}x effective against ${defName}.${additionalInfo}`);
 	},
 	effectivenesshelp: [
-		`/effectiveness [attack], [defender] - Provides the effectiveness of a move or type on another type or a Pok\u00e9mon.`,
-		`!effectiveness [attack], [defender] - Shows everyone the effectiveness of a move or type on another type or a Pok\u00e9mon.`,
+		TLkey`/effectiveness [attack], [defender] - Provides the effectiveness of a move or type on another type or a Pok\u00e9mon.`,
+		TLkey`!effectiveness [attack], [defender] - Shows everyone the effectiveness of a move or type on another type or a Pok\u00e9mon.`,
 	],
 
 	cover: 'coverage',
@@ -1182,7 +1229,7 @@ export const commands: Chat.ChatCommands = {
 
 			// arg is 'table' or 'all'?
 			if (arg === 'table' || arg === 'all') {
-				if (this.broadcasting) return this.sendReplyBox("The full table cannot be broadcast.");
+				if (this.broadcasting) return this.sendReplyBox(this.TL`The full table cannot be broadcast.`);
 				dispTable = true;
 				continue;
 			}
@@ -1203,9 +1250,9 @@ export const commands: Chat.ChatCommands = {
 			// arg is a move?
 			const move = dex.moves.get(arg);
 			if (!move.exists) {
-				throw new Chat.ErrorMessage(`Type or move '${arg}' not found.`);
+				throw new Chat.ErrorMessage(this.TL`Type or move '${arg}' not found.`);
 			} else if (move.gen > dex.gen) {
-				throw new Chat.ErrorMessage(`Move '${arg}' is not available in Gen ${dex.gen}.`);
+				throw new Chat.ErrorMessage(this.TL`Move '${arg}' is not available in Gen ${dex.gen}.`);
 			}
 
 			if (!move.basePower && !move.basePowerCallback) continue;
@@ -1224,9 +1271,9 @@ export const commands: Chat.ChatCommands = {
 			}
 		}
 		if (sources.length === 0) {
-			throw new Chat.ErrorMessage("No moves using a type table for determining damage were specified.");
+			throw new Chat.ErrorMessage(this.TL`No moves using a type table for determining damage were specified.`);
 		}
-		if (sources.length > 4) throw new Chat.ErrorMessage("Specify a maximum of 4 moves or types.");
+		if (sources.length > 4) throw new Chat.ErrorMessage(this.TL`Specify a maximum of 4 moves or types.`);
 
 		// converts to fractional effectiveness, 0 for immune
 		for (const type in bestCoverage) {
@@ -1255,11 +1302,13 @@ export const commands: Chat.ChatCommands = {
 					neutral.push(type);
 				}
 			}
-			buffer.push(`Coverage for ${sources.join(' + ')}:`);
-			buffer.push(`<b><font color=#559955>Super Effective</font></b>: ${superEff.join(', ') || '<span class="gray">None</span>'}`);
-			buffer.push(`<span class="message-effect-resist">Neutral</span>: ${neutral.join(', ') || '<span class="gray">None</span>'}`);
-			buffer.push(`<span class="message-effect-weak">Resists</span>: ${resists.join(', ') || '<span class="gray">None</span>'}`);
-			buffer.push(`<span class="message-effect-immune">Immunities</span>: ${immune.join(', ') || '<span class="gray">None</span>'}`);
+			const sourceList = sources.join(' + ');
+			const none = `<span class="gray">${this.TL`None`}</span>`;
+			buffer.push(this.TL`Coverage for ${sourceList}:`);
+			buffer.push(`<b><font color=#559955>${this.TL`Super Effective`}</font></b>: ${superEff.join(', ') || none}`);
+			buffer.push(`<span class="message-effect-resist">${this.TL`Neutral`}</span>: ${neutral.join(', ') || none}`);
+			buffer.push(`<span class="message-effect-weak">${this.TL`Resists`}</span>: ${resists.join(', ') || none}`);
+			buffer.push(`<span class="message-effect-immune">${this.TL`Immunities`}</span>: ${immune.join(', ') || none}`);
 			return this.sendReplyBox(buffer.join('<br />'));
 		} else {
 			let buffer = '<div class="scrollable"><table cellpadding="1" width="100%"><tr><th></th>';
@@ -1329,16 +1378,17 @@ export const commands: Chat.ChatCommands = {
 			buffer += '</table></div>';
 
 			if (hasThousandArrows) {
-				buffer += "<br /><b>Thousand Arrows has neutral type effectiveness on Flying-type Pok\u00e9mon if not already smacked down.";
+				buffer += "<br /><b>" + this.TL`Thousand Arrows has neutral type effectiveness on Flying-type Pok\u00e9mon if not already smacked down.`;
 			}
 
-			this.sendReplyBox(`Coverage for ${sources.join(' + ')}:<br />${buffer}`);
+			const sourceList = sources.join(' + ');
+			this.sendReplyBox(this.TL`Coverage for ${sourceList}:` + `<br />${buffer}`);
 		}
 	},
 	coveragehelp: [
-		`/coverage [move 1], [move 2] ... - Provides the best effectiveness match-up against all defending types for given moves or attacking types`,
-		`!coverage [move 1], [move 2] ... - Shows this information to everyone.`,
-		`Adding the parameter 'all' or 'table' will display the information with a table of all type combinations.`,
+		TLkey`/coverage [move 1], [move 2] ... - Provides the best effectiveness match-up against all defending types for given moves or attacking types`,
+		TLkey`!coverage [move 1], [move 2] ... - Shows this information to everyone.`,
+		TLkey`Adding the parameter 'all' or 'table' will display the information with a table of all type combinations.`,
 	],
 
 	statcalc(target, room, user) {
@@ -1370,6 +1420,7 @@ export const commands: Chat.ChatCommands = {
 
 		for (const arg of targets) {
 			const lowercase = arg.toLowerCase();
+			const argHTML = Utils.escapeHTML(arg);
 
 			if (!lvlSet) {
 				if (lowercase === 'lc') {
@@ -1384,10 +1435,10 @@ export const commands: Chat.ChatCommands = {
 					level = parseInt(arg.replace(/\D/g, ''));
 					lvlSet = true;
 					if (isNaN(level)) {
-						return this.sendReplyBox('Invalid value for level: ' + Utils.escapeHTML(arg));
+						return this.sendReplyBox(this.TL`Invalid value for level: ${argHTML}`);
 					}
 					if (level < 1 || level > 9999) {
-						return this.sendReplyBox('Level should be between 1 and 9999.');
+						return this.sendReplyBox(this.TL`Level should be between 1 and 9999.`);
 					}
 					continue;
 				}
@@ -1451,7 +1502,7 @@ export const commands: Chat.ChatCommands = {
 					ivSet = true;
 
 					if (isNaN(iv)) {
-						return this.sendReplyBox('Invalid value for IVs: ' + Utils.escapeHTML(arg));
+						return this.sendReplyBox(this.TL`Invalid value for IVs: ${argHTML}`);
 					}
 
 					continue;
@@ -1474,10 +1525,10 @@ export const commands: Chat.ChatCommands = {
 					evSet = true;
 
 					if (isNaN(ev)) {
-						return this.sendReplyBox('Invalid value for EVs: ' + Utils.escapeHTML(arg));
+						return this.sendReplyBox(this.TL`Invalid value for EVs: ${argHTML}`);
 					}
 					if (ev > 255 || ev < 0) {
-						return this.sendReplyBox('The amount of EVs should be between 0 and 255.');
+						return this.sendReplyBox(this.TL`The amount of EVs should be between 0 and 255.`);
 					}
 
 					if (!natureSet) {
@@ -1507,10 +1558,10 @@ export const commands: Chat.ChatCommands = {
 					modSet = true;
 				}
 				if (isNaN(modifier)) {
-					return this.sendReplyBox('Invalid value for modifier: ' + Utils.escapeHTML(String(modifier)));
+					return this.sendReplyBox(this.TL`Invalid value for modifier: ${modifier}`);
 				}
 				if (modifier > 6) {
-					return this.sendReplyBox('Modifier should be a number between -6 and +6');
+					return this.sendReplyBox(this.TL`Modifier should be a number between -6 and +6`);
 				}
 				if (modSet) continue;
 			}
@@ -1523,10 +1574,10 @@ export const commands: Chat.ChatCommands = {
 					realSet = true;
 
 					if (isNaN(realStat)) {
-						return this.sendReplyBox('Invalid value for target real stat: ' + Utils.escapeHTML(arg));
+						return this.sendReplyBox(this.TL`Invalid value for target real stat: ${argHTML}`);
 					}
 					if (realStat < 0) {
-						return this.sendReplyBox('The target real stat must be greater than 0.');
+						return this.sendReplyBox(this.TL`The target real stat must be greater than 0.`);
 					}
 					continue;
 				}
@@ -1542,7 +1593,7 @@ export const commands: Chat.ChatCommands = {
 			if (useStat) {
 				baseStat = pokemon[useStat];
 			} else {
-				return this.sendReplyBox('No stat found.');
+				return this.sendReplyBox(this.TL`No stat found.`);
 			}
 		}
 
@@ -1563,7 +1614,7 @@ export const commands: Chat.ChatCommands = {
 					);
 				}
 				if (baseStat < 0) {
-					return this.sendReplyBox('No valid value for base stat possible with given parameters.');
+					return this.sendReplyBox(this.TL`No valid value for base stat possible with given parameters.`);
 				}
 			} else if (!evSet) {
 				if (calcHP) {
@@ -1584,13 +1635,13 @@ export const commands: Chat.ChatCommands = {
 				}
 				ev *= 4;
 				if (iv < 0 || ev > 255) {
-					return this.sendReplyBox(`No valid EV/IV combination possible with given parameters. Maybe try a different nature?${ev}`);
+					return this.sendReplyBox(this.TL`No valid EV/IV combination possible with given parameters. Maybe try a different nature?${ev}`);
 				}
 			} else {
-				return this.sendReplyBox('Too many parameters given; nothing to calculate.');
+				return this.sendReplyBox(this.TL`Too many parameters given; nothing to calculate.`);
 			}
 		} else if (baseStat < 0) {
-			return this.sendReplyBox('No valid value for base stat found.');
+			return this.sendReplyBox(this.TL`No valid value for base stat found.`);
 		}
 
 		let output: number;
@@ -1605,13 +1656,22 @@ export const commands: Chat.ChatCommands = {
 				output *= 2 / (2 + modifier);
 			}
 		}
-		return this.sendReplyBox(`Base ${baseStat} ${calcHP ? ' HP ' : ' '}at level ${level} with ${iv} IVs, ${ev}${nature === 1.1 ? '+' : nature === 0.9 ? '-' : ''} EVs${modifier > 0 && !calcHP ? ` at ${positiveMod ? '+' : '-'}${modifier}` : ''}: <b>${Math.floor(output)}</b>.`);
+		const natureSign = nature === 1.1 ? '+' : nature === 0.9 ? '-' : '';
+		const finalStat = Math.floor(output);
+		if (calcHP) {
+			return this.sendReplyBox(this.TL`Base ${baseStat} HP at level ${level} with ${iv} IVs, ${ev}${natureSign} EVs: <b>${finalStat}</b>.`);
+		}
+		if (modifier > 0) {
+			const boostSign = positiveMod ? '+' : '-';
+			return this.sendReplyBox(this.TL`Base ${baseStat} at level ${level} with ${iv} IVs, ${ev}${natureSign} EVs at ${boostSign}${modifier}: <b>${finalStat}</b>.`);
+		}
+		return this.sendReplyBox(this.TL`Base ${baseStat} at level ${level} with ${iv} IVs, ${ev}${natureSign} EVs: <b>${finalStat}</b>.`);
 	},
 	statcalchelp: [
-		`/statcalc [level] [base stat] [IVs] [nature] [EVs] [modifier] (only base stat is required) - Calculates what the actual stat of a Pokémon is with the given parameters. For example, '/statcalc lv50 100 30iv positive 252ev scarf' calculates the speed of a base 100 scarfer with HP Ice in Battle Spot, and '/statcalc uninvested 90 neutral' calculates the attack of an uninvested Crobat.`,
-		`!statcalc [level] [base stat] [IVs] [nature] [EVs] [modifier] (only base stat is required) - Shows this information to everyone.`,
-		`Inputting 'hp' as an argument makes it use the formula for HP. Instead of giving nature, '+' and '-' can be appended to the EV amount (e.g. 252+ev) to signify a boosting or inhibiting nature.`,
-		`An actual stat can be given in place of a base stat or EVs. In this case, the minimum base stat or EVs necessary to have that real stat with the given parameters will be determined. For example, '/statcalc 502real 252+ +1' calculates the minimum base speed necessary for a positive natured fully invested scarfer to outspeed`,
+		TLkey`/statcalc [level] [base stat] [IVs] [nature] [EVs] [modifier] (only base stat is required) - Calculates what the actual stat of a Pokémon is with the given parameters. For example, '/statcalc lv50 100 30iv positive 252ev scarf' calculates the speed of a base 100 scarfer with HP Ice in Battle Spot, and '/statcalc uninvested 90 neutral' calculates the attack of an uninvested Crobat.`,
+		TLkey`!statcalc [level] [base stat] [IVs] [nature] [EVs] [modifier] (only base stat is required) - Shows this information to everyone.`,
+		TLkey`Inputting 'hp' as an argument makes it use the formula for HP. Instead of giving nature, '+' and '-' can be appended to the EV amount (e.g. 252+ev) to signify a boosting or inhibiting nature.`,
+		TLkey`An actual stat can be given in place of a base stat or EVs. In this case, the minimum base stat or EVs necessary to have that real stat with the given parameters will be determined. For example, '/statcalc 502real 252+ +1' calculates the minimum base speed necessary for a positive natured fully invested scarfer to outspeed`,
 	],
 
 	/*********************************************************
@@ -1624,23 +1684,25 @@ export const commands: Chat.ChatCommands = {
 		let uptimeText;
 		if (uptime > 24 * 60 * 60) {
 			const uptimeDays = Math.floor(uptime / (24 * 60 * 60));
-			uptimeText = `${uptimeDays} ${uptimeDays === 1 ? "day" : "days"}`;
+			uptimeText = uptimeDays === 1 ? this.TL`${uptimeDays} day` : this.TL`${uptimeDays} days`;
 			const uptimeHours = Math.floor(uptime / (60 * 60)) - uptimeDays * 24;
-			if (uptimeHours) uptimeText += `, ${uptimeHours} ${uptimeHours === 1 ? "hour" : "hours"}`;
+			if (uptimeHours) {
+				uptimeText += `, ` + (uptimeHours === 1 ? this.TL`${uptimeHours} hour` : this.TL`${uptimeHours} hours`);
+			}
 		} else {
 			uptimeText = Chat.toDurationString(uptime * 1000);
 		}
-		this.sendReplyBox(`Uptime: <b>${uptimeText}</b>`);
+		this.sendReplyBox(this.TL`Uptime: <b>${uptimeText}</b>`);
 	},
-	uptimehelp: [`/uptime - Shows how long the server has been online for.`],
+	uptimehelp: [TLkey`/uptime - Shows how long the server has been online for.`],
 
 	st: 'servertime',
 	servertime(target, room, user) {
 		if (!this.runBroadcast()) return;
-		const servertime = new Date();
-		this.sendReplyBox(`Server time: <b>${servertime.toLocaleString()}</b>`);
+		const servertime = new Date().toLocaleString();
+		this.sendReplyBox(this.TL`Server time: <b>${servertime}</b>`);
 	},
-	servertimehelp: [`/servertime - Shows the current time where the server is.`],
+	servertimehelp: [TLkey`/servertime - Shows the current time where the server is.`],
 
 	groups(target, room, user) {
 		if (!this.runBroadcast()) return;
@@ -1674,9 +1736,9 @@ export const commands: Chat.ChatCommands = {
 		);
 	},
 	groupshelp: [
-		`/groups - Explains what the symbols (like % and @) before people's names mean.`,
-		`/groups [global|room] - Explains only global or room symbols.`,
-		`!groups - Shows everyone that information. Requires: + % @ # ~`,
+		TLkey`/groups - Explains what the symbols (like % and @) before people's names mean.`,
+		TLkey`/groups [global|room] - Explains only global or room symbols.`,
+		TLkey`!groups - Shows everyone that information. Requires: + % @ # ~`,
 	],
 
 	punishments(target, room, user) {
@@ -1719,8 +1781,8 @@ export const commands: Chat.ChatCommands = {
 		);
 	},
 	punishmentshelp: [
-		`/punishments - Explains punishments.`,
-		`!punishments - Show everyone that information. Requires: + % @ # ~`,
+		TLkey`/punishments - Explains punishments.`,
+		TLkey`!punishments - Show everyone that information. Requires: + % @ # ~`,
 	],
 
 	repo: 'opensource',
@@ -1728,32 +1790,32 @@ export const commands: Chat.ChatCommands = {
 	git: 'opensource',
 	opensource(target, room, user) {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(
-			`Pok&eacute;mon Showdown is open source:<br />` +
-			`- Language: mostly TypeScript, a little PHP<br />` +
-			`- <a href="https://github.com/smogon/pokemon-showdown/commits/master">What's new?</a><br />` +
-			`- <a href="https://github.com/smogon/pokemon-showdown">Server source code</a><br />` +
-			`- <a href="https://github.com/smogon/pokemon-showdown-client">Client source code</a><br />` +
-			`- <a href="https://github.com/Zarel/Pokemon-Showdown-Dex">Dex source code</a><br />` +
-			`- <a href="https://github.com/smogon/pokemon-showdown-loginserver">Login server source code</a>`
-		);
+		this.sendReplyBox([
+			this.TL`Pok&eacute;mon Showdown is open source:`,
+			this.TL`- Language: mostly TypeScript, a little PHP`,
+			this.TL`- <a href="https://github.com/smogon/pokemon-showdown/commits/master">What's new?</a>`,
+			this.TL`- <a href="https://github.com/smogon/pokemon-showdown">Server source code</a>`,
+			this.TL`- <a href="https://github.com/smogon/pokemon-showdown-client">Client source code</a>`,
+			this.TL`- <a href="https://github.com/Zarel/Pokemon-Showdown-Dex">Dex source code</a>`,
+			this.TL`- <a href="https://github.com/smogon/pokemon-showdown-loginserver">Login server source code</a>`,
+		].join(`<br />`));
 	},
 	opensourcehelp: [
-		`/opensource - Links to PS's source code repository.`,
-		`!opensource - Show everyone that information. Requires: + % @ # ~`,
+		TLkey`/opensource - Links to PS's source code repository.`,
+		TLkey`!opensource - Show everyone that information. Requires: + % @ # ~`,
 	],
 
 	staff(target, room, user) {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(`<a href="https://www.smogon.com/forums/posts/10715136/">Pok&eacute;mon Showdown Staff List</a>`);
+		this.sendReplyBox(this.TL`<a href="https://www.smogon.com/forums/posts/10715136/">Pok&eacute;mon Showdown Staff List</a>`);
 	},
-	staffhelp: [`/staff - View the staff list.`],
+	staffhelp: [TLkey`/staff - View the staff list.`],
 
 	forums(target, room, user) {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(`<a href="https://www.smogon.com/forums/forums/209/">Pok&eacute;mon Showdown Forums</a>`);
+		this.sendReplyBox(this.TL`<a href="https://www.smogon.com/forums/forums/209/">Pok&eacute;mon Showdown Forums</a>`);
 	},
-	forumshelp: [`/forums - Links to the PS forums.`],
+	forumshelp: [TLkey`/forums - Links to the PS forums.`],
 
 	privacypolicy(target, room, user) {
 		if (!this.runBroadcast()) return;
@@ -1764,63 +1826,63 @@ export const commands: Chat.ChatCommands = {
 			this.TL`- For more information, you can read our <a href="https://${Config.routes.root}/privacy">full privacy policy.</a>`,
 		].join(`<br />`));
 	},
-	privacypolicyhelp: [`/privacypolicy - Displays PS's privacy policy.`],
+	privacypolicyhelp: [TLkey`/privacypolicy - Displays PS's privacy policy.`],
 
 	suggest: 'suggestions',
 	suggestion: 'suggestions',
 	suggestions(target, room, user) {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(`<a href="https://play.pokemonshowdown.com/suggestions">Make a suggestion for Pok&eacute;mon Showdown</a>`);
+		this.sendReplyBox(this.TL`<a href="https://play.pokemonshowdown.com/suggestions">Make a suggestion for Pok&eacute;mon Showdown</a>`);
 	},
-	suggestionshelp: [`/suggestions - Links to the place to make suggestions for Pokemon Showdown.`],
+	suggestionshelp: [TLkey`/suggestions - Links to the place to make suggestions for Pokemon Showdown.`],
 
 	bugreport: 'bugs',
 	bugreports: 'bugs',
 	bugs(target, room, user) {
 		if (!this.runBroadcast()) return;
 		if (room?.battle) {
-			this.sendReplyBox(`<center><button name="saveReplay"><i class="fa fa-upload"></i> Save Replay</button> &mdash; <a href="https://www.smogon.com/forums/threads/3520646/">Questions</a> &mdash; <a href="https://play.pokemonshowdown.com/bugs">Bug Reports</a></center>`);
+			this.sendReplyBox(this.TL`<center><button name="saveReplay"><i class="fa fa-upload"></i> Save Replay</button> &mdash; <a href="https://www.smogon.com/forums/threads/3520646/">Questions</a> &mdash; <a href="https://play.pokemonshowdown.com/bugs">Bug Reports</a></center>`);
 		} else {
-			this.sendReplyBox(
-				`Have a replay showcasing a bug on Pok&eacute;mon Showdown?<br />` +
-				`- <a href="https://www.smogon.com/forums/threads/3520646/">Questions</a><br />` +
-				`- <a href="https://play.pokemonshowdown.com/bugs">Bug Reports</a> (ask in <a href="/help">Help</a> before posting if you're unsure)`
-			);
+			this.sendReplyBox([
+				this.TL`Have a replay showcasing a bug on Pok&eacute;mon Showdown?`,
+				this.TL`- <a href="https://www.smogon.com/forums/threads/3520646/">Questions</a>`,
+				this.TL`- <a href="https://play.pokemonshowdown.com/bugs">Bug Reports</a> (ask in <a href="/help">Help</a> before posting if you're unsure)`,
+			].join(`<br />`));
 		}
 	},
-	bugshelp: [`/bugs - Links to the various bug reporting services.`],
+	bugshelp: [TLkey`/bugs - Links to the various bug reporting services.`],
 
 	optionbutton: 'optionsbutton',
 	optionsbutton(target, room, user) {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(`<button name="openOptions" class="button"><i style="font-size: 16px; vertical-align: -1px" class="fa fa-cog"></i> Options</button> (The Sound and Options buttons are at the top right, next to your username)`);
+		this.sendReplyBox(this.TL`<button name="openOptions" class="button"><i style="font-size: 16px; vertical-align: -1px" class="fa fa-cog"></i> Options</button> (The Sound and Options buttons are at the top right, next to your username)`);
 	},
-	optionsbuttonhelp: [`/optionsbutton - Provides a button to the Options menu.`],
+	optionsbuttonhelp: [TLkey`/optionsbutton - Provides a button to the Options menu.`],
 
 	soundsbutton: 'soundbutton',
 	volumebutton: 'soundbutton',
 	soundbutton(target, room, user) {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(`<button name="openSounds" class="button"><i style="font-size: 16px; vertical-align: -1px" class="fa fa-volume-up"></i> Sound</button> (The Sound and Options buttons are at the top right, next to your username)`);
+		this.sendReplyBox(this.TL`<button name="openSounds" class="button"><i style="font-size: 16px; vertical-align: -1px" class="fa fa-volume-up"></i> Sound</button> (The Sound and Options buttons are at the top right, next to your username)`);
 	},
-	soundbuttonhelp: [`/soundbutton - Provides a button to the Sounds menu.`],
+	soundbuttonhelp: [TLkey`/soundbutton - Provides a button to the Sounds menu.`],
 
 	introduction: 'intro',
 	intro(target, room, user) {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(
-			`New to competitive Pok&eacute;mon?<br />` +
-			`- <a href="https://www.smogon.com/forums/threads/3676132/">Beginner's Guide to Pok&eacute;mon Showdown</a><br />` +
-			`- <a href="https://www.smogon.com/dp/articles/intro_comp_pokemon">An introduction to competitive Pok&eacute;mon</a><br />` +
-			`- <a href="https://www.smogon.com/sm/articles/sm_tiers">What do 'OU', 'UU', etc mean?</a><br />` +
-			`- <a href="https://www.smogon.com/dex/sv/formats/">What are the rules for each format?</a><br />` +
-			`- <a href="https://www.smogon.com/sv/articles/clauses">What is 'Sleep Clause' and other clauses?</a><br />` +
-			`- <a href="https://www.smogon.com/articles/getting-started">Next Steps for Competitive Battling</a>`
-		);
+		this.sendReplyBox([
+			this.TL`New to competitive Pok&eacute;mon?`,
+			this.TL`- <a href="https://www.smogon.com/forums/threads/3676132/">Beginner's Guide to Pok&eacute;mon Showdown</a>`,
+			this.TL`- <a href="https://www.smogon.com/dp/articles/intro_comp_pokemon">An introduction to competitive Pok&eacute;mon</a>`,
+			this.TL`- <a href="https://www.smogon.com/sm/articles/sm_tiers">What do 'OU', 'UU', etc mean?</a>`,
+			this.TL`- <a href="https://www.smogon.com/dex/sv/formats/">What are the rules for each format?</a>`,
+			this.TL`- <a href="https://www.smogon.com/sv/articles/clauses">What is 'Sleep Clause' and other clauses?</a>`,
+			this.TL`- <a href="https://www.smogon.com/articles/getting-started">Next Steps for Competitive Battling</a>`,
+		].join(`<br />`));
 	},
 	introhelp: [
-		`/intro - Provides an introduction to competitive Pok\u00e9mon.`,
-		`!intro - Show everyone that information. Requires: + % @ # ~`,
+		TLkey`/intro - Provides an introduction to competitive Pok\u00e9mon.`,
+		TLkey`!intro - Show everyone that information. Requires: + % @ # ~`,
 	],
 
 	mentoring: 'smogintro',
@@ -1828,12 +1890,12 @@ export const commands: Chat.ChatCommands = {
 	smogintro(target, room, user) {
 		if (!this.runBroadcast()) return;
 		this.sendReplyBox(
-			`Welcome to Smogon's official simulator! The <a href="https://www.smogon.com/forums/forums/intro_hub">Information & Resources forum</a> can help you get integrated into the community.<br />` +
-			`- <a href="https://www.smogon.com/forums/threads/3710821/">Introduction to Smogon</a><br />` +
-			`- <a href="https://www.smogon.com/forums/threads/3652546/">Smogon Discord Directory</a><br />`
+			this.TL`Welcome to Smogon's official simulator! The <a href="https://www.smogon.com/forums/forums/intro_hub">Information & Resources forum</a> can help you get integrated into the community.` + `<br />` +
+			this.TL`- <a href="https://www.smogon.com/forums/threads/3710821/">Introduction to Smogon</a>` + `<br />` +
+			this.TL`- <a href="https://www.smogon.com/forums/threads/3652546/">Smogon Discord Directory</a>` + `<br />`
 		);
 	},
-	smogintrohelp: [`/smogintro - Provides an introduction to Smogon.`],
+	smogintrohelp: [TLkey`/smogintro - Provides an introduction to Smogon.`],
 
 	bsscalc: 'calc',
 	calculator: 'calc',
@@ -1863,50 +1925,50 @@ export const commands: Chat.ChatCommands = {
 		if (RANDOMS_CALC_COMMANDS.includes(cmd) ||
 			(isRandomBattle && !DEFAULT_CALC_COMMANDS.includes(cmd) && !BATTLESPOT_CALC_COMMANDS.includes(cmd))) {
 			return this.sendReplyBox(
-				`Random Battles damage calculator. (Courtesy of dhelmise &amp; jetou)<br />` +
-				`- <a href="https://calc.pokemonshowdown.com/randoms.html?gen=${dex.gen}">Random Battles Damage Calculator</a>`
+				this.TL`Random Battles damage calculator. (Courtesy of dhelmise &amp; jetou)` + `<br />` +
+				`- <a href="https://calc.pokemonshowdown.com/randoms.html?gen=${dex.gen}">${this.TL`Random Battles Damage Calculator`}</a>`
 			);
 		}
 		if (BATTLESPOT_CALC_COMMANDS.includes(cmd) || (isBattleSpotBattle && !DEFAULT_CALC_COMMANDS.includes(cmd))) {
 			return this.sendReplyBox(
-				`Battle Spot damage calculator. (Courtesy of cant say &amp; LegoFigure11)<br />` +
-				`- <a href="https://cantsay.github.io/">Battle Spot Damage Calculator</a>`
+				this.TL`Battle Spot damage calculator. (Courtesy of cant say &amp; LegoFigure11)` + `<br />` +
+				`- <a href="https://cantsay.github.io/">${this.TL`Battle Spot Damage Calculator`}</a>`
 			);
 		}
 		this.sendReplyBox(
-			`Pok&eacute;mon Showdown! damage calculator. (Courtesy of Honko, Austin, dhelmise, &amp; jetou)<br />` +
-			`- <a href="https://calc.pokemonshowdown.com/index.html?gen=${dex.gen}">Damage Calculator</a>`
+			this.TL`Pok&eacute;mon Showdown! damage calculator. (Courtesy of Honko, Austin, dhelmise, &amp; jetou)` + `<br />` +
+			`- <a href="https://calc.pokemonshowdown.com/index.html?gen=${dex.gen}">${this.TL`Damage Calculator`}</a>`
 		);
 	},
 	calchelp: [
-		`/calc - Provides a link to a damage calculator`,
-		`/rcalc - Provides a link to the random battles damage calculator`,
-		`/bsscalc - Provides a link to the Battle Spot damage calculator`,
-		`!calc - Shows everyone a link to a damage calculator. Requires: + % @ # ~`,
+		TLkey`/calc - Provides a link to a damage calculator`,
+		TLkey`/rcalc - Provides a link to the random battles damage calculator`,
+		TLkey`/bsscalc - Provides a link to the Battle Spot damage calculator`,
+		TLkey`!calc - Shows everyone a link to a damage calculator. Requires: + % @ # ~`,
 	],
 
 	capintro: 'cap',
 	cap(target, room, user) {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(
-			`An introduction to the Create-A-Pok&eacute;mon project:<br />` +
-			`- <a href="https://www.smogon.com/cap/">CAP project website and description</a><br />` +
-			`- <a href="https://www.smogon.com/forums/forums/66/">CAP project discussion forum</a><br />` +
-			`- <a href="https://www.smogon.com/forums/threads/48782/">What Pok&eacute;mon have been made?</a><br />` +
-			`- <a href="https://www.smogon.com/forums/forums/477">Talk about the metagame here</a><br />` +
-			`- <a href="https://www.smogon.com/forums/threads/3718107/">Sample SV CAP teams</a>`
-		);
+		this.sendReplyBox([
+			this.TL`An introduction to the Create-A-Pok&eacute;mon project:`,
+			this.TL`- <a href="https://www.smogon.com/cap/">CAP project website and description</a>`,
+			this.TL`- <a href="https://www.smogon.com/forums/forums/66/">CAP project discussion forum</a>`,
+			this.TL`- <a href="https://www.smogon.com/forums/threads/48782/">What Pok&eacute;mon have been made?</a>`,
+			this.TL`- <a href="https://www.smogon.com/forums/forums/477">Talk about the metagame here</a>`,
+			this.TL`- <a href="https://www.smogon.com/forums/threads/3718107/">Sample SV CAP teams</a>`,
+		].join(`<br />`));
 	},
 	caphelp: [
-		`/cap - Provides an introduction to the Create-A-Pok\u00e9mon project.`,
-		`!cap - Show everyone that information. Requires: + % @ # ~`,
+		TLkey`/cap - Provides an introduction to the Create-A-Pok\u00e9mon project.`,
+		TLkey`!cap - Show everyone that information. Requires: + % @ # ~`,
 	],
 
 	battlerules(target, room, user) {
 		return this.parse(`/join view-battlerules`);
 	},
 	battleruleshelp: [
-		`/battlerules - Provides information on the rules that can be added to tournament and challenge battles.`,
+		TLkey`/battlerules - Provides information on the rules that can be added to tournament and challenge battles.`,
 	],
 
 	banlists: 'formathelp',
@@ -1919,10 +1981,10 @@ export const commands: Chat.ChatCommands = {
 	async formathelp(target, room, user, connection, cmd) {
 		if (!target && this.runBroadcast()) {
 			return this.sendReplyBox(
-				`- <a href="https://www.smogon.com/forums/forums/smogon-metagames.725/">Smogon Metagames</a><br />` +
-				`- <a href="https://www.smogon.com/forums/threads/3628026/">Tiering Framework</a><br />` +
-				`- <a href="https://www.smogon.com/forums/threads/3644714/">Tiering FAQ</a><br />` +
-				"<br /><em>Type /tier <strong>[tier name]</strong> to get details, banlists, and helpful resources like sample teams for any tier!</em>"
+				this.TL`- <a href="https://www.smogon.com/forums/forums/smogon-metagames.725/">Smogon Metagames</a>` + `<br />` +
+				this.TL`- <a href="https://www.smogon.com/forums/threads/3628026/">Tiering Framework</a>` + `<br />` +
+				this.TL`- <a href="https://www.smogon.com/forums/threads/3644714/">Tiering FAQ</a>` + `<br />` +
+				"<br /><em>" + this.TL`Type /tier <strong>[tier name]</strong> to get details, banlists, and helpful resources like sample teams for any tier!` + "</em>"
 			);
 		}
 
@@ -1933,7 +1995,7 @@ export const commands: Chat.ChatCommands = {
 		if (targetId === 'all') targetId = '';
 		const { totalMatches, sections } = findFormats(targetId, isOMSearch);
 
-		if (!totalMatches) return this.errorReply("No matched formats found.");
+		if (!totalMatches) return this.errorReply(this.TL`No matched formats found.`);
 
 		const format = totalMatches === 1 ? Dex.formats.get(Object.values(sections)[0].formats[0]) : null;
 
@@ -1944,21 +2006,21 @@ export const commands: Chat.ChatCommands = {
 			let rulesetHtml = '';
 			if (['Format', 'Rule', 'ValidatorRule'].includes(format.effectType)) {
 				if (format.ruleset?.length) {
-					rules.push(`<b>Ruleset</b> - ${Utils.escapeHTML(format.ruleset.join(", "))}`);
+					rules.push(`<b>${this.TL`Ruleset`}</b> - ${Utils.escapeHTML(format.ruleset.join(", "))}`);
 				}
 				if (format.banlist?.length) {
-					rules.push(`<b>Bans</b> - ${Utils.escapeHTML(format.banlist.join(", "))}`);
+					rules.push(`<b>${this.TL`Bans`}</b> - ${Utils.escapeHTML(format.banlist.join(", "))}`);
 				}
 				if (format.unbanlist?.length) {
-					rules.push(`<b>Unbans</b> - ${Utils.escapeHTML(format.unbanlist.join(", "))}`);
+					rules.push(`<b>${this.TL`Unbans`}</b> - ${Utils.escapeHTML(format.unbanlist.join(", "))}`);
 				}
 				if (format.restricted?.length) {
-					rules.push(`<b>Restricted</b> - ${Utils.escapeHTML(format.restricted.join(", "))}`);
+					rules.push(`<b>${this.TL`Restricted`}</b> - ${Utils.escapeHTML(format.restricted.join(", "))}`);
 				}
 				if (rules.length > 0) {
-					rulesetHtml = `<details class="details"><summary>Banlist/Ruleset</summary>${rules.join("<br />")}</details>`;
+					rulesetHtml = `<details class="details"><summary>${this.TL`Banlist/Ruleset`}</summary>${rules.join("<br />")}</details>`;
 				} else {
-					rulesetHtml = `No ruleset found for ${format.name}`;
+					rulesetHtml = this.TL`No ruleset found for ${format.name}`;
 				}
 			}
 			const formatDesc = format.desc || '';
@@ -1977,9 +2039,10 @@ export const commands: Chat.ChatCommands = {
 			} else {
 				const genID = ['rb', 'gs', 'rs', 'dp', 'bw', 'xy', 'sm', 'ss', 'sv'];
 				const gen = Dex.forFormat(format).gen;
-				descHtml.push(`This format has no resources linked on its <a href="https://www.smogon.com/dex/${genID[gen - 1] || 'sv'}/formats/">Smogon Dex page</a>. ` +
-					`Please contact a <a href="https://www.smogon.com/forums/forums/757/">C&amp;C Leader</a> to resolve this. ` +
-					`Alternatively, if this format can't have a page on the Smogon Dex, message <username>dhelmise</username>.<br />`);
+				const dexGenID = genID[gen - 1] || 'sv';
+				descHtml.push(this.TL`This format has no resources linked on its <a href="https://www.smogon.com/dex/${dexGenID}/formats/">Smogon Dex page</a>.` + ` ` +
+					this.TL`Please contact a <a href="https://www.smogon.com/forums/forums/757/">C&amp;C Leader</a> to resolve this.` + ` ` +
+					this.TL`Alternatively, if this format can't have a page on the Smogon Dex, message <username>dhelmise</username>.` + `<br />`);
 			}
 			return this.sendReplyBox(`<h2>${format.name}</h2><hr />${formatDesc ? formatDesc + '<hr />' : ''}${descHtml.join("<br />")}${rulesetHtml ? `<br />${rulesetHtml}` : ''}`);
 		}
@@ -2012,8 +2075,8 @@ export const commands: Chat.ChatCommands = {
 		return this.sendReply(`|c|${user.getIdentity(room)}|/raw ${buf.join("")}`);
 	},
 	formathelphelp: [
-		`/formathelp [format] - Provides information on the given [format].`,
-		`If no format is given, provides information on how tiers work.`,
+		TLkey`/formathelp [format] - Provides information on the given [format].`,
+		TLkey`If no format is given, provides information on how tiers work.`,
 	],
 
 	roomhelp(target, room, user) {
@@ -2080,13 +2143,13 @@ export const commands: Chat.ChatCommands = {
 	restarthelp(target, room, user) {
 		if (!Rooms.global.lockdown) this.checkCan('lockdown');
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(
-			`The server is restarting. Things to know:<br />` +
-			`- We wait a few minutes before restarting so people can finish up their battles<br />` +
-			`- The restart itself will take around 0.6 seconds<br />` +
-			`- Your ladder ranking and teams will not change<br />` +
-			`- We are restarting to update Pok&eacute;mon Showdown to a newer version`
-		);
+		this.sendReplyBox([
+			this.TL`The server is restarting. Things to know:`,
+			this.TL`- We wait a few minutes before restarting so people can finish up their battles`,
+			this.TL`- The restart itself will take around 0.6 seconds`,
+			this.TL`- Your ladder ranking and teams will not change`,
+			this.TL`- We are restarting to update Pok&eacute;mon Showdown to a newer version`,
+		].join(`<br />`));
 	},
 
 	rule: 'rules',
@@ -2102,23 +2165,23 @@ export const commands: Chat.ChatCommands = {
 			return;
 		}
 		if (!room) {
-			throw new Chat.ErrorMessage(`This is not a room you can set the rules of.`);
+			throw new Chat.ErrorMessage(this.TL`This is not a room you can set the rules of.`);
 		}
 		const possibleRoom = Rooms.search(toID(target));
 		const { totalMatches: formatMatches } = findFormats(toID(target));
 		if (formatMatches && possibleRoom && cmd !== 'roomrules') {
 			throw new Chat.ErrorMessage([
-				`'${target}' is both a room and a tier.`,
-				`If you were looking for rules of that room, use /roomrules [room].`,
-				`Otherwise, use /tier [tiername].`,
+				this.TL`'${target}' is both a room and a tier.`,
+				this.TL`If you were looking for rules of that room, use /roomrules [room].`,
+				this.TL`Otherwise, use /tier [tiername].`,
 			]);
 		}
 
 		if (possibleRoom) {
 			const rulesLink = possibleRoom.settings.rulesLink;
 			return this.sendReplyBox(
-				`${possibleRoom.title}'s rules:<br />` +
-				`${rulesLink ? Utils.html`- <a href="${rulesLink}">${this.TL`${possibleRoom.title} room rules`}</a><br />` : `None set.`}`
+				this.TL`${possibleRoom.title}'s rules:` + `<br />` +
+				`${rulesLink ? Utils.html`- <a href="${rulesLink}">${this.TL`${possibleRoom.title} room rules`}</a><br />` : this.TL`None set.`}`
 			);
 		}
 
@@ -2127,13 +2190,13 @@ export const commands: Chat.ChatCommands = {
 		}
 		this.checkCan('editroom', null, room);
 		if (target.length > 150) {
-			throw new Chat.ErrorMessage(`Error: Room rules link is too long (must be under 150 characters). You can use a URL shortener to shorten the link.`);
+			throw new Chat.ErrorMessage(this.TL`Error: Room rules link is too long (must be under 150 characters). You can use a URL shortener to shorten the link.`);
 		}
 
 		target = target.trim();
 
 		if (target === 'delete' || target === 'remove') {
-			if (!room.settings.rulesLink) throw new Chat.ErrorMessage(`This room does not have rules set to remove.`);
+			if (!room.settings.rulesLink) throw new Chat.ErrorMessage(this.TL`This room does not have rules set to remove.`);
 			delete room.settings.rulesLink;
 			this.privateModAction(`${user.name} has removed the room rules link.`);
 			this.modlog('RULES', null, `removed room rules link`);
@@ -2146,10 +2209,10 @@ export const commands: Chat.ChatCommands = {
 		room.saveSettings();
 	},
 	ruleshelp: [
-		`/rules - Show links to room rules and global rules.`,
-		`!rules - Show everyone links to room rules and global rules. Requires: + % @ # ~`,
-		`/rules [url] - Change the room rules URL. Requires: # ~`,
-		`/rules remove - Removes a room rules URL. Requires: # ~`,
+		TLkey`/rules - Show links to room rules and global rules.`,
+		TLkey`!rules - Show everyone links to room rules and global rules. Requires: + % @ # ~`,
+		TLkey`/rules [url] - Change the room rules URL. Requires: # ~`,
+		TLkey`/rules remove - Removes a room rules URL. Requires: # ~`,
 	],
 
 	faq(target, room, user) {
@@ -2191,10 +2254,10 @@ export const commands: Chat.ChatCommands = {
 			buffer.push(`<a href="https://pokemonshowdown.com/${this.TL`pages/privacy`}">${this.TL`Pokémon Showdown privacy policy`}</a>`);
 		}
 		if (showAll || ['lostpassword', 'password', 'lostpass'].includes(target)) {
-			buffer.push(`Until an email server for Pokemon Showdown is set up, <b>it is no longer possible to reset the password for your account</b>`);
+			buffer.push(this.TL`Until an email server for Pokemon Showdown is set up, <b>it is no longer possible to reset the password for your account</b>`);
 		}
 		if (!buffer.length && target) {
-			this.errorReply(`'${target}' is an invalid FAQ.`);
+			this.errorReply(this.TL`'${target}' is an invalid FAQ.`);
 			return this.parse(`/help faq`);
 		}
 		if (!target || showAll) {
@@ -2204,8 +2267,8 @@ export const commands: Chat.ChatCommands = {
 		this.sendReplyBox(buffer.join(`<br />`));
 	},
 	faqhelp: [
-		`/faq [topic] - Provides a link that answers the FAQ topic. List of FAQ topics: autoconfirmed, badges, customavatar, decay, ladder, lostpassword, privacy, proxy, rng, staff, tiers, tournaments.`,
-		`!faq [topic] - Shows to other users a link that answers the FAQ topic. List of FAQ topics: autoconfirmed, badges, customavatar, decay, ladder, lostpassword, privacy, proxy, rng, staff, tiers, tournaments. Requires: + % @ # ~`,
+		TLkey`/faq [topic] - Provides a link that answers the FAQ topic. List of FAQ topics: autoconfirmed, badges, customavatar, decay, ladder, lostpassword, privacy, proxy, rng, staff, tiers, tournaments.`,
+		TLkey`!faq [topic] - Shows to other users a link that answers the FAQ topic. List of FAQ topics: autoconfirmed, badges, customavatar, decay, ladder, lostpassword, privacy, proxy, rng, staff, tiers, tournaments. Requires: + % @ # ~`,
 	],
 
 	analysis: 'smogdex',
@@ -2254,12 +2317,13 @@ export const commands: Chat.ChatCommands = {
 		} else {
 			generation = 'sv';
 		}
+		const genName = generation.toUpperCase();
 
 		// Pokemon
 		if (pokemon.exists) {
 			atLeastOne = true;
 			if (genNumber < pokemon.gen) {
-				return this.sendReplyBox(`${pokemon.name} did not exist in ${generation.toUpperCase()}!`);
+				return this.sendReplyBox(this.TL`${pokemon.name} did not exist in ${genName}!`);
 			}
 
 			if ((pokemon.battleOnly && pokemon.baseSpecies !== 'Greninja') ||
@@ -2280,7 +2344,7 @@ export const commands: Chat.ChatCommands = {
 			} else if (formatId === 'battlespottriples') {
 				formatId = 'battle_spot_triples';
 				if (genNumber > 6) {
-					return this.sendReplyBox(`Triples formats are not an available format in Pok&eacute;mon generation ${generation.toUpperCase()}.`);
+					return this.sendReplyBox(this.TL`Triples formats are not an available format in Pok&eacute;mon generation ${genName}.`);
 				}
 			} else if (formatId === 'doublesou') {
 				formatId = 'doubles';
@@ -2306,40 +2370,46 @@ export const commands: Chat.ChatCommands = {
 			let id = pokemon.name.toLowerCase();
 			if (id === 'meowstic') id = 'meowstic-m';
 			if (id === 'zygarde-10%') id = 'zygarde-10';
+			const formatHTML = Utils.escapeHTML(formatName);
+			const pokemonHTML = Utils.escapeHTML(pokemon.name);
 			if (['ou', 'uu'].includes(formatId) && generation === 'sm' &&
 				room?.settings.language && room.settings.language in supportedLanguages) {
 				// Limited support for translated analysis
 				// Translated analysis do not support automatic redirects from a id to the proper page
+				const analysisURL = Utils.html`https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=${supportedLanguages[room.settings.language]}`;
 				this.sendReplyBox(
-					Utils.html`<a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=${supportedLanguages[room.settings.language]}">${generation.toUpperCase()} ${formatName} ${pokemon.name} analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`
+					this.TL`<a href="${analysisURL}">${genName} ${formatHTML} ${pokemonHTML} analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`
 				);
 			} else if (['ou', 'uu'].includes(formatId) && generation === 'sm') {
+				const analysisURL = Utils.html`https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}`;
 				this.sendReplyBox(
-					Utils.html`<a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}">${generation.toUpperCase()} ${formatName} ${pokemon.name} analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a><br />` +
-					`Other languages: <a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=es">Español</a>, <a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=fr">Français</a>, <a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=it">Italiano</a>, ` +
+					this.TL`<a href="${analysisURL}">${genName} ${formatHTML} ${pokemonHTML} analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>` + `<br />` +
+					this.TL`Other languages:` + ` <a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=es">Español</a>, <a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=fr">Français</a>, <a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=it">Italiano</a>, ` +
 					`<a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=de">Deutsch</a>, <a href="https://www.smogon.com/dex/${generation}/pokemon/${id}/${formatId}/?lang=pt">Português</a>`
 				);
 			} else {
-				this.sendReplyBox(Utils.html`<a href="https://www.smogon.com/dex/${generation}/pokemon/${id}${(formatId ? '/' + formatId : '')}">${generation.toUpperCase()} ${formatName} ${pokemon.name} analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
+				const analysisURL = Utils.html`https://www.smogon.com/dex/${generation}/pokemon/${id}${(formatId ? '/' + formatId : '')}`;
+				this.sendReplyBox(this.TL`<a href="${analysisURL}">${genName} ${formatHTML} ${pokemonHTML} analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
 			}
 		}
 
 		// Item
 		if (item.exists && genNumber > 1 && item.gen <= genNumber) {
 			atLeastOne = true;
-			this.sendReplyBox(`<a href="https://www.smogon.com/dex/${generation}/items/${item.id}">${generation.toUpperCase()} ${item.name} item analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
+			this.sendReplyBox(this.TL`<a href="https://www.smogon.com/dex/${generation}/items/${item.id}">${genName} ${item.name} item analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
 		}
 
 		// Ability
 		if (ability.exists && genNumber > 2 && ability.gen <= genNumber) {
 			atLeastOne = true;
-			this.sendReplyBox(`<a href="https://www.smogon.com/dex/${generation}/abilities/${ability.id}">${generation.toUpperCase()} ${ability.name} ability analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
+			this.sendReplyBox(this.TL`<a href="https://www.smogon.com/dex/${generation}/abilities/${ability.id}">${genName} ${ability.name} ability analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
 		}
 
 		// Move
 		if (move.exists && move.gen <= genNumber) {
 			atLeastOne = true;
-			this.sendReplyBox(`<a href="https://www.smogon.com/dex/${generation}/moves/${toID(move.name)}">${generation.toUpperCase()} ${move.name} move analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
+			const moveId = toID(move.name);
+			this.sendReplyBox(this.TL`<a href="https://www.smogon.com/dex/${generation}/moves/${moveId}">${genName} ${move.name} move analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
 		}
 
 		// Format
@@ -2357,7 +2427,7 @@ export const commands: Chat.ChatCommands = {
 			} else if (formatId === 'battlespottriples') {
 				formatId = 'battle_spot_triples';
 				if (genNumber > 6) {
-					return this.sendReplyBox(`Triples formats are not an available format in Pok&eacute;mon generation ${generation.toUpperCase()}.`);
+					return this.sendReplyBox(this.TL`Triples formats are not an available format in Pok&eacute;mon generation ${genName}.`);
 				}
 			} else if (formatId === 'doublesou') {
 				formatId = 'doubles';
@@ -2375,17 +2445,19 @@ export const commands: Chat.ChatCommands = {
 			}
 			if (formatName) {
 				atLeastOne = true;
-				this.sendReplyBox(Utils.html`<a href="https://www.smogon.com/dex/${generation}/formats/${formatId}">${generation.toUpperCase()} ${formatName} format analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
+				const analysisURL = Utils.html`https://www.smogon.com/dex/${generation}/formats/${formatId}`;
+				const formatHTML = Utils.escapeHTML(formatName);
+				this.sendReplyBox(this.TL`<a href="${analysisURL}">${genName} ${formatHTML} format analysis</a>, brought to you by <a href="https://www.smogon.com">Smogon University</a>`);
 			}
 		}
 
 		if (!atLeastOne) {
-			return this.sendReplyBox(`Pok&eacute;mon, item, move, ability, or format not found for generation ${generation.toUpperCase()}.`);
+			return this.sendReplyBox(this.TL`Pok&eacute;mon, item, move, ability, or format not found for generation ${genName}.`);
 		}
 	},
 	smogdexhelp: [
-		`/analysis [pokemon], [generation], [format] - Links to the Smogon University analysis for this Pok\u00e9mon in the given generation.`,
-		`!analysis [pokemon], [generation], [format] - Shows everyone this link. Requires: + % @ # ~`,
+		TLkey`/analysis [pokemon], [generation], [format] - Links to the Smogon University analysis for this Pok\u00e9mon in the given generation.`,
+		TLkey`!analysis [pokemon], [generation], [format] - Shows everyone this link. Requires: + % @ # ~`,
 	],
 
 	bulbapedia(target, broadcast, user) {
@@ -2405,67 +2477,69 @@ export const commands: Chat.ChatCommands = {
 		if (pokemon.exists) {
 			atLeastOne = true;
 			if (pokemon.isNonstandard && pokemon.isNonstandard !== 'Past') {
-				throw new Chat.ErrorMessage(`${pokemon.name} is not a real Pok\u00e9mon.`);
+				throw new Chat.ErrorMessage(this.TL`${pokemon.name} is not a real Pok\u00e9mon.`);
 			}
 			let baseSpecies = pokemon.baseSpecies;
 			if (pokemon.id.startsWith('flabebe')) baseSpecies = 'Flabébé';
-			const link = `${baseLink}${encodeURIComponent(baseSpecies)}_(Pokémon)`;
-
-			this.sendReplyBox(Utils.html`<a href="${link}">${pokemon.name} in-game information</a>, provided by Bulbapedia`);
+			const link = Utils.escapeHTML(`${baseLink}${encodeURIComponent(baseSpecies)}_(Pokémon)`);
+			const pokemonHTML = Utils.escapeHTML(pokemon.name);
+			this.sendReplyBox(this.TL`<a href="${link}">${pokemonHTML} in-game information</a>, provided by Bulbapedia`);
 		}
 
 		// Item
 		if (item.exists) {
 			atLeastOne = true;
 			if (item.isNonstandard && item.isNonstandard !== 'Past') {
-				throw new Chat.ErrorMessage(`${item.name} is not a real item.`);
+				throw new Chat.ErrorMessage(this.TL`${item.name} is not a real item.`);
 			}
 			let link = `${baseLink}${encodeURIComponent(item.name)}`;
 			if (Dex.moves.get(item.name).exists) link += '_(item)';
-			this.sendReplyBox(Utils.html`<a href="${link}">${item.name} item description</a>, provided by Bulbapedia`);
+			link = Utils.escapeHTML(link);
+			const itemHTML = Utils.escapeHTML(item.name);
+			this.sendReplyBox(this.TL`<a href="${link}">${itemHTML} item description</a>, provided by Bulbapedia`);
 		}
 
 		// Ability
 		if (ability.exists) {
 			atLeastOne = true;
 			if (ability.isNonstandard && ability.isNonstandard !== 'Past') {
-				throw new Chat.ErrorMessage(`${ability.name} is not a real ability.`);
+				throw new Chat.ErrorMessage(this.TL`${ability.name} is not a real ability.`);
 			}
 			const link = `${baseLink}${encodeURIComponent(ability.name)}_(Ability)`;
-			this.sendReplyBox(`<a href="${link}">${ability.name} ability description</a>, provided by Bulbapedia`);
+			this.sendReplyBox(this.TL`<a href="${link}">${ability.name} ability description</a>, provided by Bulbapedia`);
 		}
 
 		// Move
 		if (move.exists) {
 			atLeastOne = true;
 			if (move.isNonstandard && move.isNonstandard !== 'Past') {
-				throw new Chat.ErrorMessage(`${move.name} is not a real move.`);
+				throw new Chat.ErrorMessage(this.TL`${move.name} is not a real move.`);
 			}
 			const link = `${baseLink}${encodeURIComponent(move.name)}_(move)`;
-			this.sendReplyBox(`<a href="${link}">${move.name} move description</a>, provided by Bulbapedia`);
+			this.sendReplyBox(this.TL`<a href="${link}">${move.name} move description</a>, provided by Bulbapedia`);
 		}
 
 		// Nature
 		if (nature.exists) {
 			atLeastOne = true;
 			const link = `${baseLink}Nature`;
-			this.sendReplyBox(`<a href="${link}">Nature descriptions</a>, provided by Bulbapedia`);
+			this.sendReplyBox(this.TL`<a href="${link}">Nature descriptions</a>, provided by Bulbapedia`);
 		}
 
 		if (!atLeastOne) {
-			return this.sendReplyBox(`Pok&eacute;mon, item, move, ability, or nature not found.`);
+			return this.sendReplyBox(this.TL`Pok&eacute;mon, item, move, ability, or nature not found.`);
 		}
 	},
 	bulbapediahelp: [
-		`/bulbapedia [pokemon/item/move/ability/nature] - Links to Bulbapedia wiki page for this pokemon/item/move/ability/nature.`,
-		`!bulbapedia [pokemon/item/move/ability/nature] - Shows everyone this link. Requires: + % @ # ~`,
+		TLkey`/bulbapedia [pokemon/item/move/ability/nature] - Links to Bulbapedia wiki page for this pokemon/item/move/ability/nature.`,
+		TLkey`!bulbapedia [pokemon/item/move/ability/nature] - Shows everyone this link. Requires: + % @ # ~`,
 	],
 
 	register() {
 		if (!this.runBroadcast()) return;
-		this.sendReplyBox(`You will be prompted to register upon winning a rated battle. Alternatively, there is a register button in the <button name="openOptions"><i class="fa fa-cog"></i> Options</button> menu in the upper right.`);
+		this.sendReplyBox(this.TL`You will be prompted to register upon winning a rated battle. Alternatively, there is a register button in the <button name="openOptions"><i class="fa fa-cog"></i> Options</button> menu in the upper right.`);
 	},
-	registerhelp: [`/register - Provides information on how to register.`],
+	registerhelp: [TLkey`/register - Provides information on how to register.`],
 
 	/*********************************************************
 	 * Miscellaneous commands
@@ -2486,7 +2560,7 @@ export const commands: Chat.ChatCommands = {
 			if (diceDataStart) diceQuantity = Number(target.slice(0, diceDataStart));
 			target = target.slice(diceDataStart + 1);
 			if (!Number.isInteger(diceQuantity) || diceQuantity <= 0 || diceQuantity > maxDice) {
-				return this.sendReply(`The amount of dice rolled should be a natural number up to ${maxDice}.`);
+				return this.sendReply(this.TL`The amount of dice rolled should be a natural number up to ${maxDice}.`);
 			}
 		}
 		let offset = 0;
@@ -2505,11 +2579,11 @@ export const commands: Chat.ChatCommands = {
 				offset = Number(target.slice(modifierData.index));
 				if (isNaN(offset)) return this.parse('/help dice');
 				if (!Number.isSafeInteger(offset)) {
-					throw new Chat.ErrorMessage(`The specified offset must be an integer up to ${Number.MAX_SAFE_INTEGER}.`);
+					throw new Chat.ErrorMessage(this.TL`The specified offset must be an integer up to ${Number.MAX_SAFE_INTEGER}.`);
 				}
 			}
 			if (removeOutlier && diceQuantity <= 1) {
-				throw new Chat.ErrorMessage(`More than one dice should be rolled before removing outliers.`);
+				throw new Chat.ErrorMessage(this.TL`More than one dice should be rolled before removing outliers.`);
 			}
 			target = target.slice(0, modifierData.index);
 		}
@@ -2518,14 +2592,14 @@ export const commands: Chat.ChatCommands = {
 		if (target.length) {
 			diceFaces = Number(target);
 			if (!Number.isSafeInteger(diceFaces) || diceFaces <= 0) {
-				throw new Chat.ErrorMessage(`Rolled dice must have a natural amount of faces up to ${Number.MAX_SAFE_INTEGER}.`);
+				throw new Chat.ErrorMessage(this.TL`Rolled dice must have a natural amount of faces up to ${Number.MAX_SAFE_INTEGER}.`);
 			}
 		}
 
 		if (diceQuantity > 1) {
 			// Make sure that we can deal with high rolls
 			if (!Number.isSafeInteger(offset < 0 ? diceQuantity * diceFaces : diceQuantity * diceFaces + offset)) {
-				throw new Chat.ErrorMessage(`The maximum sum of rolled dice must be lower or equal than ${Number.MAX_SAFE_INTEGER}.`);
+				throw new Chat.ErrorMessage(this.TL`The maximum sum of rolled dice must be lower or equal than ${Number.MAX_SAFE_INTEGER}.`);
 			}
 		}
 
@@ -2558,20 +2632,26 @@ export const commands: Chat.ChatCommands = {
 		let offsetFragment = "";
 		if (offset) offsetFragment += `${offset > 0 ? ` + ${offset}` : offset}`;
 
-		if (diceQuantity === 1) return this.sendReplyBox(`Rolling (1 to ${diceFaces})${offsetFragment}: ${rollSum}`);
+		if (diceQuantity === 1) return this.sendReplyBox(this.TL`Rolling (1 to ${diceFaces})${offsetFragment}: ${rollSum}`);
 
-		const outlierFragment = removeOutlier ? ` except ${removeOutlier > 0 ? "highest" : "lowest"}` : ``;
 		const rollsFragment = trackRolls ? ": " + rolls.join(", ") : "";
+		let sumText;
+		if (removeOutlier > 0) {
+			sumText = this.TL`Sum${offsetFragment} except highest: ${rollSum}`;
+		} else if (removeOutlier < 0) {
+			sumText = this.TL`Sum${offsetFragment} except lowest: ${rollSum}`;
+		} else {
+			sumText = this.TL`Sum${offsetFragment}: ${rollSum}`;
+		}
 		return this.sendReplyBox(
-			`${diceQuantity} rolls (1 to ${diceFaces})${rollsFragment}<br />` +
-			`Sum${offsetFragment}${outlierFragment}: ${rollSum}`
+			this.TL`${diceQuantity} rolls (1 to ${diceFaces})${rollsFragment}` + `<br />` + sumText
 		);
 	},
 	dicehelp: [
-		`/dice [max number] - Randomly picks a number between 1 and the number you choose.`,
-		`/dice [number of dice]d[number of sides] - Simulates rolling a number of dice, e.g., /dice 2d4 simulates rolling two 4-sided dice.`,
-		`/dice [number of dice]d[number of sides][+/-][offset] - Simulates rolling a number of dice and adding an offset to the sum, e.g., /dice 2d6+10: two standard dice are rolled; the result lies between 12 and 22.`,
-		`/dice [number of dice]d[number of sides]-[H/L] - Simulates rolling a number of dice with removal of extreme values, e.g., /dice 3d8-L: rolls three 8-sided dice; the result ignores the lowest value.`,
+		TLkey`/dice [max number] - Randomly picks a number between 1 and the number you choose.`,
+		TLkey`/dice [number of dice]d[number of sides] - Simulates rolling a number of dice, e.g., /dice 2d4 simulates rolling two 4-sided dice.`,
+		TLkey`/dice [number of dice]d[number of sides][+/-][offset] - Simulates rolling a number of dice and adding an offset to the sum, e.g., /dice 2d6+10: two standard dice are rolled; the result lies between 12 and 22.`,
+		TLkey`/dice [number of dice]d[number of sides]-[H/L] - Simulates rolling a number of dice with removal of extreme values, e.g., /dice 3d8-L: rolls three 8-sided dice; the result ignores the lowest value.`,
 	],
 
 	pr: 'pickrandom',
@@ -2584,33 +2664,33 @@ export const commands: Chat.ChatCommands = {
 		}
 		const options = target.split(',');
 		const pickedOption = options[Math.floor(Math.random() * options.length)].trim();
-		return this.sendReplyBox(Utils.html`<em>We randomly picked:</em> ${pickedOption}`);
+		return this.sendReplyBox(`<em>${this.TL`We randomly picked:`}</em> ${Utils.escapeHTML(pickedOption)}`);
 	},
-	pickrandomhelp: [`/pick [option], [option], ... - Randomly selects an item from a list containing 2 or more elements.`],
+	pickrandomhelp: [TLkey`/pick [option], [option], ... - Randomly selects an item from a list containing 2 or more elements.`],
 
 	shuffle(target, room, user) {
 		if (!target?.includes(',')) return this.parse('/help shuffle');
 		const args = target.split(',');
 		if (!this.runBroadcast(true)) return false;
 		const results = Utils.shuffle(args.map(arg => arg.trim()));
-		return this.sendReplyBox(Utils.html`<em>Shuffled:</em><br> ${results.join(', ')}`);
+		return this.sendReplyBox(`<em>${this.TL`Shuffled:`}</em><br> ${Utils.escapeHTML(results.join(', '))}`);
 	},
 	shufflehelp: [
-		`/shuffle [option], [option], [option], ... - Randomly shuffles a list of 2 or more elements.`,
+		TLkey`/shuffle [option], [option], [option], ... - Randomly shuffles a list of 2 or more elements.`,
 	],
 
 	showimage(target, room, user) {
-		throw new Chat.ErrorMessage(`/showimage has been deprecated - use /show instead.`);
+		throw new Chat.ErrorMessage(this.TL`/showimage has been deprecated - use /show instead.`);
 	},
 
 	async requestshow(target, room, user) {
 		room = this.requireRoom();
 		this.checkChat();
 		if (!room.settings.requestShowEnabled) {
-			throw new Chat.ErrorMessage(`Media approvals are disabled in this room.`);
+			throw new Chat.ErrorMessage(this.TL`Media approvals are disabled in this room.`);
 		}
-		if (user.can('showmedia', null, room, 'show')) throw new Chat.ErrorMessage(`Use !show instead.`);
-		if (room.pendingApprovals?.has(user.id)) throw new Chat.ErrorMessage('You have a request pending already.');
+		if (user.can('showmedia', null, room, 'show')) throw new Chat.ErrorMessage(this.TL`Use !show instead.`);
+		if (room.pendingApprovals?.has(user.id)) throw new Chat.ErrorMessage(this.TL`You have a request pending already.`);
 		if (!toID(target)) return this.parse(`/help requestshow`);
 
 		let [link, comment] = this.splitOne(target);
@@ -2619,16 +2699,16 @@ export const commands: Chat.ChatCommands = {
 		let dimensions;
 		if (!/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)(\/|$)/i.test(link)) {
 			if (link.includes('data:image/png;base64')) {
-				throw new Chat.ErrorMessage('Please provide an actual link (you probably copied the URL wrong?).');
+				throw new Chat.ErrorMessage(this.TL`Please provide an actual link (you probably copied the URL wrong?).`);
 			}
 			try {
 				dimensions = await Chat.fitImage(link);
 			} catch {
-				throw new Chat.ErrorMessage('Invalid link.');
+				throw new Chat.ErrorMessage(this.TL`Invalid link.`);
 			}
 		}
 		if (comment && this.checkChat(comment) !== comment) {
-			throw new Chat.ErrorMessage(`You cannot use filtered words in comments.`);
+			throw new Chat.ErrorMessage(this.TL`You cannot use filtered words in comments.`);
 		}
 		if (!room.pendingApprovals) room.pendingApprovals = new Map();
 		room.pendingApprovals.set(user.id, {
@@ -2637,31 +2717,36 @@ export const commands: Chat.ChatCommands = {
 			comment,
 			dimensions,
 		});
-		this.sendReply(`You have requested to show the link: ${link}${comment ? ` (with the comment ${comment})` : ''}.`);
-		const message = `|tempnotify|pendingapprovals|Pending media request!` +
-			`|${user.name} has requested to show media in ${room.title}.|new media request`;
+		this.sendReply(comment ?
+			this.TL`You have requested to show the link: ${link} (with the comment ${comment}).` :
+			this.TL`You have requested to show the link: ${link}.`);
+		const message = `|tempnotify|pendingapprovals|${room.TL`Pending media request!`}` +
+			`|${room.TL`${user.name} has requested to show media in ${room.title}.`}|new media request`;
 		room.sendRankedUsers(message, '%');
+		const requesterHTML = Utils.escapeHTML(user.name);
+		const linkHTML = Utils.html`<a href="${link}">${link}</a>`;
+		const commentHTML = Utils.escapeHTML(comment);
 		room.sendMods(
-			Utils.html`|uhtml|request-${user.id}|<div class="infobox">${user.name} wants to show <a href="${link}">${link}</a><br>` +
-			(comment ? Utils.html`Comment: ${comment}<br>` : '') +
-			`<button class="button" name="send" value="/approveshow ${user.id}">Approve</button><br>` +
-			`<button class="button" name="send" value="/denyshow ${user.id}">Deny</button></div>`
+			`|uhtml|request-${user.id}|<div class="infobox">${room.TL`${requesterHTML} wants to show ${linkHTML}`}<br>` +
+			(comment ? `${room.TL`Comment: ${commentHTML}`}<br>` : '') +
+			`<button class="button" name="send" value="/approveshow ${user.id}">${room.TL`Approve`}</button><br>` +
+			`<button class="button" name="send" value="/denyshow ${user.id}">${room.TL`Deny`}</button></div>`
 		);
 	},
-	requestshowhelp: [`/requestshow [link], [comment] - Requests permission to show media in the room.`],
+	requestshowhelp: [TLkey`/requestshow [link], [comment] - Requests permission to show media in the room.`],
 
 	async approveshow(target, room, user) {
 		room = this.requireRoom();
 		this.checkCan('mute', null, room);
 		if (!room.settings.requestShowEnabled) {
-			throw new Chat.ErrorMessage(`Media approvals are disabled in this room.`);
+			throw new Chat.ErrorMessage(this.TL`Media approvals are disabled in this room.`);
 		}
 		const userid = toID(target);
 		if (!userid) return this.parse(`/help approveshow`);
 		const request = room.pendingApprovals?.get(userid);
-		if (!request) throw new Chat.ErrorMessage(`${userid} has no pending request.`);
+		if (!request) throw new Chat.ErrorMessage(this.TL`${userid} has no pending request.`);
 		if (userid === user.id) {
-			throw new Chat.ErrorMessage(`You can't approve your own /show request.`);
+			throw new Chat.ErrorMessage(this.TL`You can't approve your own /show request.`);
 		}
 		room.pendingApprovals!.delete(userid);
 		room.sendMods(`|uhtmlchange|request-${target}|`);
@@ -2671,12 +2756,13 @@ export const commands: Chat.ChatCommands = {
 		if (request.dimensions) { // image
 			const [width, height, resized] = request.dimensions;
 			buf = Utils.html`<img src="${request.link}" width="${width}" height="${height}" />`;
-			if (resized) buf += Utils.html`<br /><a href="${request.link}" target="_blank">full-size image</a>`;
+			if (resized) buf += Utils.html`<br /><a href="${request.link}" target="_blank">` + room.TL`full-size image` + `</a>`;
 		} else {
 			buf = await YouTube.generateVideoDisplay(request.link, false);
-			if (!buf) throw new Chat.ErrorMessage('Could not get YouTube video');
+			if (!buf) throw new Chat.ErrorMessage(this.TL`Could not get YouTube video`);
 		}
-		buf += Utils.html`<br /><div class="infobox"><small>(Requested by ${request.name})</small>`;
+		const requesterHTML = Utils.escapeHTML(request.name);
+		buf += `<br /><div class="infobox"><small>${room.TL`(Requested by ${requesterHTML})`}</small>`;
 		if (request.comment) {
 			buf += Utils.html`<br />${request.comment}</small></div>`;
 		} else {
@@ -2685,19 +2771,19 @@ export const commands: Chat.ChatCommands = {
 		room.add(`|c| ${request.name}|/raw ${buf}`);
 		this.privateModAction(`${user.name} approved showing media from ${request.name}.`);
 	},
-	approveshowhelp: [`/approveshow [user] - Approves the media display request of [user]. Requires: % @ # ~`],
+	approveshowhelp: [TLkey`/approveshow [user] - Approves the media display request of [user]. Requires: % @ # ~`],
 
 	denyshow(target, room, user) {
 		room = this.requireRoom();
 		this.checkCan('mute', null, room);
 		if (!room.settings.requestShowEnabled) {
-			throw new Chat.ErrorMessage(`Media approvals are disabled in this room.`);
+			throw new Chat.ErrorMessage(this.TL`Media approvals are disabled in this room.`);
 		}
 		target = toID(target);
 		if (!target) return this.parse(`/help denyshow`);
 
 		const entry = room.pendingApprovals?.get(target);
-		if (!entry) throw new Chat.ErrorMessage(`${target} has no pending request.`);
+		if (!entry) throw new Chat.ErrorMessage(this.TL`${target} has no pending request.`);
 
 		room.pendingApprovals!.delete(target);
 		room.sendMods(`|uhtmlchange|request-${target}|`);
@@ -2706,33 +2792,34 @@ export const commands: Chat.ChatCommands = {
 
 		const targetUser = Users.get(target);
 		if (!targetUser) return;
-		room.sendUser(targetUser, `|raw|<div class="broadcast-red">Your media request was denied.</div>`);
-		room.sendUser(targetUser, `|notify|Media request denied`);
+		const TL = room.userTL(targetUser);
+		room.sendUser(targetUser, `|raw|<div class="broadcast-red">${TL`Your media request was denied.`}</div>`);
+		room.sendUser(targetUser, `|notify|${TL`Media request denied`}`);
 	},
-	denyshowhelp: [`/denyshow [user] - Denies the media display request of [user]. Requires: % @ # ~`],
+	denyshowhelp: [TLkey`/denyshow [user] - Denies the media display request of [user]. Requires: % @ # ~`],
 
 	approvallog(target, room, user) {
 		room = this.requireRoom();
 		return this.parse(`/sl approved showing media from, ${room.roomid}`);
 	},
-	approvalloghelp: [`/approvallog - View a log of past media approvals in the current room. Requires: ~`],
+	approvalloghelp: [TLkey`/approvallog - View a log of past media approvals in the current room. Requires: ~`],
 
 	viewapprovals(target, room, user) {
 		room = this.requireRoom();
 		return this.parse(`/join view-approvals-${room.roomid}`);
 	},
 	viewapprovalshelp: [
-		`/viewapprovals - View a list of users who have requested to show media in the current room.`,
-		`Requires: % @ # ~`,
+		TLkey`/viewapprovals - View a list of users who have requested to show media in the current room.`,
+		TLkey`Requires: % @ # ~`,
 	],
 
 	async show(target, room, user, connection) {
 		if (!room?.persist && !this.pmTarget && !room?.roomid.startsWith('help-')) {
-			throw new Chat.ErrorMessage(`/show cannot be used in temporary rooms.`);
+			throw new Chat.ErrorMessage(this.TL`/show cannot be used in temporary rooms.`);
 		}
 		if (!toID(target).trim()) return this.parse(`/help show`);
 		if (Monitor.countNetRequests(connection.ip)) {
-			throw new Chat.ErrorMessage(`You are using this command too quickly. Wait a bit and try again.`);
+			throw new Chat.ErrorMessage(this.TL`You are using this command too quickly. Wait a bit and try again.`);
 		}
 
 		const [link, comment] = Utils.splitFirst(target, ',').map(f => f.trim());
@@ -2752,8 +2839,9 @@ export const commands: Chat.ChatCommands = {
 			this.message = this.message.replace(/&ab_channel=(.*)(&|)/ig, '').replace(/https:\/\/www\./ig, '');
 		} else if (Twitch.linkRegex.test(link)) {
 			const channelId = Twitch.linkRegex.exec(link)?.[2]?.trim();
-			if (!channelId) throw new Chat.ErrorMessage(`Specify a Twitch channel.`);
-			buf = Utils.html`Watching <b><a class="subtle" href="https://twitch.tv/${toID(channelId)}">${channelId}</a></b>...<br />`;
+			if (!channelId) throw new Chat.ErrorMessage(this.TL`Specify a Twitch channel.`);
+			const channelHTML = Utils.html`<b><a class="subtle" href="https://twitch.tv/${toID(channelId)}">${channelId}</a></b>`;
+			buf = this.TL`Watching ${channelHTML}...` + `<br />`;
 			buf += Utils.html`<twitch src="${link}" />`;
 		} else {
 			if (Chat.linkRegex.test(link)) {
@@ -2765,21 +2853,21 @@ export const commands: Chat.ChatCommands = {
 				}
 			}
 			if (link.includes('data:image/png;base64')) {
-				throw new Chat.ErrorMessage('Please provide an actual link (you probably copied it wrong?).');
+				throw new Chat.ErrorMessage(this.TL`Please provide an actual link (you probably copied it wrong?).`);
 			}
 			if (!buf) { // fall back on image
 				try {
 					const [width, height, resized] = await Chat.fitImage(link);
 					buf = Utils.html`<img src="${link}" width="${width}" height="${height}" />`;
-					if (resized) buf += Utils.html`<br /><a href="${link}" target="_blank">full-size image</a>`;
+					if (resized) buf += Utils.html`<br /><a href="${link}" target="_blank">` + this.TL`full-size image` + `</a>`;
 				} catch {
-					throw new Chat.ErrorMessage('Invalid image, audio, or video URL.');
+					throw new Chat.ErrorMessage(this.TL`Invalid image, audio, or video URL.`);
 				}
 			}
 		}
 		if (comment) {
 			if (this.checkChat(comment) !== comment) {
-				throw new Chat.ErrorMessage(`You cannot use filtered words in comments.`);
+				throw new Chat.ErrorMessage(this.TL`You cannot use filtered words in comments.`);
 			}
 			buf += Utils.html`<br />(${comment})</div>`;
 		}
@@ -2787,8 +2875,8 @@ export const commands: Chat.ChatCommands = {
 		this.sendReplyBox(buf);
 	},
 	showhelp: [
-		`/show [url] - Shows you an image, audio clip, video file, or YouTube video.`,
-		`!show [url] - Shows an image, audio clip, video file, or YouTube video to everyone in a chatroom. Requires: whitelist % @ # ~`,
+		TLkey`/show [url] - Shows you an image, audio clip, video file, or YouTube video.`,
+		TLkey`!show [url] - Shows an image, audio clip, video file, or YouTube video to everyone in a chatroom. Requires: whitelist % @ # ~`,
 	],
 
 	rebroadcast(target, room, user, connection) {
@@ -2800,7 +2888,7 @@ export const commands: Chat.ChatCommands = {
 		this.parse(target, { broadcastPrefix: "!rebroadcast " });
 	},
 	rebroadcasthelp: [
-		`!rebroadcast ![command] - Bypasses the broadcast cooldown to broadcast a command.`,
+		TLkey`!rebroadcast ![command] - Bypasses the broadcast cooldown to broadcast a command.`,
 	],
 
 	regdate: 'registertime',
@@ -2808,16 +2896,16 @@ export const commands: Chat.ChatCommands = {
 	async registertime(target, room, user, connection) {
 		this.runBroadcast();
 		if (Monitor.countNetRequests(connection.ip)) {
-			throw new Chat.ErrorMessage(`You are using this command too quickly. Wait a bit and try again.`);
+			throw new Chat.ErrorMessage(this.TL`You are using this command too quickly. Wait a bit and try again.`);
 		}
-		if (!user.autoconfirmed) throw new Chat.ErrorMessage(`Only autoconfirmed users can use this command.`);
+		if (!user.autoconfirmed) throw new Chat.ErrorMessage(this.TL`Only autoconfirmed users can use this command.`);
 		target = toID(target);
 		if (!target) target = user.id;
 		let rawResult;
 		try {
 			rawResult = await Net(`https://${Config.routes.root}/users/${target}.json`).get();
 		} catch (e: any) {
-			if (e.message.includes('Not found')) throw new Chat.ErrorMessage(`User '${target}' is unregistered.`);
+			if (e.message.includes('Not found')) throw new Chat.ErrorMessage(this.TL`User '${target}' is unregistered.`);
 			throw new Chat.ErrorMessage(e.message);
 		}
 		// not in a try-catch block because if this doesn't work, this is a problem that should be known
@@ -2826,37 +2914,38 @@ export const commands: Chat.ChatCommands = {
 		const duration = Date.now() - date.getTime();
 		// hardcode, since the loginserver doesn't store exact times, and
 		// so this can look quite inaccurate if it was within the last day
-		const regTimeAgo = duration > 24 * 60 * 60 * 1000 ?
+		const regTimeAgo = Utils.escapeHTML(duration > 24 * 60 * 60 * 1000 ?
 			Chat.toDurationString(duration, { precision: 1 }) :
-			'less than a day';
-		this.sendReplyBox(Utils.html`The user '${target}' registered ${regTimeAgo} ago, on the date ${date.toDateString()}.`);
+			this.TL`less than a day`);
+		const regDate = Utils.escapeHTML(date.toDateString());
+		this.sendReplyBox(this.TL`The user '${target}' registered ${regTimeAgo} ago, on the date ${regDate}.`);
 	},
-	registertimehelp: [`/registertime OR /regtime [user] - Find out when [user] registered.`],
+	registertimehelp: [TLkey`/registertime OR /regtime [user] - Find out when [user] registered.`],
 
 	pi(target, room, user) {
 		if (!this.runBroadcast()) return false;
 		return this.sendReplyBox(
-			'Did you mean: 1. 3.1415926535897932384626... (Decimal)<br />' +
-			'2. 3.184809493B91866... (Duodecimal)<br />' +
-			'3. 3.243F6A8885A308D... (Hexadecimal)<br /><br />' +
-			'How many digits of pi do YOU know? Test it out <a href="http://guangcongluo.com/mempi/">here</a>!'
+			this.TL`Did you mean: 1. 3.1415926535897932384626... (Decimal)` + '<br />' +
+			this.TL`2. 3.184809493B91866... (Duodecimal)` + '<br />' +
+			this.TL`3. 3.243F6A8885A308D... (Hexadecimal)` + '<br /><br />' +
+			this.TL`How many digits of pi do YOU know? Test it out <a href="http://guangcongluo.com/mempi/">here</a>!`
 		);
 	},
-	pihelp: [`/pi - Displays the first several digits of pi in several notation types.`],
+	pihelp: [TLkey`/pi - Displays the first several digits of pi in several notation types.`],
 
 	code(target, room, user, connection) {
 		// target is trimmed by Chat#splitMessage, but leading spaces can be
 		// important to code block indentation.
 		target = this.message.substr(this.cmdToken.length + this.cmd.length + (this.message.includes(' ') ? 1 : 0)).trimRight();
 		if (!target) return this.parse('/help code');
-		if (target.length >= 8192) throw new Chat.ErrorMessage("Your code must be under 8192 characters long!");
+		if (target.length >= 8192) throw new Chat.ErrorMessage(this.TL`Your code must be under 8192 characters long!`);
 		if (target.length < 80 && !target.includes('\n') && !target.includes('```') && this.shouldBroadcast()) {
 			return this.checkChat(`\`\`\`${target}\`\`\``);
 		}
 
 		if (this.room?.settings.isPersonal !== false && this.shouldBroadcast()) {
 			target = this.filter(target)!;
-			if (!target) throw new Chat.ErrorMessage(`Invalid code.`);
+			if (!target) throw new Chat.ErrorMessage(this.TL`Invalid code.`);
 		}
 
 		this.checkBroadcast(true, '!code');
@@ -2869,8 +2958,8 @@ export const commands: Chat.ChatCommands = {
 		}
 	},
 	codehelp: [
-		`!code [code] - Broadcasts code to a room. Accepts multi-line arguments. Requires: + % @ ~ #`,
-		`/code [code] - Shows you code. Accepts multi-line arguments.`,
+		TLkey`!code [code] - Broadcasts code to a room. Accepts multi-line arguments. Requires: + % @ ~ #`,
+		TLkey`/code [code] - Shows you code. Accepts multi-line arguments.`,
 	],
 
 	buildformat(target, room, user) {
@@ -2884,24 +2973,24 @@ export const commands: Chat.ChatCommands = {
 	makecustomchallenge(target, room, user) {
 		target = target.trim();
 		if (!target.length) {
-			return this.popupReply(`No parameters given.`);
+			return this.popupReply(this.TL`No parameters given.`);
 		}
 		const args = Chat.parseArguments(target, ' | ', {
 			allowEmpty: true, useIDs: false,
 		});
 		if (!args.format?.[0]) {
-			return this.popupReply(`No format specified.`);
+			return this.popupReply(this.TL`No format specified.`);
 		}
 		const format = Dex.formats.get(toID(args.format[0]));
 		if (format.effectType !== 'Format') {
-			return this.popupReply(`The format '${format}' does not exist.`);
+			return this.popupReply(this.TL`The format '${format}' does not exist.`);
 		}
 		delete args.format;
 		const targetUserID = toID(args.user?.[0] || '');
 		if (targetUserID) {
 			this.checkChat();
 			if (!Users.get(targetUserID)) {
-				return this.popupReply(`User '${targetUserID}' not found.`);
+				return this.popupReply(this.TL`User '${targetUserID}' not found.`);
 			}
 		}
 		delete args.user;
@@ -2920,7 +3009,7 @@ export const commands: Chat.ChatCommands = {
 			}
 			const rule = Dex.data.Rulesets[name];
 			if (!rule || rule.effectType === 'Format') {
-				return this.popupReply(`Invalid rule or modifier: ${name}`);
+				return this.popupReply(this.TL`Invalid rule or modifier: ${name}`);
 			}
 			const id = rule.id || toID(rule.name);
 			let val = args[k][0];
@@ -2973,8 +3062,8 @@ export const commands: Chat.ChatCommands = {
 		} else {
 			this.connection.send(
 				`>view-buildformat-${format.id}\n|selectorhtml|#output|` +
-				`Here's the string for your desired rules!<br /><code>${fullFormat}</code><br />` +
-				`Use <code>/challenge [user],${fullFormat}</code> to challenge someone with it!`
+				this.TL`Here's the string for your desired rules!` + `<br /><code>${fullFormat}</code><br />` +
+				this.TL`Use <code>/challenge [user],${fullFormat}</code> to challenge someone with it!`
 			);
 		}
 	},
@@ -2997,7 +3086,7 @@ export const commands: Chat.ChatCommands = {
 			list.push(cmd.fullCmd.trim());
 			namespaces.set(namespace, list);
 		}
-		let buf = `<strong>Admin commands:</strong><br />`;
+		let buf = `<strong>${this.TL`Admin commands:`}</strong><br />`;
 		namespaces = new Map(Utils.sortBy([...namespaces], ([, cmdList]) => cmdList.length === 1));
 		for (const [namespace, cmdList] of namespaces) {
 			if (cmdList.length > 1 || cmdList[0].includes(' ')) {
@@ -3009,16 +3098,16 @@ export const commands: Chat.ChatCommands = {
 				const help = Chat.commands[namespace + 'help'];
 				if (help) {
 					const text = Array.isArray(help) ?
-						help.join(' | ') : typeof help === 'function' ?
-							`<button class="button" name="send" value="/${cmdList[0] + 'help'}">Get help</button>` : '';
-					buf += text ? ` (<code><small>${text}</small></code>)` : ` (no help found)`;
+						help.map(line => this.TL(line)).join(' | ') : typeof help === 'function' ?
+							`<button class="button" name="send" value="/${cmdList[0] + 'help'}">${this.TL`Get help`}</button>` : '';
+					buf += text ? ` (<code><small>${text}</small></code>)` : ` ${this.TL`(no help found)`}`;
 				}
 			}
 			buf += `<br />`;
 		}
 		this.sendReplyBox(buf);
 	},
-	adminhelphelp: [`/adminhelp - Programmatically generates a list of all administrator commands. Requires: ~`],
+	adminhelphelp: [TLkey`/adminhelp - Programmatically generates a list of all administrator commands. Requires: ~`],
 
 	altlog: 'altslog',
 	altslog(target, room, user) {
@@ -3030,22 +3119,22 @@ export const commands: Chat.ChatCommands = {
 		return this.parse(`/join view-altslog-${target}`);
 	},
 	altsloghelp: [
-		`/altslog [userid] - View the alternate account history for the given [userid]. Requires: % @ ~`,
+		TLkey`/altslog [userid] - View the alternate account history for the given [userid]. Requires: % @ ~`,
 	],
 
 	randtopic(target, room, user) {
 		room = this.requireRoom();
 		if (!room.settings.topics?.length) {
-			throw new Chat.ErrorMessage(`This room has no random topics to select from.`);
+			throw new Chat.ErrorMessage(this.TL`This room has no random topics to select from.`);
 		}
 		this.runBroadcast();
 		this.sendReply(Utils.html`|html|<div class="broadcast-blue">${Utils.randomElement(room.settings.topics)}</div>`);
 	},
 	randtopichelp: [
-		`/randtopic - Randomly selects a topic from the room's discussion topic pool and displays it.`,
-		`/addtopic [target] - Adds the [target] to the pool of random discussion topics. Requires: % @ # ~`,
-		`/removetopic [index] - Removes the topic from the room's topic pool. Requires: % @ # ~`,
-		`/randomtopics - View the discussion topic pool for the current room.`,
+		TLkey`/randtopic - Randomly selects a topic from the room's discussion topic pool and displays it.`,
+		TLkey`/addtopic [target] - Adds the [target] to the pool of random discussion topics. Requires: % @ # ~`,
+		TLkey`/removetopic [index] - Removes the topic from the room's topic pool. Requires: % @ # ~`,
+		TLkey`/randomtopics - View the discussion topic pool for the current room.`,
 	],
 
 	addtopic(target, room, user) {
@@ -3061,7 +3150,7 @@ export const commands: Chat.ChatCommands = {
 		this.modlog('ADDTOPIC', null, target);
 		room.saveSettings();
 	},
-	addtopichelp: [`/addtopic [target] - Adds the [target] to the pool of random discussion topics. Requires: % @ # ~`],
+	addtopichelp: [TLkey`/addtopic [target] - Adds the [target] to the pool of random discussion topics. Requires: % @ # ~`],
 
 	removetopic(target, room, user) {
 		room = this.requireRoom();
@@ -3071,17 +3160,18 @@ export const commands: Chat.ChatCommands = {
 		}
 		const index = Number(toID(target)) - 1;
 		if (isNaN(index)) {
-			throw new Chat.ErrorMessage(`Invalid topic index: ${target}. Must be a number.`);
+			throw new Chat.ErrorMessage(this.TL`Invalid topic index: ${target}. Must be a number.`);
 		}
 		if (!room.settings.topics?.[index]) {
-			throw new Chat.ErrorMessage(`Topic ${index + 1} not found.`);
+			const topicNumber = index + 1;
+			throw new Chat.ErrorMessage(this.TL`Topic ${topicNumber} not found.`);
 		}
 		const topic = room.settings.topics.splice(index, 1)[0];
 		room.saveSettings();
 		this.privateModAction(`${user.name} removed topic ${index + 1} from the random topic pool.`);
 		this.modlog('REMOVETOPIC', null, topic);
 	},
-	removetopichelp: [`/removetopic [index] - Removes the topic from the room's topic pool. Requires: % @ # ~`],
+	removetopichelp: [TLkey`/removetopic [index] - Removes the topic from the room's topic pool. Requires: % @ # ~`],
 
 	listtopics: 'randomtopics',
 	randtopics: 'randomtopics',
@@ -3104,30 +3194,31 @@ export const handlers: Chat.Handlers = {
 export const pages: Chat.PageTable = {
 	async altslog(query, user) {
 		this.checkCan('lock');
-		this.title = '[Alts Log]';
+		this.title = this.TL`[Alts Log]`;
 		const target = toID(query.shift());
 		if (!target) {
-			throw new Chat.ErrorMessage(`Please specify a user to find alternate accounts for.`);
+			throw new Chat.ErrorMessage(this.TL`Please specify a user to find alternate accounts for.`);
 		}
 		this.title += ` ${target}`;
 		if (!Config.usesqlite) {
-			throw new Chat.ErrorMessage(`The alternate account log is currently disabled.`);
+			throw new Chat.ErrorMessage(this.TL`The alternate account log is currently disabled.`);
 		}
 		const rawLimit = query.shift() || "100";
 		const num = parseInt(rawLimit);
 		if (num > 3000) {
-			throw new Chat.ErrorMessage(`3000 is the maximum number of results from the alternate account log.`);
+			throw new Chat.ErrorMessage(this.TL`3000 is the maximum number of results from the alternate account log.`);
 		}
 		if (isNaN(num) || num < 1) {
-			throw new Chat.ErrorMessage(`The max results must be a real number that is at least one (received "${rawLimit}")`);
+			throw new Chat.ErrorMessage(this.TL`The max results must be a real number that is at least one (received "${rawLimit}")`);
 		}
 		const showIPs = user.can('globalban');
 		const results = await Chat.database.all(
 			'SELECT to_id, from_id, ip FROM alts_log WHERE (to_id = ? OR from_id = ?) LIMIT ?',
 			[target, target, num]
 		);
-		let buf = `<div class="pad"><h2>Alternate accounts for ${target}</h2>`;
-		buf += `${results.length} found.<hr />`;
+		let buf = `<div class="pad"><h2>${this.TL`Alternate accounts for ${target}`}</h2>`;
+		const resultCount = results.length;
+		buf += `${this.TL`${resultCount} found.`}<hr />`;
 
 		const ipTable = {} as Record<string, number>;
 		const userids = new Set<string>();
@@ -3146,7 +3237,7 @@ export const pages: Chat.PageTable = {
 			if (!ipTable[result.ip]) ipTable[result.ip] = 0;
 			ipTable[result.ip]++;
 		}
-		buf += `<div class="ladder pad"><table><tr><th>Userid</th>${showIPs ? `<th>Latest IP</th>` : ""}</tr>`;
+		buf += `<div class="ladder pad"><table><tr><th>${this.TL`Userid`}</th>${showIPs ? `<th>${this.TL`Latest IP`}</th>` : ""}</tr>`;
 		for (const id of userids) {
 			const ips = useridToIp.get(id) || [];
 			buf += `<tr><td>`;
@@ -3156,7 +3247,7 @@ export const pages: Chat.PageTable = {
 		}
 		buf += `</table></div>`;
 		if (showIPs) {
-			buf += `<br /><div class="ladder pad"><table><tr><th>IP</th><th>Times Used</th></tr>`;
+			buf += `<br /><div class="ladder pad"><table><tr><th>IP</th><th>${this.TL`Times Used`}</th></tr>`;
 			for (const ip in ipTable) {
 				buf += `<tr><td>${ip}</td><td>${ipTable[ip]}</td></tr>`;
 			}
@@ -3166,14 +3257,15 @@ export const pages: Chat.PageTable = {
 	},
 	topics(query, user) {
 		const room = this.requireRoom();
-		this.title = `[Topics] ${room.title}`;
+		this.title = this.TL`[Topics] ${room.title}`;
 		const topics = room.settings.topics || [];
 		let buf;
 		if (!topics.length) {
-			buf = `<div class="pad"><h2>This room has no discussion topics saved.</h2></div>`;
+			buf = `<div class="pad"><h2>${this.TL`This room has no discussion topics saved.`}</h2></div>`;
 			return buf;
 		}
-		buf = `<div class="pad"><h2>Random topics for ${room.title} (${topics.length}):</h2><ul>`;
+		const topicCount = topics.length;
+		buf = `<div class="pad"><h2>${this.TL`Random topics for ${room.title} (${topicCount}):`}</h2><ul>`;
 		for (const [i, topic] of topics.entries()) {
 			buf += Utils.html`<li>${i + 1}: "${topic}"</li>`;
 		}
@@ -3183,52 +3275,53 @@ export const pages: Chat.PageTable = {
 	battlerules(query, user) {
 		const rules = Object.values(Dex.data.Rulesets).filter(rule => rule.effectType !== "Format");
 		const tourHelp = `https://www.smogon.com/forums/threads/pok%C3%A9mon-showdown-forum-rules-resources-read-here-first.3570628/#post-6777489`;
-		this.title = "Custom Rules";
-		let rulesHTML = `<div class="pad"><h1>Custom Rules in challenges and tournaments</h1>`;
+		this.title = this.TL`Custom Rules`;
+		let rulesHTML = `<div class="pad"><h1>${this.TL`Custom Rules in challenges and tournaments`}</h1>`;
 		const basics = [
-			`<p>Pok&eacute;mon Showdown! supports custom rules in three ways:</p>`,
-			`<ul><li>Challenging another user, using the command <code>/challenge USERNAME, FORMAT @@@ RULES</code></li>`,
-			`<li>Tournaments, using the command <code>/tour rules RULES</code> (see the <a href="${tourHelp}">Tournament command help</a>)</li>`,
-			`<li>Custom rules on your own server</li></ul>`,
-			`<h2><u>Bans</u></h2>`,
-			`<p>Bans are just a <code>-</code> followed by the thing you want to ban.</p>`,
-			`<h3>Individual bans</h3>`,
-			`<ul><li><code>- Arceus</code>: Ban a Pok&eacute;mon (including all formes)</li>`,
-			`<li><code>- Arceus-Flying</code> or <code>- Giratina-Altered</code>: Ban a Pok&eacute;mon forme</li>`,
-			`<li><code>- Baton Pass</code>: Ban a move/item/ability/etc</li></ul>`,
-			`<h3>Group bans</h3>`,
-			`<ul><li><code>- OU</code> or <code>- DUU</code>: Ban a tier</li>`,
-			`<li><code>- Mega</code> or <code>- CAP</code>: Ban a Pok&eacute;mon category</li></ul>`,
-			`<h3>Complex bans</h3>`,
-			`<ul><li><code>- Blaziken + Speed Boost</code>: Ban a combination of things in a single Pokemon (you can have a Blaziken, and you can have Speed Boost on the same team, but the Blaziken can't have Speed Boost)</li>`,
-			`<li><code>- Drizzle ++ Swift Swim</code>: Ban a combination of things in a team (if any Pokémon on your team have Drizzle, no Pokémon can have Swift Swim)</li></ul>`,
-			`<h2><u>Unbans</u></h2>`,
-			`<p>Using a <code>+</code> instead of a <code>-</code> unbans that category.</p>`,
-			`<ul><li><code>+ Blaziken</code>: Unban/unrestrict a Pok&eacute;mon.</li></ul>`,
-			`<p><a class="button" href="https://github.com/smogon/pokemon-showdown/blob/master/config/CUSTOM-RULES.md">More details</a></p>`,
+			`<p>${this.TL`Pok&eacute;mon Showdown! supports custom rules in three ways:`}</p>`,
+			`<ul><li>${this.TL`Challenging another user, using the command <code>/challenge USERNAME, FORMAT @@@ RULES</code>`}</li>`,
+			`<li>${this.TL`Tournaments, using the command <code>/tour rules RULES</code> (see the <a href="${tourHelp}">Tournament command help</a>)`}</li>`,
+			`<li>${this.TL`Custom rules on your own server`}</li></ul>`,
+			`<h2><u>${this.TL`Bans`}</u></h2>`,
+			`<p>${this.TL`Bans are just a <code>-</code> followed by the thing you want to ban.`}</p>`,
+			`<h3>${this.TL`Individual bans`}</h3>`,
+			`<ul><li>${this.TL`<code>- Arceus</code>: Ban a Pok&eacute;mon (including all formes)`}</li>`,
+			`<li>${this.TL`<code>- Arceus-Flying</code> or <code>- Giratina-Altered</code>: Ban a Pok&eacute;mon forme`}</li>`,
+			`<li>${this.TL`<code>- Baton Pass</code>: Ban a move/item/ability/etc`}</li></ul>`,
+			`<h3>${this.TL`Group bans`}</h3>`,
+			`<ul><li>${this.TL`<code>- OU</code> or <code>- DUU</code>: Ban a tier`}</li>`,
+			`<li>${this.TL`<code>- Mega</code> or <code>- CAP</code>: Ban a Pok&eacute;mon category`}</li></ul>`,
+			`<h3>${this.TL`Complex bans`}</h3>`,
+			`<ul><li>${this.TL`<code>- Blaziken + Speed Boost</code>: Ban a combination of things in a single Pokemon (you can have a Blaziken, and you can have Speed Boost on the same team, but the Blaziken can't have Speed Boost)`}</li>`,
+			`<li>${this.TL`<code>- Drizzle ++ Swift Swim</code>: Ban a combination of things in a team (if any Pokémon on your team have Drizzle, no Pokémon can have Swift Swim)`}</li></ul>`,
+			`<h2><u>${this.TL`Unbans`}</u></h2>`,
+			`<p>${this.TL`Using a <code>+</code> instead of a <code>-</code> unbans that category.`}</p>`,
+			`<ul><li>${this.TL`<code>+ Blaziken</code>: Unban/unrestrict a Pok&eacute;mon.`}</li></ul>`,
+			`<p><a class="button" href="https://github.com/smogon/pokemon-showdown/blob/master/config/CUSTOM-RULES.md">${this.TL`More details`}</a></p>`,
 		];
+		const ruleTableHeader = `<div class="ladder"><table><tr><th>${this.TL`Rule Name`}</th><th>${this.TL`Description`}</th></tr>`;
 		const rulesets = [
-			`<h2><u>Rules, mods, and clauses</u></h2>`,
-			`<p>The following rules can be added to challenges/tournaments to modify the style of play. Alternatively, already present rules can be removed from formats by preceding the rule name with <code>!</code></p>`,
-			`<p>However, some rules, like <code>Obtainable</code>, are made of subrules, that can be individually turned on and off.</p>`,
-			`<div class="ladder"><table><tr><th>Rule Name</th><th>Description</th></tr>`,
+			`<h2><u>${this.TL`Rules, mods, and clauses`}</u></h2>`,
+			`<p>${this.TL`The following rules can be added to challenges/tournaments to modify the style of play. Alternatively, already present rules can be removed from formats by preceding the rule name with <code>!</code>`}</p>`,
+			`<p>${this.TL`However, some rules, like <code>Obtainable</code>, are made of subrules, that can be individually turned on and off.`}</p>`,
+			ruleTableHeader,
 		];
 		for (const rule of rules) {
 			if (rule.hasValue) continue;
-			const desc = rule.desc ? rule.desc : "No description.";
+			const desc = rule.desc ? rule.desc : this.TL`No description.`;
 			rulesets.push(`<tr><td>${rule.name}</td><td>${desc}</td></tr>`);
 		}
 		rulesets.push(
 			`</table></div>`,
-			`<h3>Value rules</h3>`,
-			`<ul><li>Value rules are formatted like [Name] = [value], e.g. "Force Monotype = Water" or "Min Team Size = 4"</li>`,
-			`<li>To remove a value rule, use <code>![rule name]</code>.</li>`,
-			`<li>To override another value rule, use <code>!! [Name] = [new value]</code>. For example, overriding the Min Source Gen on [Gen 8] VGC 2021 from 8 to 3 would look like <code>!! Min Source Gen = 3</code>.</li></ul>`,
-			`<div class="ladder"><table><tr><th>Rule Name</th><th>Description</th></tr>`
+			`<h3>${this.TL`Value rules`}</h3>`,
+			`<ul><li>${this.TL`Value rules are formatted like [Name] = [value], e.g. "Force Monotype = Water" or "Min Team Size = 4"`}</li>`,
+			`<li>${this.TL`To remove a value rule, use <code>![rule name]</code>.`}</li>`,
+			`<li>${this.TL`To override another value rule, use <code>!! [Name] = [new value]</code>. For example, overriding the Min Source Gen on [Gen 8] VGC 2021 from 8 to 3 would look like <code>!! Min Source Gen = 3</code>.`}</li></ul>`,
+			ruleTableHeader
 		);
 		for (const rule of rules) {
 			if (!rule.hasValue) continue;
-			const desc = rule.desc ? rule.desc : "No description.";
+			const desc = rule.desc ? rule.desc : this.TL`No description.`;
 			rulesets.push(`<tr><td>${rule.name}</td><td>${desc}</td></tr>`);
 		}
 		rulesets.push(`</table></div>`);
@@ -3236,9 +3329,9 @@ export const pages: Chat.PageTable = {
 		return rulesHTML;
 	},
 	buildformat(query, user) {
-		this.title = '[Format Customizer]';
+		this.title = this.TL`[Format Customizer]`;
 		const rules = Object.values(Dex.data.Rulesets).filter(rule => rule.effectType !== "Format");
-		let buf = `<div class="pad"><h2>Format customizer</h2>`;
+		let buf = `<div class="pad"><h2>${this.TL`Format customizer`}</h2>`;
 		buf += `<button class="button" name="send" value="/join ${this.pageid}">`;
 		buf += `<i class="fa fa-refresh"></i> ${this.TL`Refresh`}</button>`;
 		buf += `<hr />`;
@@ -3246,11 +3339,11 @@ export const pages: Chat.PageTable = {
 		const format = Dex.formats.get(formatId);
 		if (!formatId || format.effectType !== 'Format') {
 			if (formatId) {
-				buf += `<div class="message-error">The format '${formatId}' does not exist.</div><br />`;
+				buf += `<div class="message-error">${this.TL`The format '${formatId}' does not exist.`}</div><br />`;
 			}
 			buf += `<form data-submitsend="/buildformat {format}">`;
-			buf += `Choose your format: <formatselect name="format">[Gen ${Dex.gen}] Random Battle</formatselect><br />`;
-			buf += `<button type="submit" class="button notifying">Continue</button>`;
+			buf += `${this.TL`Choose your format:`} <formatselect name="format">[Gen ${Dex.gen}] Random Battle</formatselect><br />`;
+			buf += `<button type="submit" class="button notifying">${this.TL`Continue`}</button>`;
 			buf += `</form>`;
 			return buf;
 		}
@@ -3258,38 +3351,39 @@ export const pages: Chat.PageTable = {
 		buf += `<form data-submitsend="{{cmd}}">`;
 		const ruleTable = Dex.formats.getRuleTable(format);
 		const cmd = [`format=${formatId}`, 'user={user}'];
-		buf += `Format: ${format.name}<br />`;
-		buf += `User to challenge: <input name="user" /> <small>(optional)</small>`;
+		buf += `${this.TL`Format: ${format.name}`}<br />`;
+		buf += `${this.TL`User to challenge:`} <input name="user" /> <small>${this.TL`(optional)`}</small>`;
 		buf += `<br /><br />`;
-		buf += `<u><strong>Bans/Unbans</strong></u><br />`;
+		buf += `<u><strong>${this.TL`Bans/Unbans`}</strong></u><br />`;
 		buf += `<details class="readmore">`;
-		buf += `<summary>Bans are a <code>-</code> followed by the thing you want to ban. `;
-		buf += `Using a <code>+</code> instead unbans Pokemon.</summary><small>`;
-		buf += `<h3>Individual bans</h3>`;
-		buf += `<ul><li><code>- Arceus</code>: Ban a Pok&eacute;mon (including all formes)</li>`;
-		buf += `<li><code>- Arceus-Flying</code> or <code>- Giratina-Altered</code>: Ban a Pok&eacute;mon forme</li>`;
-		buf += `<li><code>- Baton Pass</code>: Ban a move/item/ability/etc</li></ul>`;
-		buf += `<h3>Group bans</h3>`;
-		buf += `<ul><li><code>- OU</code> or <code>- DUU</code>: Ban a tier</li>`;
-		buf += `<li><code>- Mega</code> or <code>- CAP</code>: Ban a Pok&eacute;mon category</li></ul>`;
-		buf += `<h3>Complex bans</h3>`;
-		buf += `<ul><li><code>- Blaziken + Speed Boost</code>: Ban a combination of things in a single Pokemon (you can have a Blaziken, and you can have Speed Boost on the same team, but the Blaziken can't have Speed Boost)</li>`;
-		buf += `<li><code>- Drizzle ++ Swift Swim</code>: Ban a combination of things in a team (if any Pokémon on your team have Drizzle, no Pokémon can have Swift Swim)</li></ul>`;
-		buf += `<h2><u>Unbans</u></h2>`;
-		buf += `<p>Using a <code>+</code> instead of a <code>-</code> unbans that category.</p>`;
-		buf += `<ul><li><code>+ Blaziken</code>: Unban/unrestrict a Pok&eacute;mon.</li></ul></small></details><br />`;
+		buf += `<summary>${this.TL`Bans are a <code>-</code> followed by the thing you want to ban.`} `;
+		buf += `${this.TL`Using a <code>+</code> instead unbans Pokemon.`}</summary><small>`;
+		buf += `<h3>${this.TL`Individual bans`}</h3>`;
+		buf += `<ul><li>${this.TL`<code>- Arceus</code>: Ban a Pok&eacute;mon (including all formes)`}</li>`;
+		buf += `<li>${this.TL`<code>- Arceus-Flying</code> or <code>- Giratina-Altered</code>: Ban a Pok&eacute;mon forme`}</li>`;
+		buf += `<li>${this.TL`<code>- Baton Pass</code>: Ban a move/item/ability/etc`}</li></ul>`;
+		buf += `<h3>${this.TL`Group bans`}</h3>`;
+		buf += `<ul><li>${this.TL`<code>- OU</code> or <code>- DUU</code>: Ban a tier`}</li>`;
+		buf += `<li>${this.TL`<code>- Mega</code> or <code>- CAP</code>: Ban a Pok&eacute;mon category`}</li></ul>`;
+		buf += `<h3>${this.TL`Complex bans`}</h3>`;
+		buf += `<ul><li>${this.TL`<code>- Blaziken + Speed Boost</code>: Ban a combination of things in a single Pokemon (you can have a Blaziken, and you can have Speed Boost on the same team, but the Blaziken can't have Speed Boost)`}</li>`;
+		buf += `<li>${this.TL`<code>- Drizzle ++ Swift Swim</code>: Ban a combination of things in a team (if any Pokémon on your team have Drizzle, no Pokémon can have Swift Swim)`}</li></ul>`;
+		buf += `<h2><u>${this.TL`Unbans`}</u></h2>`;
+		buf += `<p>${this.TL`Using a <code>+</code> instead of a <code>-</code> unbans that category.`}</p>`;
+		buf += `<ul><li>${this.TL`<code>+ Blaziken</code>: Unban/unrestrict a Pok&eacute;mon.`}</li></ul></small></details><br />`;
 		cmd.push(`bans={bans}`);
-		buf += `Bans/Unbans: <small>(separated by commas)</small><br /><br />`;
+		buf += `${this.TL`Bans/Unbans:`} <small>${this.TL`(separated by commas)`}</small><br /><br />`;
 		buf += `<textarea style="width: 100%" name="bans"></textarea><br />`;
-		buf += `<details class="readmore"><summary><u><strong>Clauses</strong></u></summary>`;
-		buf += `<p>The following rules can be added to challenges/tournaments to modify the style of play. `;
-		buf += `Alternatively, already present rules can be removed from formats by preceding the rule name with <code>!</code>.</p>`;
-		buf += `<p>However, some rules, like <code>Obtainable</code>, are made of subrules, that can be individually turned on and off.</p>`;
-		buf += `<p>Note that if you do not explicitly check a mod to include it, it will not be included in the final output.</p>`;
-		buf += `<div class="ladder"><table><tr><th>Rule Name</th><th>Description</th><th>Toggle</th></tr>`;
+		buf += `<details class="readmore"><summary><u><strong>${this.TL`Clauses`}</strong></u></summary>`;
+		buf += `<p>${this.TL`The following rules can be added to challenges/tournaments to modify the style of play.`} `;
+		buf += `${this.TL`Alternatively, already present rules can be removed from formats by preceding the rule name with <code>!</code>.`}</p>`;
+		buf += `<p>${this.TL`However, some rules, like <code>Obtainable</code>, are made of subrules, that can be individually turned on and off.`}</p>`;
+		buf += `<p>${this.TL`Note that if you do not explicitly check a mod to include it, it will not be included in the final output.`}</p>`;
+		const ruleTableHeader = `<div class="ladder"><table><tr><th>${this.TL`Rule Name`}</th><th>${this.TL`Description`}</th><th>${this.TL`Toggle`}</th></tr>`;
+		buf += ruleTableHeader;
 		for (const rule of rules) {
 			if (rule.hasValue) continue;
-			const desc = rule.desc || "No description.";
+			const desc = rule.desc || this.TL`No description.`;
 			const id = toID(rule.name);
 			buf += `<tr>`;
 			buf += `<td>${rule.name}</td><td>${desc}</td>`;
@@ -3298,18 +3392,18 @@ export const pages: Chat.PageTable = {
 			cmd.push(`${id}={${id}}`);
 		}
 		buf += `</table></div></details><br />`;
-		buf += `<details class="readmore"><summary><u><strong>Value Rules</strong></u></summary>`;
-		buf += `Click the "enabled" checkbox and fill in a value to enable a rule - uncheck the box to remove the rule.`;
-		buf += `<div class="ladder"><table><tr><th>Rule Name</th><th>Description</th><th>Toggle</th></tr>`;
+		buf += `<details class="readmore"><summary><u><strong>${this.TL`Value Rules`}</strong></u></summary>`;
+		buf += this.TL`Click the "enabled" checkbox and fill in a value to enable a rule - uncheck the box to remove the rule.`;
+		buf += ruleTableHeader;
 		for (const rule of rules) {
 			if (!rule.hasValue) continue;
-			const desc = rule.desc || "No description.";
+			const desc = rule.desc || this.TL`No description.`;
 			buf += `<tr>`;
 			const id = toID(rule.name);
 			const existing = ruleTable.valueRules.get(id);
 			buf += `<td>${rule.name}</td><td>${desc}</td>`;
-			buf += `<td>Enabled: <input type="checkbox" name="${id}enabled" value="on" ${existing ? "checked" : ''}/><br />`;
-			buf += `Value: <input name="${id}val" value="${existing || ""}"/>`;
+			buf += `<td>${this.TL`Enabled:`} <input type="checkbox" name="${id}enabled" value="on" ${existing ? "checked" : ''}/><br />`;
+			buf += `${this.TL`Value:`} <input name="${id}val" value="${existing || ""}"/>`;
 			cmd.push(`${id}-enabled={${id}enabled}`);
 			cmd.push(`${id}-val={${id}val}`);
 			buf += `</td></tr>`;
@@ -3317,12 +3411,12 @@ export const pages: Chat.PageTable = {
 		buf += `</details>`;
 		buf = buf.replace(`{{cmd}}`, `/makecustomchallenge ${cmd.join(' | ')}`);
 		buf += `<br /><br />`;
-		buf += `<button type="submit" class="button notifying">Create!</button></form>`;
+		buf += `<button type="submit" class="button notifying">${this.TL`Create!`}</button></form>`;
 		buf += `<span id="output"></span>`;
 		return buf;
 	},
 	punishments(query, user) {
-		this.title = 'Punishments';
+		this.title = this.TL`Punishments`;
 		const room = this.requireRoom();
 
 		let buf = "";
@@ -3341,7 +3435,7 @@ export const pages: Chat.PageTable = {
 		return buf;
 	},
 	globalpunishments(query, user) {
-		this.title = 'Global Punishments';
+		this.title = this.TL`Global Punishments`;
 		let buf = "";
 		if (!user.named) return Rooms.RETRY_AFTER_LOGIN;
 		this.checkCan('lock');
@@ -3360,18 +3454,18 @@ export const pages: Chat.PageTable = {
 		const room = Rooms.get(args[0])!;
 		this.checkCan('mute', null, room);
 		if (!room.pendingApprovals) room.pendingApprovals = new Map();
-		if (room.pendingApprovals.size < 1) return `<h2>No pending approvals on ${room.title}</h2>`;
-		let buf = `<div class="pad"><strong>Pending media requests on ${room.title}</strong><hr />`;
+		if (room.pendingApprovals.size < 1) return `<h2>${this.TL`No pending approvals on ${room.title}`}</h2>`;
+		let buf = `<div class="pad"><strong>${this.TL`Pending media requests on ${room.title}`}</strong><hr />`;
 		for (const [userid, entry] of room.pendingApprovals) {
 			buf += `<strong>${entry.name}</strong><div class="infobox">`;
-			buf += `<strong>Requester ID:</strong> ${userid}<br />`;
-			buf += `<strong>Link:</strong> <a href="${entry.link}">${entry.link}</a><br />`;
-			buf += `<strong>Comment:</strong> ${entry.comment}`;
+			buf += `<strong>${this.TL`Requester ID:`}</strong> ${userid}<br />`;
+			buf += `<strong>${this.TL`Link:`}</strong> <a href="${entry.link}">${entry.link}</a><br />`;
+			buf += `<strong>${this.TL`Comment:`}</strong> ${entry.comment}`;
 			buf += `<form data-submitsend="/msgroom ${args[0]}, /approveshow ${userid}">`;
-			buf += `<button class="button" type="submit">Approve</button>`;
+			buf += `<button class="button" type="submit">${this.TL`Approve`}</button>`;
 			buf += `</form>`;
 			buf += `<form data-submitsend="/msgroom ${args[0]}, /denyshow ${userid}">`;
-			buf += `<button class="button" type="submit">Reject</button>`;
+			buf += `<button class="button" type="submit">${this.TL`Reject`}</button>`;
 			buf += `</form>`;
 			buf += `</div><hr />`;
 		}

@@ -278,6 +278,13 @@ exports.reportjoins = true;
 exports.reportjoinsperiod = 0;
 
 /**
+ * default language - language of the rooms and users that have not chosen one
+ *   (battle rooms, for example): 'english', 'french', ...
+ *  @type {string}
+ */
+exports.defaultlanguage = 'english';
+
+/**
  * report battles - shows messages like "OU battle started" in the lobby
  *   This feature can lag larger servers - turn this off if your server is
  *   getting more than 160 or so users.

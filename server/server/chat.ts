@@ -1743,10 +1743,11 @@ export const Chat = new class {
 	readonly languages = new Map<ID, string>();
 
 	getDexLanguage(language: ID | null = null): TextLanguage {
-		return Dex.text.findLanguage(language || 'english')?.code as TextLanguage || 'en';
+		return Dex.text.findLanguage(language || Config.defaultlanguage || 'english')?.code as TextLanguage || 'en';
 	}
+	/** Without a language (a battle room, for example), uses Config.defaultlanguage. */
 	getTranslator(language: ID | null = null): Translator {
-		const code = Dex.text.findLanguage(language || 'english')?.code || 'en';
+		const code = Dex.text.findLanguage(language || Config.defaultlanguage || 'english')?.code || 'en';
 		return TLfor(code);
 	}
 	getLanguageName(language: ID): string {

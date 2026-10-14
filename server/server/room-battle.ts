@@ -216,26 +216,31 @@ export class RoomBattleTimer {
 		const userid = requester ? requester.id : 'staff' as ID;
 		if (this.timerRequesters.has(userid)) return false;
 		if (this.battle.ended) {
-			requester?.sendTo(this.battle.roomid, `|inactiveoff|The timer can't be enabled after a battle has ended.`);
+			requester?.sendTo(
+				this.battle.roomid, `|inactiveoff|${requester.TL`The timer can't be enabled after a battle has ended.`}`
+			);
 			return false;
 		}
+		const room = this.battle.room;
 		if (this.timerRequesters.size) {
-			this.battle.room.add(`|inactive|${requester ? requester.name : userid} also wants the timer to be on.`).update();
+			const requesterName = requester ? requester.name : userid;
+			room.add(`|inactive|${room.TL`${requesterName} also wants the timer to be on.`}`).update();
 			this.timerRequesters.add(userid);
 			return false;
 		}
 		if (requester && this.battle.playerTable[requester.id] && this.lastDisabledByUser === requester.id) {
 			const remainingCooldownMs = (this.lastDisabledTime || 0) + TIMER_COOLDOWN - Date.now();
 			if (remainingCooldownMs > 0) {
+				const remainingSeconds = Math.ceil(remainingCooldownMs / SECONDS);
 				this.battle.playerTable[requester.id].sendRoom(
-					`|inactiveoff|The timer can't be re-enabled so soon after disabling it (${Math.ceil(remainingCooldownMs / SECONDS)} seconds remaining).`
+					`|inactiveoff|${requester.TL`The timer can't be re-enabled so soon after disabling it (${remainingSeconds} seconds remaining).`}`
 				);
 				return false;
 			}
 		}
 		this.timerRequesters.add(userid);
-		const requestedBy = requester ? ` (requested by ${requester.name})` : ``;
-		this.battle.room.add(`|inactive|Battle timer is ON: inactive players will automatically lose when time's up.${requestedBy}`).update();
+		const requestedBy = requester ? ` ${room.TL`(requested by ${requester.name})`}` : ``;
+		room.add(`|inactive|${room.TL`Battle timer is ON: inactive players will automatically lose when time's up.`}${requestedBy}`).update();
 
 		this.checkActivity();
 		for (const player of this.battle.players) this.nextRequest(player);
@@ -250,12 +255,15 @@ export class RoomBattleTimer {
 		} else {
 			this.timerRequesters.clear();
 		}
+		const room = this.battle.room;
 		if (this.timerRequesters.size) {
-			this.battle.room.add(`|inactive|${requester!.name} no longer wants the timer on, but the timer is staying on because ${[...this.timerRequesters].join(', ')} still does.`).update();
+			const requesters = [...this.timerRequesters].join(', ');
+			const requesterName = requester!.name;
+			room.add(`|inactive|${room.TL`${requesterName} no longer wants the timer on, but the timer is staying on because ${requesters} still does.`}`).update();
 			return false;
 		}
 		if (this.end()) {
-			this.battle.room.add(`|inactiveoff|Battle timer is now OFF.`).update();
+			room.add(`|inactiveoff|${room.TL`Battle timer is now OFF.`}`).update();
 			return true;
 		}
 		return false;
@@ -371,7 +379,7 @@ export class RoomBattleTimer {
 			if (!player.knownActive && (dcSecondsLeft <= secondsLeft || this.settings.dcTimerBank)) {
 				// dc timer is shown only if it's lower than turn timer or you're in timer bank mode
 				if (dcSecondsLeft % 30 === 0 || dcSecondsLeft <= 20) {
-					room.add(`|inactive|${player.name} has ${dcSecondsLeft} seconds to reconnect!`);
+					room.add(`|inactive|${room.TL`${player.name} has ${dcSecondsLeft} seconds to reconnect!`}`);
 				}
 			} else {
 				// regular turn timer shown
@@ -409,29 +417,31 @@ export class RoomBattleTimer {
 				}
 
 				if (this.timerRequesters.size) {
-					let msg = `!`;
+					const room = this.battle.room;
+					let msg = room.TL`${player.name} disconnected!`;
 
 					if (this.settings.dcTimer) {
-						msg = ` and has a minute to reconnect!`;
+						msg = room.TL`${player.name} disconnected and has a minute to reconnect!`;
 					}
 					if (this.settings.dcTimerBank) {
 						if (player.dcSecondsLeft > 0) {
-							msg = ` and has ${player.dcSecondsLeft} seconds to reconnect!`;
+							msg = room.TL`${player.name} disconnected and has ${player.dcSecondsLeft} seconds to reconnect!`;
 						} else {
-							msg = ` and has no disconnection time left!`;
+							msg = room.TL`${player.name} disconnected and has no disconnection time left!`;
 						}
 					}
-					this.battle.room.add(`|inactive|${player.name} disconnected${msg}`).update();
+					room.add(`|inactive|${msg}`).update();
 				}
 			} else {
 				// player has reconnected
 				player.knownActive = true;
 				if (this.timerRequesters.size) {
-					let timeLeft = ``;
+					const room = this.battle.room;
+					let msg = room.TL`${player.name} reconnected.`;
 					if (!player.request.isWait) {
-						timeLeft = ` and has ${player.turnSecondsLeft} seconds left`;
+						msg = room.TL`${player.name} reconnected and has ${player.turnSecondsLeft} seconds left.`;
 					}
-					this.battle.room.add(`|inactive|${player.name} reconnected${timeLeft}.`).update();
+					room.add(`|inactive|${msg}`).update();
 				}
 			}
 		}
@@ -440,7 +450,7 @@ export class RoomBattleTimer {
 		const players = this.battle.players;
 		if (players.every(player => player.turnSecondsLeft <= 0)) {
 			if (!this.settings.timeoutAutoChoose || players.every(player => player.secondsLeft <= 0)) {
-				this.battle.room.add(`|-message|All players are inactive.`).update();
+				this.battle.room.add(`|-message|${this.battle.room.TL`All players are inactive.`}`).update();
 				this.battle.tie();
 				return true;
 			}
@@ -617,7 +627,7 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 	}
 	override choose(user: User, data: string) {
 		if (this.frozen) {
-			user.popup(`Your battle is currently paused, so you cannot move right now.`);
+			user.popup(user.TL`Your battle is currently paused, so you cannot move right now.`);
 			return;
 		}
 		const player = this.playerTable[user.id];
@@ -625,13 +635,13 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 		if (!player) return;
 		const request = player.request;
 		if (request.isWait !== false && request.isWait !== true) {
-			player.sendRoom(`|error|[Invalid choice] There's nothing to choose`);
+			player.sendRoom(`|error|[Invalid choice] ${user.TL`There's nothing to choose`}`);
 			return;
 		}
 		const allPlayersWait = this.players.every(p => !!p.request.isWait);
 		if (allPlayersWait || // too late
 			(rqid && rqid !== `${request.rqid}`)) { // WAY too late
-			player.sendRoom(`|error|[Invalid choice] Sorry, too late to make a different move; the next turn has already started`);
+			player.sendRoom(`|error|[Invalid choice] ${user.TL`Sorry, too late to make a different move; the next turn has already started`}`);
 			return;
 		}
 		request.isWait = true;
@@ -645,13 +655,13 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 		if (!player) return;
 		const request = player.request;
 		if (request.isWait !== true) {
-			player.sendRoom(`|error|[Invalid choice] There's nothing to cancel`);
+			player.sendRoom(`|error|[Invalid choice] ${user.TL`There's nothing to cancel`}`);
 			return;
 		}
 		const allPlayersWait = this.players.every(p => !!p.request.isWait);
 		if (allPlayersWait || // too late
 			(rqid && rqid !== `${request.rqid}`)) { // WAY too late
-			player.sendRoom(`|error|[Invalid choice] Sorry, too late to cancel; the next turn has already started`);
+			player.sendRoom(`|error|[Invalid choice] ${user.TL`Sorry, too late to cancel; the next turn has already started`}`);
 			return;
 		}
 		request.isWait = false;
@@ -661,7 +671,7 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 	}
 	override joinGame(user: User, slot?: SideID, playerOpts?: { team?: string }) {
 		if (user.id in this.playerTable) {
-			user.popup(`You have already joined this battle.`);
+			user.popup(user.TL`You have already joined this battle.`);
 			return false;
 		}
 
@@ -669,23 +679,24 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 
 		if (slot && !validSlots.includes(slot)) {
 			if (this[slot]?.eliminated) {
-				user.popup(`The player in slot ${slot} has already been eliminated.`);
+				user.popup(user.TL`The player in slot ${slot} has already been eliminated.`);
 			} else if (this.players.some(player => player.slot === slot)) {
-				user.popup(`This battle already has a user in slot ${slot}.`);
+				user.popup(user.TL`This battle already has a user in slot ${slot}.`);
 			} else {
-				user.popup(`Slot "${slot}" doesn't exist in this battle.`);
+				user.popup(user.TL`Slot "${slot}" doesn't exist in this battle.`);
 			}
 			return false;
 		}
 
 		if (!validSlots.length) {
-			user.popup(`This battle has no available player slots.`);
+			user.popup(user.TL`This battle has no available player slots.`);
 			return false;
 		}
 
 		slot ||= validSlots.find(validSlot => this[validSlot].invite === user.id);
 		if (!slot && validSlots.length > 1) {
-			user.popup(`Which slot would you like to join into? Use something like \`/joingame ${validSlots[0]}\``);
+			const exampleSlot = validSlots[0];
+			user.popup(user.TL`Which slot would you like to join into? Use something like \`/joingame ${exampleSlot}\``);
 			return false;
 		}
 		slot ||= validSlots[0];
@@ -693,7 +704,7 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 		if (this[slot].invite === user.id) {
 			this.room.auth.set(user.id, Users.PLAYER_SYMBOL);
 		} else if (!user.can('joinbattle', null, this.room)) {
-			user.popup(`You must be set as a player to join a battle you didn't start. Ask a player to use /addplayer on you to join this battle.`);
+			user.popup(user.TL`You must be set as a player to join a battle you didn't start. Ask a player to use /addplayer on you to join this battle.`);
 			return false;
 		}
 
@@ -716,12 +727,14 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 	override leaveGame(user: User) {
 		if (!user) return false; // ...
 		if (this.room.rated || this.room.tour) {
-			user.popup(`Players can't be swapped out in a ${this.room.tour ? "tournament" : "rated"} battle.`);
+			user.popup(this.room.tour ?
+				user.TL`Players can't be swapped out in a tournament battle.` :
+				user.TL`Players can't be swapped out in a rated battle.`);
 			return false;
 		}
 		const player = this.playerTable[user.id];
 		if (!player) {
-			user.popup(`Failed to leave battle - you're not a player.`);
+			user.popup(user.TL`Failed to leave battle - you're not a player.`);
 			return false;
 		}
 		Chat.runHandlers('onBattleLeave', user, this.room);
@@ -752,7 +765,7 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 			}
 		}
 		if (!this.ended) {
-			this.room.add(`|bigerror|The simulator process crashed. We've been notified and will fix this ASAP.`);
+			this.room.add(`|bigerror|${this.room.TL`The simulator process crashed. We've been notified and will fix this ASAP.`}`);
 			if (!disconnected) Monitor.crashlog(new Error(`Sim stream interrupted`), `A sim stream`);
 			this.setEnded();
 		}
@@ -783,7 +796,7 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 				}
 				this.room.add(line);
 				if (line.startsWith(`|bigerror|You will auto-tie if `) && Config.allowrequestingties && !this.room.tour) {
-					this.room.add(`|-hint|If you want to tie earlier, consider using \`/offertie\`.`);
+					this.room.add(`|-hint|${this.room.TL`If you want to tie earlier, consider using \`/offertie\`.`}`);
 				}
 			}
 			this.room.update();
@@ -1048,11 +1061,34 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 		return this.forfeitPlayer(this.playerTable[user], message);
 	}
 
+	/**
+	 * The forfeit message shown in `room`, as one translated sentence. `reason` is the English
+	 * ending passed to `forfeit` (it starts with a space, see `RoomGame#forfeit`); a reason not
+	 * listed here is shown untranslated after the player's name.
+	 */
+	static forfeitMessage(room: Room, name: string, reason: string) {
+		switch (reason) {
+		case '': return room.TL`${name} was made to forfeit.`;
+		case ' forfeited.': return room.TL`${name} forfeited.`;
+		case ' forfeited the series.': return room.TL`${name} forfeited the series.`;
+		case ' lost due to inactivity.': return room.TL`${name} lost due to inactivity.`;
+		case ' lost the series due to inactivity.': return room.TL`${name} lost the series due to inactivity.`;
+		case ' lost by being unavailable at the start of a game.':
+			return room.TL`${name} lost by being unavailable at the start of a game.`;
+		case ' lost by having an inappropriate name.': return room.TL`${name} lost by having an inappropriate name.`;
+		case ' forfeited by changing their name.': return room.TL`${name} forfeited by changing their name.`;
+		case ' lost by being banned.': return room.TL`${name} lost by being banned.`;
+		case ' lost by being offline too long.': return room.TL`${name} lost by being offline too long.`;
+		case ' was disqualified from the tournament.': return room.TL`${name} was disqualified from the tournament.`;
+		}
+		return `${name}${reason}`;
+	}
+
 	forfeitPlayer(player: RoomBattlePlayer, message = '') {
 		if (this.ended || !this.started || player.eliminated) return false;
 
 		player.eliminated = true;
-		this.room.add(`|-message|${player.name}${message || ' was made to forfeit.'}`);
+		this.room.add(`|-message|${RoomBattle.forfeitMessage(this.room, player.name, message)}`);
 		this.endType = 'forfeit';
 		if (this.playerCap > 2) {
 			player.sendRoom(`|request|null`);
@@ -1111,14 +1147,17 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 			if (this.forcedSettings.privacy) {
 				room.setPrivate(false);
 				room.settings.modjoin = null;
-				room.add(`|raw|<div class="broadcast-blue"><strong>This battle is required to be public due to a player having a name starting with '${this.forcedSettings.privacy}'.</div>`);
+				room.add(`|raw|<div class="broadcast-blue"><strong>${room.TL`This battle is required to be public due to a player having a name starting with '${this.forcedSettings.privacy}'.`}</div>`);
 			} else if (!options.tour || (room.tour?.allowModjoin)) {
 				room.setPrivate('hidden');
 				if (inviteOnly) room.settings.modjoin = '%';
 				room.privacySetter = privacySetter;
 				if (inviteOnly) {
 					room.settings.modjoin = '%';
-					room.add(`|raw|<div class="broadcast-red"><strong>This battle is invite-only!</strong><br />Users must be invited with <code>/invite</code> (or be staff) to join</div>`);
+					room.add(
+						`|raw|<div class="broadcast-red"><strong>${room.TL`This battle is invite-only!`}</strong><br />` +
+						`${room.TL`Users must be invited with <code>/invite</code> (or be staff) to join`}</div>`
+					);
 				}
 			}
 		}
@@ -1204,8 +1243,8 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 		if (suspectTest) {
 			const format = Dex.formats.get(this.format);
 			this.room.add(
-				`|html|<div class="broadcast-blue"><strong>${format.name} is currently suspecting ${suspectTest.suspect}! ` +
-				`For information on how to participate check out the <a href="${suspectTest.url}">suspect thread</a>.</strong></div>`
+				`|html|<div class="broadcast-blue"><strong>${this.room.TL`${format.name} is currently suspecting ${suspectTest.suspect}!`} ` +
+				`${this.room.TL`For information on how to participate check out the <a href="${suspectTest.url}">suspect thread</a>.`}</strong></div>`
 			).update();
 		}
 
@@ -1227,7 +1266,10 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 			Rooms.global.onCreateBattleRoom(users as User[], this.room, { rated: this.rated });
 			this.started = true;
 		} else if (delayStart === 'multi') {
-			this.room.add(`|uhtml|invites|<div class="broadcast broadcast-blue"><strong>This is a 4-player challenge battle</strong><br />The players will need to add more players before the battle can start.</div>`);
+			this.room.add(
+				`|uhtml|invites|<div class="broadcast broadcast-blue"><strong>${this.room.TL`This is a 4-player challenge battle`}</strong><br />` +
+				`${this.room.TL`The players will need to add more players before the battle can start.`}</div>`
+			);
 		}
 	}
 
@@ -1241,14 +1283,15 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 			return;
 		}
 		if (!connection) return;
+		const TL = connection.user.TL;
 
 		const playerForms = this.players.map(player => (
 			player.id ? (
-				`<form><label>Player ${player.num}: <strong>${player.name}</strong></label></form>`
+				`<form><label>${TL`Player ${player.num}:`} <strong>${player.name}</strong></label></form>`
 			) : player.invite ? (
-				`<form data-submitsend="/msgroom ${this.roomid},/uninvitebattle ${player.invite}"><label>Player ${player.num}: <strong>${player.invite}</strong> (invited) <button type="submit">Uninvite</button></label></form>`
+				`<form data-submitsend="/msgroom ${this.roomid},/uninvitebattle ${player.invite}"><label>${TL`Player ${player.num}:`} <strong>${player.invite}</strong> ${TL`(invited)`} <button type="submit">${TL`Uninvite`}</button></label></form>`
 			) : (
-				`<form data-submitsend="/msgroom ${this.roomid},/invitebattle {username}, p${player.num}"><label>Player ${player.num}: <input name="username" class="textbox" placeholder="Username" /></label> <button class="button" type="submit">Add Player</button></form>`
+				`<form data-submitsend="/msgroom ${this.roomid},/invitebattle {username}, p${player.num}"><label>${TL`Player ${player.num}:`} <input name="username" class="textbox" placeholder="${TL`Username`}" /></label> <button class="button" type="submit">${TL`Add Player`}</button></form>`
 			)
 		));
 		if (this.gameType === 'multi') {
@@ -1257,7 +1300,7 @@ export class RoomBattle extends RoomGame<RoomBattlePlayer> {
 		}
 		connection.sendTo(
 			this.room,
-			`|uhtmlchange|invites|<div class="broadcast broadcast-blue"><strong>This battle needs more players to start</strong><br /><br />${playerForms.join(``)}</div>`
+			`|uhtmlchange|invites|<div class="broadcast broadcast-blue"><strong>${TL`This battle needs more players to start`}</strong><br /><br />${playerForms.join(``)}</div>`
 		);
 	}
 
