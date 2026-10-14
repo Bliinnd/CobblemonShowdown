@@ -3,6 +3,7 @@
  * By bumbadadabum and Zarel.
  */
 import { Utils } from '../../lib';
+import { TLkey } from '../../sim/dex-text';
 
 const MINUTES = 60000;
 const MAX_QUESTIONS = 10;
@@ -116,8 +117,9 @@ export class Poll extends Rooms.MinorActivity {
 		this.totalVotes++;
 		if (this.maxVotes && this.totalVotes >= this.maxVotes) {
 			this.end(this.room);
+			const maxVotes = this.maxVotes;
 			return this.room
-				.add(`|c|~|/log The poll hit the max vote cap of ${this.maxVotes}, and has ended.`)
+				.add(`|c|~|/log ${this.room.TL`The poll hit the max vote cap of ${maxVotes}, and has ended.`}`)
 				.update();
 		}
 
@@ -152,7 +154,8 @@ export class Poll extends Rooms.MinorActivity {
 			const pendingVotes = (user && this.pendingVotes[user.id]) || [];
 			for (const [num, answer] of this.answers) {
 				const selected = pendingVotes.includes(num);
-				output += `<div style="margin-top: 5px"><button style="text-align: left; border: none; background: none; color: inherit;" value="/poll ${selected ? 'de' : ''}select ${num}" name="send" title="${selected ? "Deselect" : "Select"} ${num}. ${Utils.escapeHTML(answer.name)}">${selected ? "<strong>" : ''}${selected ? chosen : empty} ${num}. `;
+				const buttonTitle = selected ? this.room.TL`Deselect ${num}` : this.room.TL`Select ${num}`;
+				output += `<div style="margin-top: 5px"><button style="text-align: left; border: none; background: none; color: inherit;" value="/poll ${selected ? 'de' : ''}select ${num}" name="send" title="${buttonTitle}. ${Utils.escapeHTML(answer.name)}">${selected ? "<strong>" : ''}${selected ? chosen : empty} ${num}. `;
 				output += `${Poll.getAnswerMarkup(answer, this.supportHTML)}${selected ? "</strong>" : ''}</button></div>`;
 			}
 			const submitButton = pendingVotes.length ? (
@@ -194,7 +197,9 @@ export class Poll extends Rooms.MinorActivity {
 			const answerMarkup = options.isQuiz ?
 				`<span style="color:${answer.correct ? 'green' : 'red'};">${answer.correct ? '' : '<s>'}${this.getAnswerMarkup(answer, options.supportHTML)}${answer.correct ? '' : '</s>'}</span>` :
 				this.getAnswerMarkup(answer, options.supportHTML);
-			output += `<div style="margin-top: 3px">${num}. <strong>${chosen ? '<em>' : ''}${answerMarkup}${chosen ? '</em>' : ''}</strong> <small>(${answer.votes} vote${answer.votes === 1 ? '' : 's'})</small><br /><span style="font-size:7pt;background:${colors[num % 3]};padding-right:${percentage * 3}px"></span><small>&nbsp;${percentage}%</small></div>`;
+			const votes = answer.votes;
+			const voteCount = votes === 1 ? room.TL`${votes} vote` : room.TL`${votes} votes`;
+			output += `<div style="margin-top: 3px">${num}. <strong>${chosen ? '<em>' : ''}${answerMarkup}${chosen ? '</em>' : ''}</strong> <small>(${voteCount})</small><br /><span style="font-size:7pt;background:${colors[num % 3]};padding-right:${percentage * 3}px"></span><small>&nbsp;${percentage}%</small></div>`;
 		}
 		if (!choice && !ended) {
 			output += `<div><small>(${room.TL`You can't vote after viewing results`})</small></div>`;
@@ -469,10 +474,10 @@ export const commands: Chat.ChatCommands = {
 			this.addModAction(room.TL`A poll was started by ${user.name}.`);
 		},
 		newhelp: [
-			`/poll create [question], [option1], [option2], [...] - Creates a poll. Requires: % @ # ~`,
-			`/poll createmulti [question], [option1], [option2], [...] - Creates a poll, allowing for multiple answers to be selected. Requires: % @ # ~`,
-			`To queue a poll, use [queue], [queuemulti], [queuehtml], or [htmlqueuemulti].`,
-			`Polls can be used as quiz questions. To do this, prepend all correct answers with a +.`,
+			TLkey`/poll create [question], [option1], [option2], [...] - Creates a poll. Requires: % @ # ~`,
+			TLkey`/poll createmulti [question], [option1], [option2], [...] - Creates a poll, allowing for multiple answers to be selected. Requires: % @ # ~`,
+			TLkey`To queue a poll, use [queue], [queuemulti], [queuehtml], or [htmlqueuemulti].`,
+			TLkey`Polls can be used as quiz questions. To do this, prepend all correct answers with a +.`,
 		],
 
 		viewqueue(target, room, user) {
@@ -480,7 +485,7 @@ export const commands: Chat.ChatCommands = {
 			this.checkCan('mute', null, room);
 			this.parse(`/join view-pollqueue-${room.roomid}`);
 		},
-		viewqueuehelp: [`/viewqueue - view the queue of polls in the room. Requires: % @ # ~`],
+		viewqueuehelp: [TLkey`/viewqueue - view the queue of polls in the room. Requires: % @ # ~`],
 
 		deletequeue(target, room, user) {
 			room = this.requireRoom();
@@ -509,7 +514,7 @@ export const commands: Chat.ChatCommands = {
 			this.refreshPage(`pollqueue-${room.roomid}`);
 		},
 		deletequeuehelp: [
-			`/poll deletequeue [number] - deletes poll at the corresponding queue slot (1 = next, 2 = the one after that, etc). Requires: % @ # ~`,
+			TLkey`/poll deletequeue [number] - deletes poll at the corresponding queue slot (1 = next, 2 = the one after that, etc). Requires: % @ # ~`,
 		],
 		clearqueue(target, room, user, connection, cmd) {
 			room = this.requireRoom();
@@ -523,7 +528,7 @@ export const commands: Chat.ChatCommands = {
 			this.sendReply(this.TL`Cleared poll queue.`);
 		},
 		clearqueuehelp: [
-			`/poll clearqueue - deletes the queue of polls. Requires: % @ # ~`,
+			TLkey`/poll clearqueue - deletes the queue of polls. Requires: % @ # ~`,
 		],
 
 		deselect: 'select',
@@ -545,8 +550,8 @@ export const commands: Chat.ChatCommands = {
 			}
 		},
 		selecthelp: [
-			`/poll select [number] - Select option [number].`,
-			`/poll deselect [number] - Deselects option [number].`,
+			TLkey`/poll select [number] - Select option [number].`,
+			TLkey`/poll deselect [number] - Deselects option [number].`,
 		],
 
 		submit(target, room, user) {
@@ -555,7 +560,7 @@ export const commands: Chat.ChatCommands = {
 
 			poll.submit(user);
 		},
-		submithelp: [`/poll submit - Submits your vote.`],
+		submithelp: [TLkey`/poll submit - Submits your vote.`],
 
 		timer(target, room, user) {
 			room = this.requireRoom();
@@ -585,8 +590,8 @@ export const commands: Chat.ChatCommands = {
 			}
 		},
 		timerhelp: [
-			`/poll timer [minutes] - Sets the poll to automatically end after [minutes] minutes. Requires: % @ # ~`,
-			`/poll timer clear - Clears the poll's timer. Requires: % @ # ~`,
+			TLkey`/poll timer [minutes] - Sets the poll to automatically end after [minutes] minutes. Requires: % @ # ~`,
+			TLkey`/poll timer clear - Clears the poll's timer. Requires: % @ # ~`,
 		],
 
 		results(target, room, user) {
@@ -596,7 +601,7 @@ export const commands: Chat.ChatCommands = {
 			poll.blankvote(user);
 		},
 		resultshelp: [
-			`/poll results - Shows the results of the poll without voting. NOTE: you can't go back and vote after using this.`,
+			TLkey`/poll results - Shows the results of the poll without voting. NOTE: you can't go back and vote after using this.`,
 		],
 
 		close: 'end',
@@ -610,7 +615,7 @@ export const commands: Chat.ChatCommands = {
 			this.privateModAction(room.TL`The poll was ended by ${user.name}.`);
 			poll.end(room, Poll);
 		},
-		endhelp: [`/poll end - Ends a poll and displays the results. Requires: % @ # ~`],
+		endhelp: [TLkey`/poll end - Ends a poll and displays the results. Requires: % @ # ~`],
 
 		show: '',
 		display: '',
@@ -626,7 +631,7 @@ export const commands: Chat.ChatCommands = {
 				poll.displayTo(user, connection);
 			}
 		},
-		displayhelp: [`/poll display - Displays the poll`],
+		displayhelp: [TLkey`/poll display - Displays the poll`],
 
 		mv: 'maxvotes',
 		maxvotes(target, room, user) {
@@ -638,17 +643,18 @@ export const commands: Chat.ChatCommands = {
 				num = 0;
 			}
 			if (isNaN(num)) {
-				throw new Chat.ErrorMessage(`Invalid max vote cap: '${target}'`);
+				throw new Chat.ErrorMessage(this.TL`Invalid max vote cap: '${target}'`);
 			}
 			if (poll.maxVotes === num) {
-				throw new Chat.ErrorMessage(`The poll's vote cap is already set to ${num}.`);
+				throw new Chat.ErrorMessage(this.TL`The poll's vote cap is already set to ${num}.`);
 			}
 			poll.maxVotes = num;
-			this.addModAction(`${user.name} set the poll's vote cap to ${num}.`);
+			const name = user.name;
+			this.addModAction(room.TL`${name} set the poll's vote cap to ${num}.`);
 			let ended = false;
 			if (poll.totalVotes > poll.maxVotes) {
 				poll.end(room);
-				this.addModAction(`The poll has more votes than the maximum vote cap, and has ended.`);
+				this.addModAction(room.TL`The poll has more votes than the maximum vote cap, and has ended.`);
 				ended = true;
 			}
 			if (!ended) poll.save();
@@ -657,21 +663,21 @@ export const commands: Chat.ChatCommands = {
 	},
 	pollhelp() {
 		this.sendReply(
-			`|html|<details class="readmore"><summary>/poll allows rooms to run their own polls (limit 1 at a time).<br />` +
-			`Polls can be used as quiz questions, by putting <code>+</code> before correct answers.<br />` +
-			`<code>/poll create [question], [option1], [option2], [...]</code> - Creates a poll. Requires: % @ # ~</summary>` +
-			`<code>/poll createmulti [question], [option1], [option2], [...]</code> - Creates a poll, allowing for multiple answers to be selected. Requires: % @ # ~<br />` +
-			`<code>/poll htmlcreate(multi) [question], [option1], [option2], [...]</code> - Creates a poll, with HTML allowed in the question and options. Requires: # ~<br />` +
-			`<code>/poll vote [number]</code> - Votes for option [number].<br />` +
-			`<code>/poll timer [minutes]</code> - Sets the poll to automatically end after [minutes]. Requires: % @ # ~.<br />` +
-			`<code>/poll results</code> - Shows the results of the poll without voting. NOTE: you can't go back and vote after using this.<br />` +
-			`<code>/poll display</code> - Displays the poll.<br />` +
-			`<code>/poll end</code> - Ends a poll and displays the results. Requires: % @ # ~.<br />` +
-			`<code>/poll queue [question], [option1], [option2], [...]</code> - Add a poll in queue. Requires: % @ # ~<br />` +
-			`<code>/poll deletequeue [number]</code> - Deletes poll at the corresponding queue slot (1 = next, 2 = the one after that, etc).<br />` +
-			`<code>/poll clearqueue</code> - Deletes the queue of polls. Requires: % @ # ~.<br />` +
-			`<code>/poll viewqueue</code> - View the queue of polls in the room. Requires: % @ # ~<br />` +
-			`<code>/poll maxvotes [number]</code> - Set the max poll votes to the given [number]. Requires: % @ # ~<br />` +
+			`|html|<details class="readmore"><summary>${this.TL`/poll allows rooms to run their own polls (limit 1 at a time).`}<br />` +
+			`${this.TL`Polls can be used as quiz questions, by putting <code>+</code> before correct answers.`}<br />` +
+			`${this.TL`<code>/poll create [question], [option1], [option2], [...]</code> - Creates a poll. Requires: % @ # ~`}</summary>` +
+			`${this.TL`<code>/poll createmulti [question], [option1], [option2], [...]</code> - Creates a poll, allowing for multiple answers to be selected. Requires: % @ # ~`}<br />` +
+			`${this.TL`<code>/poll htmlcreate(multi) [question], [option1], [option2], [...]</code> - Creates a poll, with HTML allowed in the question and options. Requires: # ~`}<br />` +
+			`${this.TL`<code>/poll vote [number]</code> - Votes for option [number].`}<br />` +
+			`${this.TL`<code>/poll timer [minutes]</code> - Sets the poll to automatically end after [minutes]. Requires: % @ # ~.`}<br />` +
+			`${this.TL`<code>/poll results</code> - Shows the results of the poll without voting. NOTE: you can't go back and vote after using this.`}<br />` +
+			`${this.TL`<code>/poll display</code> - Displays the poll.`}<br />` +
+			`${this.TL`<code>/poll end</code> - Ends a poll and displays the results. Requires: % @ # ~.`}<br />` +
+			`${this.TL`<code>/poll queue [question], [option1], [option2], [...]</code> - Add a poll in queue. Requires: % @ # ~`}<br />` +
+			`${this.TL`<code>/poll deletequeue [number]</code> - Deletes poll at the corresponding queue slot (1 = next, 2 = the one after that, etc).`}<br />` +
+			`${this.TL`<code>/poll clearqueue</code> - Deletes the queue of polls. Requires: % @ # ~.`}<br />` +
+			`${this.TL`<code>/poll viewqueue</code> - View the queue of polls in the room. Requires: % @ # ~`}<br />` +
+			`${this.TL`<code>/poll maxvotes [number]</code> - Set the max poll votes to the given [number]. Requires: % @ # ~`}<br />` +
 			`</details>`
 		);
 	},

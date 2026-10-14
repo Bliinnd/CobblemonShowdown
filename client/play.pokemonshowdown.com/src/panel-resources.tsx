@@ -12,6 +12,9 @@ class ResourcePanel extends PSRoomPanel {
 	static readonly routes = ['resources'];
 	static readonly icon = <i class="fa fa-question-circle" aria-hidden></i>;
 	static readonly title = 'Resources';
+	static getTitle() {
+		return TL`Resources`;
+	}
 
 	override state = { search: '' };
 	onChangeSearch = (e: Event) => {
@@ -47,35 +50,38 @@ class ResourcePanel extends PSRoomPanel {
 	};
 	override render() {
 		const { room } = this.props;
+		const newcomerText = TL`While this page chiefly documents the ever-shifting set of commands available to PS! users, here are some useful resources for newcomers:`;
+		const commandsText = TL`Within any of the chats, and in private messages, it is possible to type in commands (messages beginning with {SLASH}) to perform a particular action. A great number of these commands exist, with some only available to certain users. For instance, you can broadcast commands to others with the {EXCLAMATION} prefix, but only when you're a player in a battle or a Voice (+) user.`;
+		const chatSelfText = TL`You can also use the "chat self" button on your username in the top right if you need a place to send these commands without joining a room.`;
+		const commandListText = TL`A complete list of commands available to regular users is provided below. Use {COMMAND} for more in-depth information on how to use them.`;
 
 		return <PSPanelWrapper room={room}>
 			<div className="pad">
-				<h2>PS! Informational Resources</h2>
+				<h2>{TL`PS! Informational Resources`}</h2>
 				<hr />
 				<p>
-					PS! is a wide and varied site, with more facets than can be covered here easily.
+					{TL`PS! is a wide and varied site, with more facets than can be covered here easily.`}
 					<br />
-					While this page chiefly documents the ever-shifting set of commands available to PS! users, {}
-					here are some useful resources for newcomers:
+					{newcomerText}
 				</p>
 				<ul>
 					<li>
-						<a href="https://www.smogon.com/forums/threads/3676132/">Beginner's Guide to Pokémon Showdown</a>
+						<a href="https://www.smogon.com/forums/threads/3676132/">{TL`Beginner's Guide to Pokémon Showdown`}</a>
 					</li>
 					<li>
-						<a href="https://www.smogon.com/dp/articles/intro_comp_pokemon">An introduction to competitive Pokémon</a>
+						<a href="https://www.smogon.com/dp/articles/intro_comp_pokemon">{TL`An introduction to competitive Pokémon`}</a>
 					</li>
 					<li>
-						<a href="https://www.smogon.com/sm/articles/sm_tiers">What do 'OU', 'UU', etc mean?</a>
+						<a href="https://www.smogon.com/sm/articles/sm_tiers">{TL`What do 'OU', 'UU', etc mean?`}</a>
 					</li>
 					<li>
-						<a href="https://www.smogon.com/dex/sv/formats/">What are the rules for each format?</a>
+						<a href="https://www.smogon.com/dex/sv/formats/">{TL`What are the rules for each format?`}</a>
 					</li>
 					<li>
-						<a href="https://www.smogon.com/sv/articles/clauses">What is 'Sleep Clause' and other clauses?</a>
+						<a href="https://www.smogon.com/sv/articles/clauses">{TL`What is 'Sleep Clause' and other clauses?`}</a>
 					</li>
 					<li>
-						<a href="https://www.smogon.com/articles/getting-started">Next Steps for Competitive Battling</a>
+						<a href="https://www.smogon.com/articles/getting-started">{TL`Next Steps for Competitive Battling`}</a>
 					</li>
 					<li>
 						<button className="button" data-cmd="/report">{TL`[Report a user]`}</button>
@@ -85,62 +91,68 @@ class ResourcePanel extends PSRoomPanel {
 					</li>
 				</ul>
 				<hr />
-				<h3>Commands</h3>
+				<h3>{TL`Commands`}</h3>
 				<p>
-					Within any of the chats, and in private messages, {}
-					it is possible to type in commands (messages beginning with <code>/</code>) {}
-					to perform a particular action. A great number of these commands exist,  {}
-					with some only available to certain users. For instance, you can broadcast commands to others with the {}
-					<code>!</code> prefix, but only when you're a player in a battle or a Voice (+) user.
+					{TL.parts(commandsText, {
+						SLASH: <code>/</code>,
+						EXCLAMATION: <code>!</code>,
+					})}
 					<br />
-					For more information on ranks, type <code>/groups</code> in any chat. {}
-					You can also use the "chat self" button on your username in the top right  {}
-					if you need a place to send these commands without joining a room.
+					{TL.parts(TL`For more information on ranks, type {COMMAND} in any chat.`, {
+						COMMAND: <code>/groups</code>,
+					})} {}
+					{chatSelfText}
 				</p>
 
 				<details class="readmore">
-					<summary>Here's a list of the most useful commands for the average Pokémon Showdown experience:</summary>
+					<summary>{TL`Here's a list of the most useful commands for the average Pokémon Showdown experience:`}</summary>
 					<p>
-						COMMANDS: /report, /msg, /reply, /logout, {}
+						{TL.label(TL`COMMANDS`)}/report, /msg, /reply, /logout, {}
 						/challenge, /search, /rating, /whois, /user, /join, /leave, /userauth, /roomauth
 					</p>
 					<p>
-						BATTLE ROOM COMMANDS: /savereplay, /hideroom, /inviteonly, /invite, {}
+						{TL.label(TL`BATTLE ROOM COMMANDS`)}/savereplay, /hideroom, /inviteonly, /invite, {}
 						/timer, /forfeit
 					</p>
 					<p>
-						OPTION COMMANDS: /nick, /avatar, /ignore, /status, /away, /busy, /back, /timestamps, {}
+						{TL.label(TL`OPTION COMMANDS`)}/nick, /avatar, /ignore, /status, /away, /busy, /back, /timestamps, {}
 						/highlight, /showjoins, /hidejoins, /blockchallenges, /blockpms
 					</p>
 					<p>
-						INFORMATIONAL/RESOURCE COMMANDS: /groups, /faq, /rules, /intro, /formatshelp, {}
+						{TL.label(TL`INFORMATIONAL/RESOURCE COMMANDS`)}/groups, /faq, /rules, /intro, /formatshelp, {}
 						/othermetas, /analysis, /punishments, /calc, /git, /cap, /roomhelp, /roomfaq {}
-						(replace / with ! to broadcast. Broadcasting requires: + % @ # ~)
+						{TL`(replace / with ! to broadcast. Broadcasting requires: + % @ # ~)`}
 					</p>
 					<p>
-						DATA COMMANDS: /data, /dexsearch, /movesearch, /itemsearch, /learn, {}
+						{TL.label(TL`DATA COMMANDS`)}/data, /dexsearch, /movesearch, /itemsearch, /learn, {}
 						/statcalc, /effectiveness, /weakness, /coverage, /randommove, /randompokemon</p>
-					<p>For an overview of room commands, use <code>/roomhelp</code></p>
-					<p>For details of a specific command, you can use <code>/help [command]</code>, for example <code>/help data</code>.</p>
+					<p>{TL.parts(TL`For an overview of room commands, use {COMMAND}`, {
+						COMMAND: <code>/roomhelp</code>,
+					})}</p>
+					<p>{TL.parts(TL`For details of a specific command, you can use {COMMAND}, for example {EXAMPLE}.`, {
+						COMMAND: <code>/help [command]</code>,
+						EXAMPLE: <code>/help data</code>,
+					})}</p>
 				</details>
 
 				<br />
 				<p>
-					A complete list of commands available to regular users is provided below. Use  {}
-					<code>/help [commandname]</code> for more in-depth information on how to use them.
+					{TL.parts(commandListText, {
+						COMMAND: <code>/help [commandname]</code>,
+					})}
 				</p>
 				<hr />
-				<h3>Search</h3>
+				<h3>{TL`Search`}</h3>
 				<p>
 					<label class="checkbox" style={{ float: 'right' }}>
 						<input
 							type="checkbox" name="collapseall"
 							onChange={this.onToggleCollapseAll}
-						/> Collapse all
+						/> {TL`Collapse all`}
 					</label>
 					<input
 						type="search" name="command-search" class="textbox" style={{ width: "50%" }}
-						value={this.state.search} placeholder="Filter by command name"
+						value={this.state.search} placeholder={TL`Filter by command name`}
 						onInput={this.onChangeSearch}
 					/>
 				</p>
@@ -152,7 +164,7 @@ class ResourcePanel extends PSRoomPanel {
 	getCommandList() {
 		if (typeof BattleChatCommands !== 'object') {
 			document.addEventListener('ready', () => this.setState({ commandsLoaded: true }));
-			return <>Loading command data, please try again in a few moments...</>;
+			return <>{TL`Loading command data, please try again in a few moments...`}</>;
 		}
 		const buf = [];
 		const search = this.state.search;
@@ -171,10 +183,10 @@ class ResourcePanel extends PSRoomPanel {
 			if (!cmdTable.length) continue;
 			let pluginSection = null;
 			if (pluginName.startsWith('chat-plugins/')) {
-				pluginSection = 'Chat plugin';
+				pluginSection = TL`Chat plugin`;
 				pluginName = pluginName.slice('chat-plugins/'.length);
 			} else if (pluginName.startsWith('chat-commands/')) {
-				pluginSection = 'Core commands';
+				pluginSection = TL`Core commands`;
 				pluginName = pluginName.slice('chat-commands/'.length);
 			}
 			let matchedCmds = [];

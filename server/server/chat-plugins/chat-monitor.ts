@@ -1,5 +1,6 @@
 import { FS, Utils } from '../../lib';
 import type { FilterWord } from '../chat';
+import { TLkey, type Translator } from '../../sim/dex-text';
 
 const LEGACY_MONITOR_FILE = 'config/chat-plugins/chat-monitor.tsv';
 const MONITOR_FILE = 'config/chat-plugins/chat-filter.json';
@@ -46,6 +47,14 @@ const EVASION_DETECTION_SUBSTITUTIONS: { [k: string]: string[] } = {
 
 const filterWords: { [k: string]: Chat.FilterWord[] } = Chat.filterWords;
 
+/**
+ * Notes added to a staff member's message are seen by everyone who sees the message,
+ * so they use the room's language (the user's own language in PMs): seenIn(this, room).TL
+ */
+function seenIn(context: Chat.CommandContext, room: Room | null) {
+	return { TL: room ? Chat.getTranslator(room.settings.language || null) : context.TL };
+}
+
 export const Filters = new class {
 	readonly EVASION_DETECTION_SUBSTITUTIONS = EVASION_DETECTION_SUBSTITUTIONS;
 	readonly EVASION_DETECTION_SUB_STRINGS: { [k: string]: string } = {};
@@ -62,7 +71,9 @@ export const Filters = new class {
 		return new RegExp(buf, 'iu');
 	}
 
-	generateRegex(word: string, isEvasion = false, isShortener = false, isReplacement = false) {
+	generateRegex(
+		word: string, isEvasion = false, isShortener = false, isReplacement = false, TL: Translator = Chat.getTranslator()
+	) {
 		try {
 			if (isEvasion) {
 				return this.constructEvasionRegex(word);
@@ -71,7 +82,7 @@ export const Filters = new class {
 			}
 		} catch (e: any) {
 			throw new Chat.ErrorMessage(
-				e.message.startsWith('Invalid regular expression: ') ? e.message : `Invalid regular expression: /${word}/: ${e.message}`
+				e.message.startsWith('Invalid regular expression: ') ? e.message : TL`Invalid regular expression: /${word}/: ${e.message}`
 			);
 		}
 	}
@@ -95,7 +106,7 @@ export const Filters = new class {
 		}, { throttle: force ? 0 : WRITE_THROTTLE_TIME });
 	}
 
-	add(filterWord: Partial<Chat.FilterWord> & { list: string, word: string }) {
+	add(filterWord: Partial<Chat.FilterWord> & { list: string, word: string }, TL: Translator = Chat.getTranslator()) {
 		if (!filterWord.hits) filterWord.hits = 0;
 		const punishment = Chat.monitors[filterWord.list].punishment;
 		if (!filterWord.regex) {
@@ -104,11 +115,12 @@ export const Filters = new class {
 				punishment === 'EVASION',
 				punishment === 'SHORTENER',
 				!!filterWord.replacement,
+				TL,
 			);
 		}
 
 		if (filterWords[filterWord.list].some(val => String(val.regex) === String(filterWord.regex))) {
-			throw new Chat.ErrorMessage(`${filterWord.word} is already added to the ${filterWord.list} list.`);
+			throw new Chat.ErrorMessage(TL`${filterWord.word} is already added to the ${filterWord.list} list.`);
 		}
 
 		filterWords[filterWord.list].push(filterWord as Chat.FilterWord);
@@ -199,12 +211,13 @@ export const Filters = new class {
 Chat.registerMonitor('autolock', {
 	location: 'EVERYWHERE',
 	punishment: 'AUTOLOCK',
-	label: 'Autolock',
+	label: TLkey`Autolock`,
 	monitor(line, room, user, message, lcMessage, isStaff) {
 		const { regex, word, reason, publicReason } = line;
 		const match = regex.exec(lcMessage);
 		if (match) {
-			if (isStaff) return `${message} __[would be locked: ${word}${reason ? ` (${reason})` : ''}]__`;
+			const reasonText = reason ? ` (${reason})` : '';
+			if (isStaff) return `${message} __[${seenIn(this, room).TL`would be locked: ${word}${reasonText}`}]__`;
 			message = message.replace(/(https?):\/\//g, '$1__:__//');
 			message = message.replace(/\./g, '__.__');
 			if (room) {
@@ -213,7 +226,8 @@ Chat.registerMonitor('autolock', {
 					`<<${room.roomid}>> ${user.name}: ||\`\`${message}\`\`${reason ? ` __(${reason})__` : ''}||`, true
 				);
 			} else {
-				this.errorReply(`Please do not say '${match[0]}'${publicReason ? ` ${publicReason}` : ``}.`);
+				const publicText = publicReason ? ` ${publicReason}` : ``;
+				this.errorReply(this.TL`Please do not say '${match[0]}'${publicText}.`);
 			}
 			return false;
 		}
@@ -223,13 +237,15 @@ Chat.registerMonitor('autolock', {
 Chat.registerMonitor('publicwarn', {
 	location: 'PUBLIC',
 	punishment: 'WARN',
-	label: 'Filtered in public',
+	label: TLkey`Filtered in public`,
 	monitor(line, room, user, message, lcMessage, isStaff) {
 		const { regex, word, reason, publicReason } = line;
 		const match = regex.exec(lcMessage);
 		if (match) {
-			if (isStaff) return `${message} __[would be filtered in public: ${word}${reason ? ` (${reason})` : ''}]__`;
-			this.errorReply(`Please do not say '${match[0]}'${publicReason ? ` ${publicReason}` : ``}.`);
+			const reasonText = reason ? ` (${reason})` : '';
+			if (isStaff) return `${message} __[${seenIn(this, room).TL`would be filtered in public: ${word}${reasonText}`}]__`;
+			const publicText = publicReason ? ` ${publicReason}` : ``;
+			this.errorReply(this.TL`Please do not say '${match[0]}'${publicText}.`);
 			return false;
 		}
 	},
@@ -238,13 +254,15 @@ Chat.registerMonitor('publicwarn', {
 Chat.registerMonitor('warn', {
 	location: 'EVERYWHERE',
 	punishment: 'WARN',
-	label: 'Filtered',
+	label: TLkey`Filtered`,
 	monitor(line, room, user, message, lcMessage, isStaff) {
 		const { regex, word, reason, publicReason } = line;
 		const match = regex.exec(lcMessage);
 		if (match) {
-			if (isStaff) return `${message} __[would be filtered: ${word}${reason ? ` (${reason})` : ''}]__`;
-			this.errorReply(`Please do not say '${match[0]}'${publicReason ? ` ${publicReason}` : ``}.`);
+			const reasonText = reason ? ` (${reason})` : '';
+			if (isStaff) return `${message} __[${seenIn(this, room).TL`would be filtered: ${word}${reasonText}`}]__`;
+			const publicText = publicReason ? ` ${publicReason}` : ``;
+			this.errorReply(this.TL`Please do not say '${match[0]}'${publicText}.`);
 			return false;
 		}
 	},
@@ -253,7 +271,7 @@ Chat.registerMonitor('warn', {
 Chat.registerMonitor('evasion', {
 	location: 'EVERYWHERE',
 	punishment: 'EVASION',
-	label: 'Filter Evasion Detection',
+	label: TLkey`Filter Evasion Detection`,
 	monitor(line, room, user, message, lcMessage, isStaff) {
 		const { regex, word, reason, publicReason } = line;
 
@@ -271,11 +289,15 @@ Chat.registerMonitor('evasion', {
 			// Don't lock someone iff the word itself is used, and whitespace wasn't used to evade the filter,
 			// in which case message (which doesn't have whitespace stripped) should also match the regex.
 			if (match[0] === word && regex.test(message)) {
-				if (isStaff) return `${message} __[would be filtered: ${word}${reason ? ` (${reason})` : ''}]__`;
-				this.errorReply(`Do not say '${word}'.`);
+				const reasonText = reason ? ` (${reason})` : '';
+				if (isStaff) return `${message} __[${seenIn(this, room).TL`would be filtered: ${word}${reasonText}`}]__`;
+				this.errorReply(this.TL`Do not say '${word}'.`);
 				return false;
 			}
-			if (isStaff) return `${message} __[would be locked for filter evading: ${match[0]} (${word})]__`;
+			if (isStaff) {
+				const note = seenIn(this, room).TL`would be locked for filter evading: ${match[0]} (${word})`;
+				return `${message} __[${note}]__`;
+			}
 			message = message.replace(/(https?):\/\//g, '$1__:__//');
 			if (room) {
 				void Punishments.autolock(
@@ -283,7 +305,8 @@ Chat.registerMonitor('evasion', {
 					`<<${room.roomid}>> ${user.name}: ||\`\`${message}\`\` __(${match[0]} => ${word})__||`, true
 				);
 			} else {
-				this.errorReply(`Please do not say '${word}'${publicReason ? ` ${publicReason}` : ``}.`);
+				const publicText = publicReason ? ` ${publicReason}` : ``;
+				this.errorReply(this.TL`Please do not say '${word}'${publicText}.`);
 			}
 			return false;
 		}
@@ -293,7 +316,7 @@ Chat.registerMonitor('evasion', {
 Chat.registerMonitor('wordfilter', {
 	location: 'EVERYWHERE',
 	punishment: 'FILTERTO',
-	label: 'Filtered to a different phrase',
+	label: TLkey`Filtered to a different phrase`,
 	condition: 'notStaff',
 	monitor(line, room, user, message, lcMessage, isStaff) {
 		const { regex, replacement } = line;
@@ -314,24 +337,26 @@ Chat.registerMonitor('wordfilter', {
 Chat.registerMonitor('namefilter', {
 	location: 'NAMES',
 	punishment: 'WARN',
-	label: 'Filtered in names',
+	label: TLkey`Filtered in names`,
 });
 
 Chat.registerMonitor('battlefilter', {
 	location: 'BATTLES',
 	punishment: 'MUTE',
-	label: 'Filtered in battles',
+	label: TLkey`Filtered in battles`,
 	monitor(line, room, user, message, lcMessage, isStaff) {
 		const { regex, word, reason, publicReason } = line;
 		const match = regex.exec(lcMessage);
 		if (match) {
-			if (isStaff) return `${message} __[would be filtered: ${word}${reason ? ` (${reason})` : ''}]__`;
+			const reasonText = reason ? ` (${reason})` : '';
+			if (isStaff) return `${message} __[${seenIn(this, room).TL`would be filtered: ${word}${reasonText}`}]__`;
 			message = message.replace(/(https?):\/\//g, '$1__:__//');
 			message = message.replace(/\./g, '__.__');
 			if (room) {
 				room.mute(user);
+				const publicText = publicReason ? ` ${publicReason}` : ``;
 				this.errorReply(
-					`You have been muted for using a banned phrase. Please do not say '${match[0]}'${publicReason ? ` ${publicReason}` : ``}.`
+					this.TL`You have been muted for using a banned phrase. Please do not say '${match[0]}'${publicText}.`
 				);
 				const text = `[BattleMonitor] <<${room.roomid}>> MUTED: ${user.name}: ${message}${reason ? ` __(${reason})__` : ''}`;
 				const adminlog = Rooms.get('adminlog');
@@ -350,13 +375,14 @@ Chat.registerMonitor('battlefilter', {
 Chat.registerMonitor('shorteners', {
 	location: 'EVERYWHERE',
 	punishment: 'SHORTENER',
-	label: 'URL Shorteners',
+	label: TLkey`URL Shorteners`,
 	condition: 'notTrusted',
 	monitor(line, room, user, message, lcMessage, isStaff) {
 		const { regex, word, publicReason } = line;
 		if (regex.test(lcMessage)) {
-			if (isStaff) return `${message} __[shortener: ${word}]__`;
-			this.errorReply(`Please do not use URL shorteners such as '${word}'${publicReason ? ` ${publicReason}` : ``}.`);
+			if (isStaff) return `${message} __[${seenIn(this, room).TL`shortener: ${word}`}]__`;
+			const publicText = publicReason ? ` ${publicReason}` : ``;
+			this.errorReply(this.TL`Please do not use URL shorteners such as '${word}'${publicText}.`);
 			return false;
 		}
 	},
@@ -473,15 +499,23 @@ export const loginfilter: Chat.LoginFilter = user => {
 	if (user.namelocked) return;
 	if (user.trackRename) {
 		const manualForceRename = Monitor.forceRenames.has(toID(user.trackRename));
-		Rooms.global.notifyRooms(
-			['staff'],
-			Utils.html`|html|[NameMonitor] Username used: <span class="username">${user.name}</span> ${user.getAccountStatusString()} (${!manualForceRename ? 'automatically ' : ''}forcerenamed from <span class="username">${user.trackRename}</span>)`
-		);
+		const username = Utils.html`<span class="username">${user.name}</span> ${user.getAccountStatusString()}`;
+		const oldName = Utils.html`<span class="username">${user.trackRename}</span>`;
+		Rooms.global.notifyRooms(['staff'], room => {
+			const TL = Chat.getTranslator(room.settings.language || null);
+			const text = manualForceRename ?
+				TL`Username used: ${username} (forcerenamed from ${oldName})` :
+				TL`Username used: ${username} (automatically forcerenamed from ${oldName})`;
+			return `|html|[NameMonitor] ${text}`;
+		});
 		user.trackRename = '';
 	}
 	const offlineWarn = Punishments.offlineWarns.get(user.id);
 	if (typeof offlineWarn !== 'undefined') {
-		user.send(`|c|~|/warn You were warned while offline${offlineWarn.length ? `: ${offlineWarn}` : '.'}`);
+		const warning = offlineWarn.length ?
+			user.TL`You were warned while offline: ${offlineWarn}` :
+			user.TL`You were warned while offline.`;
+		user.send(`|c|~|/warn ${warning}`);
 		Punishments.offlineWarns.delete(user.id);
 	}
 };
@@ -576,16 +610,19 @@ export const statusfilter: Chat.StatusFilter = (status, user) => {
 export const pages: Chat.PageTable = {
 	filters(query, user, connection) {
 		if (!user.named) return Rooms.RETRY_AFTER_LOGIN;
-		this.title = 'Filters';
-		let buf = `<div class="pad ladder"><h2>Filters</h2>`;
+		this.title = this.TL`Filters`;
+		let buf = `<div class="pad ladder"><h2>${this.TL`Filters`}</h2>`;
 		if (!user.can('addhtml')) this.checkCan('lock');
 		let content = ``;
 		for (const key in Chat.monitors) {
-			content += `<tr><th colspan="2"><h3>${Chat.monitors[key].label} <span style="font-size:8pt;">[${key}]</span></h3></tr></th>`;
+			content += `<tr><th colspan="2"><h3>${this.TL(Chat.monitors[key].label)} <span style="font-size:8pt;">[${key}]</span></h3></tr></th>`;
 			if (filterWords[key].length) {
 				content += filterWords[key].map(({ regex, word, reason, publicReason, replacement, hits }) => {
 					let entry = Utils.html`<abbr title="${reason}"><code>${word}</code></abbr>`;
-					if (publicReason) entry += Utils.html` <small>(public reason: ${publicReason})</small>`;
+					if (publicReason) {
+						const escapedReason = Utils.escapeHTML(publicReason);
+						entry += ` <small>(${this.TL`public reason: ${escapedReason}`})</small>`;
+					}
 					if (replacement) entry += Utils.html` &rArr; ${replacement}`;
 					return `<tr><td>${entry}</td><td>${hits}</td></tr>`;
 				}).join('');
@@ -593,13 +630,13 @@ export const pages: Chat.PageTable = {
 		}
 
 		if (Punishments.namefilterwhitelist.size) {
-			content += `<tr><th colspan="2"><h3>Whitelisted names</h3></tr></th>`;
+			content += `<tr><th colspan="2"><h3>${this.TL`Whitelisted names`}</h3></tr></th>`;
 			for (const [val] of Punishments.namefilterwhitelist) {
 				content += `<tr><td>${val}</td></tr>`;
 			}
 		}
 		if (!content) {
-			buf += `<p>There are no filtered words.</p>`;
+			buf += `<p>${this.TL`There are no filtered words.`}</p>`;
 		} else {
 			buf += `<table>${content}</table>`;
 		}
@@ -625,11 +662,13 @@ export const commands: Chat.ChatCommands = {
 			list = toID(list);
 
 			if (!list || !rest.length) {
-				throw new Chat.ErrorMessage(`Syntax: /filter add list ${separator} word ${separator} reason [${separator} optional public reason]`);
+				const syntax = `/filter add list ${separator} word ${separator} reason [${separator} optional public reason]`;
+				throw new Chat.ErrorMessage(this.TL`Syntax: ${syntax}`);
 			}
 
 			if (!(list in filterWords)) {
-				throw new Chat.ErrorMessage(`Invalid list: ${list}. Possible options: ${Object.keys(filterWords).join(', ')}`);
+				const lists = Object.keys(filterWords).join(', ');
+				throw new Chat.ErrorMessage(this.TL`Invalid list: ${list}. Possible options: ${lists}`);
 			}
 
 			const filterWord = { list, word: '' } as Partial<FilterWord> & { list: string, word: string };
@@ -638,9 +677,8 @@ export const commands: Chat.ChatCommands = {
 			if (Chat.monitors[list].punishment === 'FILTERTO') {
 				[filterWord.word, filterWord.replacement, filterWord.reason, filterWord.publicReason] = rest;
 				if (!filterWord.replacement) {
-					throw new Chat.ErrorMessage(
-						`Syntax for word filters: /filter add ${list} ${separator} regex ${separator} reason [${separator} optional public reason]`
-					);
+					const syntax = `/filter add ${list} ${separator} regex ${separator} reason [${separator} optional public reason]`;
+					throw new Chat.ErrorMessage(this.TL`Syntax for word filters: ${syntax}`);
 				}
 			} else {
 				[filterWord.word, filterWord.reason, filterWord.publicReason] = rest;
@@ -648,18 +686,18 @@ export const commands: Chat.ChatCommands = {
 
 			filterWord.word = filterWord.word.trim();
 			if (!filterWord.word) {
-				throw new Chat.ErrorMessage(`Invalid word: '${filterWord.word}'.`);
+				throw new Chat.ErrorMessage(this.TL`Invalid word: '${filterWord.word}'.`);
 			}
-			Filters.add(filterWord);
+			Filters.add(filterWord, this.TL);
 			const reason = filterWord.reason ? ` (${filterWord.reason})` : '';
 			if (Chat.monitors[list].punishment === 'FILTERTO') {
 				this.globalModlog(`ADDFILTER`, null, `'${String(filterWord.regex)} => ${filterWord.replacement}' to ${list} list${reason}`);
 			} else {
 				this.globalModlog(`ADDFILTER`, null, `'${filterWord.word}' to ${list} list${reason}`);
 			}
-			const output = `'${filterWord.word}' was added to the ${list} list.`;
-			Rooms.get('upperstaff')?.add(output).update();
-			if (room?.roomid !== 'upperstaff') this.sendReply(output);
+			const upperstaff = Rooms.get('upperstaff');
+			upperstaff?.add(upperstaff.TL`'${filterWord.word}' was added to the ${list} list.`).update();
+			if (room?.roomid !== 'upperstaff') this.sendReply(this.TL`'${filterWord.word}' was added to the ${list} list.`);
 		},
 		remove(target, room, user) {
 			this.checkCan('rangeban');
@@ -667,23 +705,31 @@ export const commands: Chat.ChatCommands = {
 			let [list, ...words] = target.split(target.includes('\n') ? '\n' : ',').map(param => param.trim());
 			list = toID(list);
 
-			if (!list || !words.length) throw new Chat.ErrorMessage("Syntax: /filter remove list, words");
+			if (!list || !words.length) throw new Chat.ErrorMessage(this.TL`Syntax: /filter remove list, words`);
 
 			if (!(list in filterWords)) {
-				throw new Chat.ErrorMessage(`Invalid list: ${list}. Possible options: ${Object.keys(filterWords).join(', ')}`);
+				const lists = Object.keys(filterWords).join(', ');
+				throw new Chat.ErrorMessage(this.TL`Invalid list: ${list}. Possible options: ${lists}`);
 			}
 
 			const notFound = words.filter(val => !filterWords[list].filter(entry => entry.word === val).length);
 			if (notFound.length) {
-				throw new Chat.ErrorMessage(`${notFound.join(', ')} ${Chat.plural(notFound, "are", "is")} not on the ${list} list.`);
+				const notFoundList = notFound.join(', ');
+				throw new Chat.ErrorMessage(notFound.length === 1 ?
+					this.TL`${notFoundList} is not on the ${list} list.` :
+					this.TL`${notFoundList} are not on the ${list} list.`);
 			}
 			filterWords[list] = filterWords[list].filter(entry => !words.includes(entry.word));
 
 			this.globalModlog(`REMOVEFILTER`, null, `'${words.join(', ')}' from ${list} list`);
 			Filters.save(true);
-			const output = `'${words.join(', ')}' ${Chat.plural(words, "were", "was")} removed from the ${list} list.`;
-			Rooms.get('upperstaff')?.add(output).update();
-			if (room?.roomid !== 'upperstaff') this.sendReply(output);
+			const wordList = words.join(', ');
+			const output = (TL: Translator) => (words.length === 1 ?
+				TL`'${wordList}' was removed from the ${list} list.` :
+				TL`'${wordList}' were removed from the ${list} list.`);
+			const upperstaff = Rooms.get('upperstaff');
+			upperstaff?.add(output(Chat.getTranslator(upperstaff.settings.language || null))).update();
+			if (room?.roomid !== 'upperstaff') this.sendReply(output(this.TL));
 		},
 		'': 'view',
 		list: 'view',
@@ -723,7 +769,7 @@ export const commands: Chat.ChatCommands = {
 						buf.push(`${monitorName}: ${ret}`);
 						break;
 					} else if (ret === false) {
-						buf.push(`${monitorName}: "${target}" would be blocked from being sent.`);
+						buf.push(`${monitorName}: ${this.TL`"${target}" would be blocked from being sent.`}`);
 						break;
 					}
 				}
@@ -732,35 +778,37 @@ export const commands: Chat.ChatCommands = {
 				return this.sendReplyBox(Chat.formatText(buf.join('\n'), false, true));
 			} else {
 				throw new Chat.ErrorMessage(
-					`"${target}" doesn't trigger any filters. Check spelling?`
+					this.TL`"${target}" doesn't trigger any filters. Check spelling?`
 				);
 			}
 		},
 		testhelp: [
-			`/filter test [test string] - Tests whether or not the provided test string would trigger any of the chat monitors.`,
-			`Requires: % @ ~`,
+			TLkey`/filter test [test string] - Tests whether or not the provided test string would trigger any of the chat monitors.`,
+			TLkey`Requires: % @ ~`,
 		],
 	},
 	filterhelp: [
-		`/filter add list, word, reason[, optional public reason] - Adds a word to the given filter list. Requires: ~`,
-		`/filter remove list, words - Removes words from the given filter list. Requires: ~`,
-		`/filter view - Opens the list of filtered words. Requires: % @ ~`,
-		`/filter test [test string] - Tests whether or not the provided test string would trigger any of the chat monitors. Requires: % @ ~`,
-		`You may use / instead of , in /filter add if you want to specify a reason that includes commas.`,
+		TLkey`/filter add list, word, reason[, optional public reason] - Adds a word to the given filter list. Requires: ~`,
+		TLkey`/filter remove list, words - Removes words from the given filter list. Requires: ~`,
+		TLkey`/filter view - Opens the list of filtered words. Requires: % @ ~`,
+		TLkey`/filter test [test string] - Tests whether or not the provided test string would trigger any of the chat monitors. Requires: % @ ~`,
+		TLkey`You may use / instead of , in /filter add if you want to specify a reason that includes commas.`,
 	],
 	allowname(target, room, user) {
 		this.checkCan('forcerename');
 		target = toID(target);
-		if (!target) throw new Chat.ErrorMessage(`Syntax: /allowname username`);
+		if (!target) throw new Chat.ErrorMessage(this.TL`Syntax: /allowname username`);
 		if (Punishments.namefilterwhitelist.has(target)) {
-			throw new Chat.ErrorMessage(`${target} is already allowed as a username.`);
+			throw new Chat.ErrorMessage(this.TL`${target} is already allowed as a username.`);
 		}
 
-		const msg = `${target} was allowed as a username by ${user.name}.`;
 		const toNotify: RoomID[] = ['staff', 'upperstaff'];
-		Rooms.global.notifyRooms(toNotify, `|c|${user.getIdentity()}|/log ${msg}`);
+		Rooms.global.notifyRooms(toNotify, curRoom => {
+			const TL = Chat.getTranslator(curRoom.settings.language || null);
+			return `|c|${user.getIdentity()}|/log ${TL`${target} was allowed as a username by ${user.name}.`}`;
+		});
 		if (!room || !toNotify.includes(room.roomid)) {
-			this.sendReply(msg);
+			this.sendReply(this.TL`${target} was allowed as a username by ${user.name}.`);
 		}
 		this.globalModlog(`ALLOWNAME`, target);
 		Monitor.forceRenames.delete(target as ID);

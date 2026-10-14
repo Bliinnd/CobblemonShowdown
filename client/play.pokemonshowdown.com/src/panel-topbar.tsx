@@ -31,7 +31,7 @@ export class PSHeader extends preact.Component {
 
 		const favicon = document.querySelector<HTMLLinkElement>('#dynamic-favicon');
 		if (!favicon) return;
-		favicon.href = `${Dex.resourcePrefix}${notifying ? 'favicon-notify.ico' : 'favicon.ico'}`;
+		favicon.href = notifying ? `${Dex.resourcePrefix}favicon-notify.ico` : '/cobblemonshowdown-logo.svg';
 		this.faviconNotifying = notifying;
 	};
 	static toggleMute = (e: Event) => {
@@ -85,7 +85,7 @@ export class PSHeader extends preact.Component {
 			let formatName;
 			// TODO: relocate to room implementation
 			if (idChunks.length <= 2) {
-				if (idChunks[1] === 'uploadedreplay') formatName = 'Uploaded Replay';
+				if (idChunks[1] === 'uploadedreplay') formatName = TL`Uploaded Replay`;
 			} else {
 				formatName = window.BattleLog ? BattleLog.formatName(idChunks[1]) : idChunks[1];
 			}
@@ -94,11 +94,11 @@ export class PSHeader extends preact.Component {
 				const p1 = battle?.p1?.name || '';
 				const p2 = battle?.p2?.name || '';
 				if (p1 && p2) {
-					title = `${p1} v. ${p2}`;
+					title = TL`${p1} v. ${p2}`;
 				} else if (p1 || p2) {
 					title = `${p1}${p2}`;
 				} else {
-					title = `(empty room)`;
+					title = TL`(empty room)`;
 				}
 			}
 			icon = <i class="text">{formatName}</i>;
@@ -247,8 +247,8 @@ export class PSHeader extends preact.Component {
 			<div class="scrollable-part">
 				<img
 					class="logo"
-					src={`https://${Config.routes.client}/iconbeta.png`}
-					alt="Pokémon Showdown! (beta)"
+					src={`https://${Config.routes.client}/cobblemonshowdown-logo.svg`}
+					alt="CobblemonShowdown"
 					width="50" height="50"
 				/>
 				<div class="tablist" role="tablist">
@@ -306,8 +306,8 @@ export class PSHeader extends preact.Component {
 					<li>
 						<img
 							class="logo"
-							src={`https://${Config.routes.client}/iconbeta.png`}
-							alt="Pokémon Showdown! (beta)"
+							src={`https://${Config.routes.client}/cobblemonshowdown-logo.svg`}
+							alt="CobblemonShowdown"
 							width="48" height="48"
 						/>
 					</li>

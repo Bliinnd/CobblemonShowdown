@@ -477,7 +477,9 @@ export abstract class BasicRoom {
 
 		const timeUntilExpire = this.muteQueue[0].time - Date.now();
 		if (timeUntilExpire <= 1000) { // one second of leeway
-			this.unmute(this.muteQueue[0].userid, "Your mute in '" + this.title + "' has expired.");
+			const mutedUser = Users.get(this.muteQueue[0].userid);
+			const TL = mutedUser ? this.userTL(mutedUser) : Chat.getTranslator(this.settings.language || null);
+			this.unmute(this.muteQueue[0].userid, TL`Your mute in '${this.title}' has expired.`);
 			// runMuteTimer() is called again in unmute() so this function instance should be closed
 			return;
 		}
@@ -712,16 +714,18 @@ export abstract class BasicRoom {
 		this.roomlog(entry);
 	}
 	getIntroMessage(user: User) {
-		let message = Utils.html`\n|raw|<div class="infobox"> You joined ${this.title}`;
+		const TL = this.userTL(user);
+		const roomTitle = Utils.escapeHTML(this.title);
+		let message = `\n|raw|<div class="infobox"> ${TL`You joined ${roomTitle}`}`;
 		if (this.settings.modchat) {
-			message += ` [${this.settings.modchat} or higher to talk]`;
+			message += ` [${TL`${this.settings.modchat} or higher to talk`}]`;
 		}
 		if (this.settings.modjoin) {
 			const modjoin = this.settings.modjoin === true ? this.settings.modchat : this.settings.modjoin;
-			message += ` [${modjoin} or higher to join]`;
+			message += ` [${TL`${modjoin} or higher to join`}]`;
 		}
 		if (this.settings.slowchat) {
-			message += ` [Slowchat ${this.settings.slowchat}s]`;
+			message += ` [${TL`Slowchat ${this.settings.slowchat}s`}]`;
 		}
 		message += `</div>`;
 		if (this.settings.introMessage) {
@@ -735,28 +739,29 @@ export abstract class BasicRoom {
 	}
 	getStaffIntroMessage(user: User) {
 		if (!user.can('mute', null, this)) return ``;
+		const TL = this.userTL(user);
 		const messages = [];
 		if (this.settings.staffMessage) {
-			messages.push(`|raw|<div class="infobox">(Staff intro:)<br /><div>` +
+			messages.push(`|raw|<div class="infobox">${TL`(Staff intro:)`}<br /><div>` +
 				this.settings.staffMessage.replace(/\n/g, '') +
 				`</div>`);
 		}
 		if (this.pendingApprovals?.size) {
 			let message = `|raw|<div class="infobox">`;
-			message += `<details open><summary>(Pending media requests: ${this.pendingApprovals.size})</summary>`;
+			message += `<details open><summary>${TL`(Pending media requests: ${this.pendingApprovals.size})`}</summary>`;
 			for (const [userid, entry] of this.pendingApprovals) {
 				message += `<div class="infobox">`;
-				message += `<strong>Requester ID:</strong> ${userid}<br />`;
+				message += `<strong>${TL`Requester ID:`}</strong> ${userid}<br />`;
 				if (entry.dimensions) {
 					const [width, height, resized] = entry.dimensions;
-					message += `<strong>Link:</strong><br /> <img src="${entry.link}" width="${width}" height="${height}"><br />`;
-					if (resized) message += `(Resized)<br />`;
+					message += `<strong>${TL`Link:`}</strong><br /> <img src="${entry.link}" width="${width}" height="${height}"><br />`;
+					if (resized) message += `${TL`(Resized)`}<br />`;
 				} else {
-					message += `<strong>Link:</strong><br /> <a href="${entry.link}"">Link</a><br />`;
+					message += `<strong>${TL`Link:`}</strong><br /> <a href="${entry.link}"">${TL`Link`}</a><br />`;
 				}
-				message += `<strong>Comment:</strong> ${entry.comment ? entry.comment : 'None.'}<br />`;
-				message += `<button class="button" name="send" value="/approveshow ${userid}">Approve</button>` +
-					`<button class="button" name="send" value="/denyshow ${userid}">Deny</button></div>`;
+				message += `<strong>${TL`Comment:`}</strong> ${entry.comment ? entry.comment : TL`None.`}<br />`;
+				message += `<button class="button" name="send" value="/approveshow ${userid}">${TL`Approve`}</button>` +
+					`<button class="button" name="send" value="/denyshow ${userid}">${TL`Deny`}</button></div>`;
 				message += `<hr />`;
 			}
 			message += `</details></div>`;
@@ -766,7 +771,7 @@ export abstract class BasicRoom {
 			!this.settings.isPrivate && !this.settings.isPersonal &&
 			this.settings.modchat && this.settings.modchat !== 'autoconfirmed'
 		) {
-			messages.push(`|raw|<div class="broadcast-red">Modchat currently set to ${this.settings.modchat}</div>`);
+			messages.push(`|raw|<div class="broadcast-red">${TL`Modchat currently set to ${this.settings.modchat}`}</div>`);
 		}
 		return messages.join('\n');
 	}
@@ -777,18 +782,20 @@ export abstract class BasicRoom {
 		);
 	}
 	validateTitle(newTitle: string, newID?: string, oldID?: string) {
+		// the constructor calls this before `settings` exists
+		const TL = Chat.getTranslator((this.settings as RoomSettings | undefined)?.language || null);
 		if (!newID) newID = toID(newTitle);
 		// `,` is a delimiter used by a lot of /commands
 		// `|` and `[` are delimiters used by the protocol
 		// `-` has special meaning in roomids
 		if (newTitle.includes(',') || newTitle.includes('|')) {
-			throw new Chat.ErrorMessage(`Room title "${newTitle}" can't contain any of: ,|`);
+			throw new Chat.ErrorMessage(TL`Room title "${newTitle}" can't contain any of: ,|`);
 		}
 		if ((!newID.includes('-') || newID.startsWith('groupchat-')) && newTitle.includes('-')) {
-			throw new Chat.ErrorMessage(`Room title "${newTitle}" can't contain -`);
+			throw new Chat.ErrorMessage(TL`Room title "${newTitle}" can't contain -`);
 		}
-		if (newID.length > MAX_CHATROOM_ID_LENGTH) throw new Chat.ErrorMessage("The given room title is too long.");
-		if (newID !== oldID && Rooms.search(newTitle)) throw new Chat.ErrorMessage(`The room '${newTitle}' already exists.`);
+		if (newID.length > MAX_CHATROOM_ID_LENGTH) throw new Chat.ErrorMessage(TL`The given room title is too long.`);
+		if (newID !== oldID && Rooms.search(newTitle)) throw new Chat.ErrorMessage(TL`The room '${newTitle}' already exists.`);
 	}
 	setParent(room: Room | null) {
 		if (this.parent === room) return;
@@ -834,7 +841,7 @@ export abstract class BasicRoom {
 			for (const user of Object.values(this.users)) {
 				if (!user.named) {
 					user.leaveRoom(this.roomid);
-					user.popup(`The room <<${this.roomid}>> has been made private; you must log in to be in private rooms.`);
+					user.popup(user.TL`The room <<${this.roomid}>> has been made private; you must log in to be in private rooms.`);
 				}
 			}
 		}
@@ -871,22 +878,24 @@ export abstract class BasicRoom {
 	validateSection(section: string) {
 		const target = toID(section);
 		if (!RoomSections.sections.includes(target as any)) {
-			throw new Chat.ErrorMessage(`"${target}" is not a valid room section. Valid categories include: ${RoomSections.sections.join(', ')}`);
+			const sections = RoomSections.sections.join(', ');
+			throw new Chat.ErrorMessage(this.TL`"${target}" is not a valid room section. Valid categories include: ${sections}`);
 		}
 		return target as RoomSection;
 	}
 	setSection(section?: string) {
 		if (!this.persist) {
-			throw new Chat.ErrorMessage(`You cannot change the section of temporary rooms.`);
+			throw new Chat.ErrorMessage(this.TL`You cannot change the section of temporary rooms.`);
 		}
 		if (section) {
 			const validatedSection = this.validateSection(section);
 			if (this.settings.isPrivate && [true, 'hidden'].includes(this.settings.isPrivate)) {
-				throw new Chat.ErrorMessage(`Only public rooms can change their section.`);
+				throw new Chat.ErrorMessage(this.TL`Only public rooms can change their section.`);
 			}
 			const oldSection = this.settings.section;
 			if (oldSection === section) {
-				throw new Chat.ErrorMessage(`${this.title}'s room section is already set to "${RoomSections.sectionNames[oldSection]}".`);
+				const sectionName = RoomSections.sectionNames[oldSection];
+				throw new Chat.ErrorMessage(this.TL`${this.title}'s room section is already set to "${sectionName}".`);
 			}
 			this.settings.section = validatedSection;
 			this.saveSettings();
@@ -918,7 +927,7 @@ export abstract class BasicRoom {
 		const oldID = this.roomid;
 		this.validateTitle(newTitle, newID, oldID);
 		if (this.type === 'chat' && this.game) {
-			throw new Chat.ErrorMessage(`Please finish your game (${this.game.title}) before renaming ${this.roomid}.`);
+			throw new Chat.ErrorMessage(this.TL`Please finish your game (${this.game.title}) before renaming ${this.roomid}.`);
 		}
 		(this as any).roomid = newID;
 		this.title = this.settings.title = newTitle;
@@ -1096,8 +1105,9 @@ export abstract class BasicRoom {
 				this.settings.modchat = rank;
 				this.add(
 					// always gonna be minutes so we can just use the number directly lol
-					`|raw|<div class="broadcast-blue"><strong>This room has had no active staff for ${time} minutes,` +
-					` and has had modchat set to ${rank}.</strong></div>`
+					`|raw|<div class="broadcast-blue"><strong>` +
+					this.TL`This room has had no active staff for ${time} minutes, and has had modchat set to ${rank}.` +
+					`</strong></div>`
 				).update();
 				this.modlog({
 					action: 'AUTOMODCHAT ACTIVATE',
@@ -1187,7 +1197,14 @@ export abstract class BasicRoom {
 		if (this.roomid === 'lobby') Rooms.lobby = null;
 	}
 	TL(strings: string | TemplateStringsArray, ...keys: any[]) {
-		return Chat.TLto(this.settings.language || 'english' as ID, strings, ...keys);
+		return Chat.TLto(this.settings.language || null, strings, ...keys);
+	}
+	/**
+	 * Translator for a message only `user` sees in this room: the room's language if it
+	 * has one, otherwise the user's (the same choice as for command replies).
+	 */
+	userTL(user: User) {
+		return Chat.getTranslator(this.settings.language || user.language);
 	}
 }
 
@@ -1773,14 +1790,23 @@ export class GlobalRoomState {
 		for (const [id, curRoom] of Rooms.rooms) {
 			if (err) {
 				if (id === 'staff' || id === 'development' || (!devRoom && id === 'lobby')) {
-					curRoom.addRaw(`<div class="broadcast-red"><b>The server needs to restart because of a crash:</b> ${stack}<br />Please restart the server.</div>`);
-					curRoom.addRaw(`<div class="broadcast-red">You will not be able to start new battles until the server restarts.</div>`);
+					curRoom.addRaw(
+						`<div class="broadcast-red"><b>${curRoom.TL`The server needs to restart because of a crash:`}</b> ${stack}<br />` +
+						`${curRoom.TL`Please restart the server.`}</div>`
+					);
+					curRoom.addRaw(`<div class="broadcast-red">${curRoom.TL`You will not be able to start new battles until the server restarts.`}</div>`);
 					curRoom.update();
 				} else {
-					curRoom.addRaw(`<div class="broadcast-red"><b>The server needs to restart because of a crash.</b><br />No new battles can be started until the server is done restarting.</div>`).update();
+					curRoom.addRaw(
+						`<div class="broadcast-red"><b>${curRoom.TL`The server needs to restart because of a crash.`}</b><br />` +
+						`${curRoom.TL`No new battles can be started until the server is done restarting.`}</div>`
+					).update();
 				}
 			} else {
-				curRoom.addRaw(`<div class="broadcast-red"><b>The server is restarting soon.</b><br />Please finish your battles quickly. No new battles can be started until the server resets in a few minutes.</div>`).update();
+				curRoom.addRaw(
+					`<div class="broadcast-red"><b>${curRoom.TL`The server is restarting soon.`}</b><br />` +
+					`${curRoom.TL`Please finish your battles quickly. No new battles can be started until the server resets in a few minutes.`}</div>`
+				).update();
 			}
 			const game = curRoom.game;
 			// @ts-expect-error TODO: revisit when game.timer is standardized
@@ -1789,12 +1815,18 @@ export class GlobalRoomState {
 				game.timer.start();
 				if (curRoom.settings.modchat !== '+') {
 					curRoom.settings.modchat = '+';
-					curRoom.addRaw(`<div class="broadcast-red"><b>Moderated chat was set to +!</b><br />Only users of rank + and higher can talk.</div>`).update();
+					curRoom.addRaw(
+						`<div class="broadcast-red"><b>${curRoom.TL`Moderated chat was set to +!`}</b><br />` +
+						`${curRoom.TL`Only users of rank + and higher can talk.`}</div>`
+					).update();
 				}
 			}
 		}
 		for (const user of Users.users.values()) {
-			user.send(`|pm|~|${user.tempGroup}${user.name}|/raw <div class="broadcast-red"><b>The server is restarting soon.</b><br />Please finish your battles quickly. No new battles can be started until the server resets in a few minutes.</div>`);
+			user.send(
+				`|pm|~|${user.tempGroup}${user.name}|/raw <div class="broadcast-red"><b>${user.TL`The server is restarting soon.`}</b><br />` +
+				`${user.TL`Please finish your battles quickly. No new battles can be started until the server resets in a few minutes.`}</div>`
+			);
 		}
 
 		this.lockdown = true;
@@ -1811,7 +1843,8 @@ export class GlobalRoomState {
 			if (Monitor.updateServerLock) {
 				this.notifyRooms(
 					notifyPlaces,
-					`|html|<div class="broadcast-red"><b>Automatic server lockdown kill canceled.</b><br /><br />The server tried to automatically kill itself upon the final battle finishing, but the server was updating while trying to kill itself.</div>`
+					room => `|html|<div class="broadcast-red"><b>${room.TL`Automatic server lockdown kill canceled.`}</b><br /><br />` +
+						`${room.TL`The server tried to automatically kill itself upon the final battle finishing, but the server was updating while trying to kill itself.`}</div>`
 				);
 				return;
 			}
@@ -1819,7 +1852,7 @@ export class GlobalRoomState {
 			// final warning
 			this.notifyRooms(
 				notifyPlaces,
-				`|html|<div class="broadcast-red"><b>The server is about to automatically kill itself in 10 seconds.</b></div>`
+				room => `|html|<div class="broadcast-red"><b>${room.TL`The server is about to automatically kill itself in 10 seconds.`}</b></div>`
 			);
 
 			// kill server in 10 seconds if it's still set to
@@ -1830,17 +1863,19 @@ export class GlobalRoomState {
 				} else {
 					this.notifyRooms(
 						notifyPlaces,
-						`|html|<div class="broadcast-red"><b>Automatic server lockdown kill canceled.</b><br /><br />In the last final seconds, the automatic lockdown was manually disabled.</div>`
+						room => `|html|<div class="broadcast-red"><b>${room.TL`Automatic server lockdown kill canceled.`}</b><br /><br />` +
+							`${room.TL`In the last final seconds, the automatic lockdown was manually disabled.`}</div>`
 					);
 				}
 			}, 10 * 1000);
 		}
 	}
-	notifyRooms(rooms: RoomID[], message: string) {
+	/** `message` can be a function, to translate the message for each room. */
+	notifyRooms(rooms: RoomID[], message: string | ((room: Room) => string)) {
 		if (!rooms || !message) return;
 		for (const roomid of rooms) {
 			const curRoom = Rooms.get(roomid);
-			if (curRoom) curRoom.add(message).update();
+			if (curRoom) curRoom.add(typeof message === 'string' ? message : message(curRoom)).update();
 		}
 	}
 	reportCrash(err: Error | string, crasher = "The server") {
@@ -2005,7 +2040,7 @@ export class GameRoom extends BasicRoom {
 		} else if (!this.modchatUser || this.modchatUser === user.id || this.auth.get(user.id) !== Users.PLAYER_SYMBOL) {
 			this.modchatUser = user.id;
 		} else {
-			return "Modchat can only be changed by the user who turned it on, or by staff";
+			return user.TL`Modchat can only be changed by the user who turned it on, or by staff`;
 		}
 	}
 	override onConnect(user: User, connection: Connection) {
@@ -2109,12 +2144,12 @@ export class GameRoom extends BasicRoom {
 				});
 				const url = `https://${Config.routes.replays}/${fullid}`;
 				connection?.popup(
-					`|html|<p>Your replay has been uploaded! It's available at:</p><p> ` +
+					`|html|<p>${connection.user.TL`Your replay has been uploaded! It's available at:`}</p><p> ` +
 					`<a class="no-panel-intercept" href="${url}" target="_blank">${url}</a> ` +
-					`<copytext value="${url}">Copy</copytext>`
+					`<copytext value="${url}">${connection.user.TL`Copy`}</copytext>`
 				);
 			} catch (e) {
-				connection?.popup(`Your replay could not be saved: ${e}`);
+				connection?.popup(connection.user.TL`Your replay could not be saved: ${e}`);
 				throw e;
 			}
 			return;
@@ -2133,16 +2168,16 @@ export class GameRoom extends BasicRoom {
 			password,
 		});
 		if (result?.errorip) {
-			connection?.popup(`This server's request IP ${result.errorip} is not a registered server.`);
+			connection?.popup(connection.user.TL`This server's request IP ${result.errorip} is not a registered server.`);
 			return;
 		}
 
 		const fullid = result?.replayid;
 		const url = `https://${Config.routes.replays}/${fullid}`;
 		connection?.popup(
-			`|html|<p>Your replay has been uploaded! It's available at:</p><p> ` +
+			`|html|<p>${connection.user.TL`Your replay has been uploaded! It's available at:`}</p><p> ` +
 			`<a class="no-panel-intercept" href="${url}" target="_blank">${url}</a> ` +
-			`<copytext value="${url}">Copy</copytext>`
+			`<copytext value="${url}">${connection.user.TL`Copy`}</copytext>`
 		);
 	}
 
@@ -2216,7 +2251,7 @@ export const Rooms = {
 
 		if (Rooms.global.lockdown === 'pre' && isBestOf && !options.isBestOfSubBattle) {
 			for (const user of players) {
-				user.popup(`The server will be restarting soon. Best-of-${isBestOf} battles cannot be started at this time.`);
+				user.popup(user.TL`The server will be restarting soon. Best-of-${isBestOf} battles cannot be started at this time.`);
 			}
 			return null;
 		}
@@ -2224,7 +2259,7 @@ export const Rooms = {
 		// gotta allow new bo3 child battles to start
 		if (Rooms.global.lockdown === true && !options.isBestOfSubBattle) {
 			for (const user of players) {
-				user.popup("The server is restarting. Battles will be available again in a few minutes.");
+				user.popup(user.TL`The server is restarting. Battles will be available again in a few minutes.`);
 			}
 			return null;
 		}
@@ -2240,7 +2275,7 @@ export const Rooms = {
 
 		if (mismatch !== `"${p1Special}"`) {
 			for (const user of players) {
-				user.popup(`Your special battle settings don't match: ${mismatch}`);
+				user.popup(user.TL`Your special battle settings don't match: ${mismatch}`);
 			}
 			return null;
 		} else if (p1Special) {

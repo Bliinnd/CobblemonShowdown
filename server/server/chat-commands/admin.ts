@@ -14,6 +14,7 @@ import * as path from 'path';
 import * as child_process from 'child_process';
 import { createRequire } from 'module';
 import { FS, Utils, ProcessManager, SQL } from '../../lib';
+import { TLkey, type Translator } from '../../sim/dex-text';
 
 interface ProcessData {
 	cmd: string;
@@ -188,8 +189,8 @@ export const commands: Chat.ChatCommands = {
 		}
 	},
 	htmlboxhelp: [
-		`/htmlbox [message] - Displays a message, parsing HTML code contained.`,
-		`!htmlbox [message] - Shows everyone a message, parsing HTML code contained. Requires: * # ~`,
+		TLkey`/htmlbox [message] - Displays a message, parsing HTML code contained.`,
+		TLkey`!htmlbox [message] - Shows everyone a message, parsing HTML code contained. Requires: * # ~`,
 	],
 	addhtmlbox(target, room, user, connection, cmd) {
 		if (!target) return this.parse('/help ' + cmd);
@@ -205,14 +206,14 @@ export const commands: Chat.ChatCommands = {
 		return `/raw <div class="infobox">${target}</div>`;
 	},
 	addhtmlboxhelp: [
-		`/addhtmlbox [message] - Shows everyone a message, parsing HTML code contained. Requires: * # ~`,
+		TLkey`/addhtmlbox [message] - Shows everyone a message, parsing HTML code contained. Requires: * # ~`,
 	],
 	addrankhtmlbox(target, room, user, connection, cmd) {
 		room = this.requireRoom();
 		if (!target) return this.parse('/help ' + cmd);
 		this.checkChat();
 		let [rank, html] = this.splitOne(target);
-		if (!(rank in Config.groups)) throw new Chat.ErrorMessage(`Group '${rank}' does not exist.`);
+		if (!(rank in Config.groups)) throw new Chat.ErrorMessage(this.TL`Group '${rank}' does not exist.`);
 		html = this.checkHTML(html);
 		this.checkCan('addhtml', null, room);
 		html = Chat.collapseLineBreaksHTML(html);
@@ -223,7 +224,7 @@ export const commands: Chat.ChatCommands = {
 		room.sendRankedUsers(`|html|<div class="infobox">${html}</div>`, rank as GroupSymbol);
 	},
 	addrankhtmlboxhelp: [
-		`/addrankhtmlbox [rank], [message] - Shows everyone with the specified rank or higher a message, parsing HTML code contained. Requires: * # ~`,
+		TLkey`/addrankhtmlbox [rank], [message] - Shows everyone with the specified rank or higher a message, parsing HTML code contained. Requires: * # ~`,
 	],
 	changeuhtml: 'adduhtml',
 	adduhtml(target, room, user, connection, cmd) {
@@ -247,10 +248,10 @@ export const commands: Chat.ChatCommands = {
 		}
 	},
 	adduhtmlhelp: [
-		`/adduhtml [name], [message] - Shows everyone a message that can change, parsing HTML code contained.  Requires: * # ~`,
+		TLkey`/adduhtml [name], [message] - Shows everyone a message that can change, parsing HTML code contained.  Requires: * # ~`,
 	],
 	changeuhtmlhelp: [
-		`/changeuhtml [name], [message] - Changes the message previously shown with /adduhtml [name]. Requires: * # ~`,
+		TLkey`/changeuhtml [name], [message] - Changes the message previously shown with /adduhtml [name]. Requires: * # ~`,
 	],
 	changerankuhtml: 'addrankuhtml',
 	addrankuhtml(target, room, user, connection, cmd) {
@@ -259,7 +260,7 @@ export const commands: Chat.ChatCommands = {
 		this.checkChat();
 
 		const [rank, uhtml] = this.splitOne(target);
-		if (!(rank in Config.groups)) throw new Chat.ErrorMessage(`Group '${rank}' does not exist.`);
+		if (!(rank in Config.groups)) throw new Chat.ErrorMessage(this.TL`Group '${rank}' does not exist.`);
 		let [name, html] = this.splitOne(uhtml);
 		name = toID(name);
 		html = this.checkHTML(html);
@@ -273,10 +274,10 @@ export const commands: Chat.ChatCommands = {
 		room.sendRankedUsers(html, rank as GroupSymbol);
 	},
 	addrankuhtmlhelp: [
-		`/addrankuhtml [rank], [name], [message] - Shows everyone with the specified rank or higher a message that can change, parsing HTML code contained.  Requires: * # ~`,
+		TLkey`/addrankuhtml [rank], [name], [message] - Shows everyone with the specified rank or higher a message that can change, parsing HTML code contained.  Requires: * # ~`,
 	],
 	changerankuhtmlhelp: [
-		`/changerankuhtml [rank], [name], [message] - Changes the message previously shown with /addrankuhtml [rank], [name]. Requires: * # ~`,
+		TLkey`/changerankuhtml [rank], [name], [message] - Changes the message previously shown with /addrankuhtml [rank], [name]. Requires: * # ~`,
 	],
 
 	deletenamecolor: 'setnamecolor',
@@ -292,11 +293,11 @@ export const commands: Chat.ChatCommands = {
 			source = '';
 		} else if (!source || source.length > 18) {
 			throw new Chat.ErrorMessage(
-				`Specify a source username to take the color from. Name must be <19 characters.`
+				this.TL`Specify a source username to take the color from. Name must be <19 characters.`
 			);
 		}
 		if (!userid || userid.length > 18) {
-			throw new Chat.ErrorMessage(`Specify a valid name to set a new color for. Names must be <19 characters.`);
+			throw new Chat.ErrorMessage(this.TL`Specify a valid name to set a new color for. Names must be <19 characters.`);
 		}
 		const [res, error] = await LoginServer.request('updatenamecolor', {
 			userid,
@@ -307,25 +308,25 @@ export const commands: Chat.ChatCommands = {
 			throw new Chat.ErrorMessage(error.message);
 		}
 		if (!res || res.actionerror) {
-			throw new Chat.ErrorMessage(res?.actionerror || "The loginserver is currently disabled.");
+			throw new Chat.ErrorMessage(res?.actionerror || this.TL`The loginserver is currently disabled.`);
 		}
 		if (source) {
 			return this.sendReply(
-				`|html|<username>${userid}</username>'s namecolor was ` +
-				`successfully updated to match '<username>${source}</username>'. ` +
-				`Refresh your browser for it to take effect.`
+				`|html|` +
+				this.TL`<username>${userid}</username>'s namecolor was successfully updated to match '<username>${source}</username>'.` +
+				` ` + this.TL`Refresh your browser for it to take effect.`
 			);
 		} else {
-			return this.sendReply(`${userid}'s namecolor was removed.`);
+			return this.sendReply(this.TL`${userid}'s namecolor was removed.`);
 		}
 	},
 	setnamecolorhelp: [
-		`/setnamecolor OR /snc [username], [source name] - Set [username]'s name color to match the [source name]'s color.`,
-		`Requires: ~`,
+		TLkey`/setnamecolor OR /snc [username], [source name] - Set [username]'s name color to match the [source name]'s color.`,
+		TLkey`Requires: ~`,
 	],
 	deletenamecolorhelp: [
-		`/deletenamecolor OR /dnc [username] - Remove [username]'s namecolor.`,
-		`Requires: ~`,
+		TLkey`/deletenamecolor OR /dnc [username] - Remove [username]'s namecolor.`,
+		TLkey`Requires: ~`,
 	],
 
 	pline(target, room, user) {
@@ -358,7 +359,7 @@ export const commands: Chat.ChatCommands = {
 		targetUser.lastPM = user.id;
 		user.lastPM = targetUser.id;
 	},
-	pminfoboxhelp: [`/pminfobox [user], [html]- PMs an [html] infobox to [user]. Requires * # ~`],
+	pminfoboxhelp: [TLkey`/pminfobox [user], [html]- PMs an [html] infobox to [user]. Requires * # ~`],
 
 	pmuhtmlchange: 'pmuhtml',
 	pmuhtml(target, room, user, connection, cmd) {
@@ -379,9 +380,9 @@ export const commands: Chat.ChatCommands = {
 		targetUser.lastPM = user.id;
 		user.lastPM = targetUser.id;
 	},
-	pmuhtmlhelp: [`/pmuhtml [user], [name], [html] - PMs [html] that can change to [user]. Requires * # ~`],
+	pmuhtmlhelp: [TLkey`/pmuhtml [user], [name], [html] - PMs [html] that can change to [user]. Requires * # ~`],
 	pmuhtmlchangehelp: [
-		`/pmuhtmlchange [user], [name], [html] - Changes html that was previously PMed to [user] to [html]. Requires * # ~`,
+		TLkey`/pmuhtmlchange [user], [name], [html] - Changes html that was previously PMed to [user] to [html]. Requires * # ~`,
 	],
 
 	closehtmlpage: 'sendhtmlpage',
@@ -412,10 +413,10 @@ export const commands: Chat.ChatCommands = {
 
 		targets.forEach(targetUsername => {
 			const targetUser = Users.get(targetUsername);
-			if (!targetUser) return errors.push(`${targetUsername} [offline/misspelled]`);
+			if (!targetUser) return errors.push(this.TL`${targetUsername} [offline/misspelled]`);
 
 			if (targetUser.locked && !this.user.can('lock')) {
-				return errors.push(`${targetUser.name} [locked]`);
+				return errors.push(this.TL`${targetUser.name} [locked]`);
 			}
 
 			let targetConnections = [];
@@ -430,7 +431,7 @@ export const commands: Chat.ChatCommands = {
 				try {
 					this.checkPMHTML(targetUser);
 				} catch {
-					return errors.push(`${targetUser.name} [not in room / blocking PMs]`);
+					return errors.push(this.TL`${targetUser.name} [not in room / blocking PMs]`);
 				}
 				targetConnections = targetUser.connections;
 			}
@@ -453,32 +454,36 @@ export const commands: Chat.ChatCommands = {
 			successes.push(targetUser.name);
 		});
 
+		const successList = this.TL.andList(successes);
+		const errorList = this.TL.andList(errors);
 		if (closeHtmlPage) {
 			if (successes.length) {
-				this.sendReply(`Closed the bot page ${pageid} for ${Chat.toListString(successes)}.`);
+				this.sendReply(this.TL`Closed the bot page ${pageid} for ${successList}.`);
 			}
 			if (errors.length) {
-				this.errorReply(`Unable to close the bot page for ${Chat.toListString(errors)}.`);
+				this.errorReply(this.TL`Unable to close the bot page for ${errorList}.`);
 			}
 		} else {
 			if (successes.length) {
-				this.sendReply(`Sent ${Chat.toListString(successes)}${selector ? ` the selector ${selector} on` : ''} the bot page ${pageid}.`);
+				this.sendReply(selector ?
+					this.TL`Sent ${successList} the selector ${selector} on the bot page ${pageid}.` :
+					this.TL`Sent ${successList} the bot page ${pageid}.`);
 			}
 			if (errors.length) {
-				this.errorReply(`Unable to send the bot page ${pageid} to ${Chat.toListString(errors)}.`);
+				this.errorReply(this.TL`Unable to send the bot page ${pageid} to ${errorList}.`);
 			}
 		}
 
 		if (!successes.length) return false;
 	},
 	sendhtmlpagehelp: [
-		`/sendhtmlpage [userid], [pageid], [html] - Sends [userid] the bot page [pageid] with the content [html]. Requires: * # ~`,
+		TLkey`/sendhtmlpage [userid], [pageid], [html] - Sends [userid] the bot page [pageid] with the content [html]. Requires: * # ~`,
 	],
 	changehtmlpageselectorhelp: [
-		`/changehtmlpageselector [userid], [pageid], [selector], [html] - Sends [userid] the content [html] for the selector [selector] on the bot page [pageid]. Requires: * # ~`,
+		TLkey`/changehtmlpageselector [userid], [pageid], [selector], [html] - Sends [userid] the content [html] for the selector [selector] on the bot page [pageid]. Requires: * # ~`,
 	],
 	closehtmlpagehelp: [
-		`/closehtmlpage [userid], [pageid], - Closes the bot page [pageid] for [userid]. Requires: * # ~`,
+		TLkey`/closehtmlpage [userid], [pageid], - Closes the bot page [pageid] for [userid]. Requires: * # ~`,
 	],
 
 	highlighthtmlpage(target, room, user) {
@@ -488,10 +493,10 @@ export const commands: Chat.ChatCommands = {
 		pageid = `${user.id}-${toID(pageid)}`;
 		if (!pageid || !target) return this.parse(`/help highlighthtmlpage`);
 		if (targetUser.locked && !this.user.can('lock')) {
-			throw new Chat.ErrorMessage("This user is currently locked, so you cannot send them highlights.");
+			throw new Chat.ErrorMessage(this.TL`This user is currently locked, so you cannot send them highlights.`);
 		}
 
-		const buf = `|tempnotify|bot-${pageid}|${title} [from ${user.name}]|${highlight ? highlight : ''}`;
+		const buf = `|tempnotify|bot-${pageid}|${targetUser.TL`${title} [from ${user.name}]`}|${highlight ? highlight : ''}`;
 		let targetConnections = [];
 		this.checkPMHTML(targetUser);
 		// try to locate connections that have requested the page recently
@@ -508,11 +513,11 @@ export const commands: Chat.ChatCommands = {
 			conn.send(`>view-bot-${pageid}\n${buf}`);
 		}
 
-		this.sendReply(`Sent a highlight to ${targetUser.name} on the bot page ${pageid}.`);
+		this.sendReply(this.TL`Sent a highlight to ${targetUser.name} on the bot page ${pageid}.`);
 	},
 	highlighthtmlpagehelp: [
-		`/highlighthtmlpage [userid], [pageid], [title], [optional highlight] - Sends a highlight to [userid] if they're viewing the bot page [pageid].`,
-		`If a [highlight] is specified, only highlights them if they have that term on their highlight list.`,
+		TLkey`/highlighthtmlpage [userid], [pageid], [title], [optional highlight] - Sends a highlight to [userid] if they're viewing the bot page [pageid].`,
+		TLkey`If a [highlight] is specified, only highlights them if they have that term on their highlight list.`,
 	],
 
 	changeprivateuhtml: 'sendprivatehtmlbox',
@@ -540,37 +545,42 @@ export const commands: Chat.ChatCommands = {
 
 		html = this.checkHTML(html);
 		if (!html) return this.parse('/help sendprivatehtmlbox');
-		html = `${Utils.html`<div class="gray" style="font-size:8pt">[Private from ${user.name}]</div>`}${Chat.collapseLineBreaksHTML(html)}`;
-		if (plainHtml) html = `<div class="infobox">${html}</div>`;
+		html = Chat.collapseLineBreaksHTML(html);
+		const senderName = Utils.escapeHTML(user.name);
 
 		const successes: string[] = [], errors: string[] = [];
 
 		targets.forEach(targetUsername => {
 			const targetUser = Users.get(targetUsername);
 
-			if (!targetUser) return errors.push(`${targetUsername} [offline/misspelled]`);
+			if (!targetUser) return errors.push(this.TL`${targetUsername} [offline/misspelled]`);
 
 			if (targetUser.locked && !this.user.can('lock')) {
-				return errors.push(`${targetUser.name} [locked]`);
+				return errors.push(this.TL`${targetUser.name} [locked]`);
 			}
 
 			if (!(targetUser.id in room.users)) {
-				return errors.push(`${targetUser.name} [not in room]`);
+				return errors.push(this.TL`${targetUser.name} [not in room]`);
 			}
 
 			successes.push(targetUser.name);
-			targetUser.sendTo(room, `|${messageType}|${html}`);
+			const TL = room.userTL(targetUser);
+			let targetHtml = `<div class="gray" style="font-size:8pt">${TL`[Private from ${senderName}]`}</div>${html}`;
+			if (plainHtml) targetHtml = `<div class="infobox">${targetHtml}</div>`;
+			targetUser.sendTo(room, `|${messageType}|${targetHtml}`);
 		});
 
-		if (successes.length) this.sendReply(`Sent private HTML to ${Chat.toListString(successes)}.`);
-		if (errors.length) this.errorReply(`Unable to send private HTML to ${Chat.toListString(errors)}.`);
+		const successList = this.TL.andList(successes);
+		const errorList = this.TL.andList(errors);
+		if (successes.length) this.sendReply(this.TL`Sent private HTML to ${successList}.`);
+		if (errors.length) this.errorReply(this.TL`Unable to send private HTML to ${errorList}.`);
 
 		if (!successes.length) return false;
 	},
 	sendprivatehtmlboxhelp: [
-		`/sendprivatehtmlbox [userid], [html] - Sends [userid] the private [html]. Requires: * # ~`,
-		`/sendprivateuhtml [userid], [name], [html] - Sends [userid] the private [html] that can change. Requires: * # ~`,
-		`/changeprivateuhtml [userid], [name], [html] - Changes the message previously sent with /sendprivateuhtml [userid], [name], [html]. Requires: * # ~`,
+		TLkey`/sendprivatehtmlbox [userid], [html] - Sends [userid] the private [html]. Requires: * # ~`,
+		TLkey`/sendprivateuhtml [userid], [name], [html] - Sends [userid] the private [html] that can change. Requires: * # ~`,
+		TLkey`/changeprivateuhtml [userid], [name], [html] - Changes the message previously sent with /sendprivateuhtml [userid], [name], [html]. Requires: * # ~`,
 	],
 
 	botmsg(target, room, user, connection) {
@@ -583,7 +593,7 @@ export const commands: Chat.ChatCommands = {
 
 		const auth = this.room ? this.room.auth : Users.globalAuth;
 		if (!['*', '#'].includes(auth.get(targetUser))) {
-			return this.popupReply(`The user "${targetUser.name}" is not a bot in this room.`);
+			return this.popupReply(this.TL`The user "${targetUser.name}" is not a bot in this room.`);
 		}
 		this.room = null; // shouldn't be in a room
 		this.pmTarget = targetUser;
@@ -592,7 +602,7 @@ export const commands: Chat.ChatCommands = {
 		if (!message) return;
 		Chat.PrivateMessages.send(`/botmsg ${message}`, user, targetUser, targetUser);
 	},
-	botmsghelp: [`/botmsg [username], [message] - Send a private message to a bot without feedback. For room bots, must use in the room the bot is auth in.`],
+	botmsghelp: [TLkey`/botmsg [username], [message] - Send a private message to a bot without feedback. For room bots, must use in the room the bot is auth in.`],
 
 	nick() {
 		this.sendReply(`||New to the Pokémon Showdown protocol? Your client needs to get a signed assertion from the login server and send /trn`);
@@ -1092,31 +1102,31 @@ export const commands: Chat.ChatCommands = {
 		if (['!', '/'].some(c => target.startsWith(c))) target = target.slice(1);
 		const parsed = Chat.parseCommand(`/${target}`);
 		if (!parsed) {
-			throw new Chat.ErrorMessage(`Command "/${target}" is in an invalid format.`);
+			throw new Chat.ErrorMessage(this.TL`Command "/${target}" is in an invalid format.`);
 		}
 		const { handler, fullCmd } = parsed;
 		if (!handler) {
-			throw new Chat.ErrorMessage(`Command "/${target}" not found.`);
+			throw new Chat.ErrorMessage(this.TL`Command "/${target}" not found.`);
 		}
 		if (handler.disabled) {
-			throw new Chat.ErrorMessage(`Command "/${target}" is already disabled`);
+			throw new Chat.ErrorMessage(this.TL`Command "/${target}" is already disabled`);
 		}
 		handler.disabled = true;
 		this.addGlobalModAction(`${user.name} disabled the command /${fullCmd}.`);
 		this.globalModlog(`DISABLECOMMAND`, null, target);
 	},
-	disablecommandhelp: [`/disablecommand [command] - Disables the given [command]. Requires: ~`],
+	disablecommandhelp: [TLkey`/disablecommand [command] - Disables the given [command]. Requires: ~`],
 
 	widendatacenters: 'adddatacenters',
 	adddatacenters() {
-		this.errorReply("This command has been replaced by /datacenter add");
+		this.errorReply(this.TL`This command has been replaced by /datacenter add`);
 		return this.parse('/help datacenters');
 	},
 
 	disableladder(target, room, user) {
 		this.checkCan('disableladder');
 		if (Ladders.disabled) {
-			throw new Chat.ErrorMessage(`/disableladder - Ladder is already disabled.`);
+			throw new Chat.ErrorMessage(this.TL`/disableladder - Ladder is already disabled.`);
 		}
 
 		Ladders.disabled = true;
@@ -1124,60 +1134,63 @@ export const commands: Chat.ChatCommands = {
 		this.modlog(`DISABLELADDER`);
 		Monitor.log(`The ladder was disabled by ${user.name}.`);
 
-		const innerHTML = (
-			`<b>Due to technical difficulties, the ladder has been temporarily disabled.</b><br />` +
-			`Rated games will no longer update the ladder. It will be back momentarily.`
+		const innerHTML = (TL: Translator) => (
+			`<b>${TL`Due to technical difficulties, the ladder has been temporarily disabled.`}</b><br />` +
+			TL`Rated games will no longer update the ladder. It will be back momentarily.`
 		);
 
 		for (const curRoom of Rooms.rooms.values()) {
 			if (curRoom.type === 'battle') curRoom.rated = 0;
-			curRoom.addRaw(`<div class="broadcast-red">${innerHTML}</div>`).update();
+			curRoom.addRaw(`<div class="broadcast-red">${innerHTML(Chat.getTranslator(curRoom.settings.language || null))}</div>`).update();
 		}
 		for (const u of Users.users.values()) {
-			if (u.connected) u.send(`|pm|~|${u.tempGroup}${u.name}|/raw <div class="broadcast-red">${innerHTML}</div>`);
+			if (u.connected) u.send(`|pm|~|${u.tempGroup}${u.name}|/raw <div class="broadcast-red">${innerHTML(u.TL)}</div>`);
 		}
 	},
-	disableladderhelp: [`/disableladder - Stops all rated battles from updating the ladder. Requires: ~`],
+	disableladderhelp: [TLkey`/disableladder - Stops all rated battles from updating the ladder. Requires: ~`],
 
 	enableladder(target, room, user) {
 		this.checkCan('disableladder');
 		if (!Ladders.disabled) {
-			throw new Chat.ErrorMessage(`/enable - Ladder is already enabled.`);
+			throw new Chat.ErrorMessage(this.TL`/enable - Ladder is already enabled.`);
 		}
 		Ladders.disabled = false;
 
 		this.modlog('ENABLELADDER');
 		Monitor.log(`The ladder was enabled by ${user.name}.`);
 
-		const innerHTML = (
-			`<b>The ladder is now back.</b><br />` +
-			`Rated games will update the ladder now..`
+		const innerHTML = (TL: Translator) => (
+			`<b>${TL`The ladder is now back.`}</b><br />` +
+			TL`Rated games will update the ladder now..`
 		);
 
 		for (const curRoom of Rooms.rooms.values()) {
-			curRoom.addRaw(`<div class="broadcast-green">${innerHTML}</div>`).update();
+			curRoom.addRaw(`<div class="broadcast-green">${innerHTML(Chat.getTranslator(curRoom.settings.language || null))}</div>`).update();
 		}
 		for (const u of Users.users.values()) {
-			if (u.connected) u.send(`|pm|~|${u.tempGroup}${u.name}|/raw <div class="broadcast-green">${innerHTML}</div>`);
+			if (u.connected) u.send(`|pm|~|${u.tempGroup}${u.name}|/raw <div class="broadcast-green">${innerHTML(u.TL)}</div>`);
 		}
 	},
-	enableladderhelp: [`/enable - Allows all rated games to update the ladder. Requires: ~`],
+	enableladderhelp: [TLkey`/enable - Allows all rated games to update the ladder. Requires: ~`],
 
 	lockdown(target, room, user) {
 		this.checkCan('lockdown');
 
 		const disabledCommands = Chat.allCommands().filter(c => c.disabled).map(c => `/${c.fullCmd}`);
 		if (disabledCommands.length) {
-			this.sendReply(`${Chat.count(disabledCommands.length, "commands")} are disabled right now.`);
-			this.sendReply(`Be aware that restarting will re-enable them.`);
-			this.sendReply(`Currently disabled: ${disabledCommands.join(', ')}`);
+			this.sendReply(disabledCommands.length === 1 ?
+				this.TL`1 command are disabled right now.` :
+				this.TL`${disabledCommands.length} commands are disabled right now.`);
+			this.sendReply(this.TL`Be aware that restarting will re-enable them.`);
+			const disabledList = disabledCommands.join(', ');
+			this.sendReply(this.TL`Currently disabled: ${disabledList}`);
 		}
 		Rooms.global.startLockdown();
 
 		this.stafflog(`${user.name} used /lockdown`);
 	},
 	lockdownhelp: [
-		`/lockdown - locks down the server, which prevents new battles from starting so that the server can eventually be restarted. Requires: ~`,
+		TLkey`/lockdown - locks down the server, which prevents new battles from starting so that the server can eventually be restarted. Requires: ~`,
 	],
 
 	autolockdown: 'autolockdownkill',
@@ -1186,13 +1199,13 @@ export const commands: Chat.ChatCommands = {
 		if (Config.autolockdown === undefined) Config.autolockdown = true;
 		if (this.meansYes(target)) {
 			if (Config.autolockdown) {
-				throw new Chat.ErrorMessage("The server is already set to automatically kill itself upon the final battle finishing.");
+				throw new Chat.ErrorMessage(this.TL`The server is already set to automatically kill itself upon the final battle finishing.`);
 			}
 			Config.autolockdown = true;
 			this.privateGlobalModAction(`${user.name} used /autolockdownkill on (autokill on final battle finishing)`);
 		} else if (this.meansNo(target)) {
 			if (!Config.autolockdown) {
-				throw new Chat.ErrorMessage("The server is already set to not automatically kill itself upon the final battle finishing.");
+				throw new Chat.ErrorMessage(this.TL`The server is already set to not automatically kill itself upon the final battle finishing.`);
 			}
 			Config.autolockdown = false;
 			this.privateGlobalModAction(`${user.name} used /autolockdownkill off (no autokill on final battle finishing)`);
@@ -1201,8 +1214,8 @@ export const commands: Chat.ChatCommands = {
 		}
 	},
 	autolockdownkillhelp: [
-		`/autolockdownkill on - Turns on the setting to enable the server to automatically kill itself upon the final battle finishing. Requires ~`,
-		`/autolockdownkill off - Turns off the setting to enable the server to automatically kill itself upon the final battle finishing. Requires ~`,
+		TLkey`/autolockdownkill on - Turns on the setting to enable the server to automatically kill itself upon the final battle finishing. Requires ~`,
+		TLkey`/autolockdownkill off - Turns off the setting to enable the server to automatically kill itself upon the final battle finishing. Requires ~`,
 	],
 
 	prelockdown(target, room, user) {
@@ -1211,7 +1224,7 @@ export const commands: Chat.ChatCommands = {
 
 		this.privateGlobalModAction(`${user.name} used /prelockdown (disabled tournaments in preparation for server restart)`);
 	},
-	prelockdownhelp: [`/prelockdown - Prevents new tournaments from starting so that the server can be restarted. Requires: ~`],
+	prelockdownhelp: [TLkey`/prelockdown - Prevents new tournaments from starting so that the server can be restarted. Requires: ~`],
 
 	slowlockdown(target, room, user) {
 		this.checkCan('lockdown');
@@ -1221,8 +1234,8 @@ export const commands: Chat.ChatCommands = {
 		this.privateGlobalModAction(`${user.name} used /slowlockdown (lockdown without auto-restart)`);
 	},
 	slowlockdownhelp: [
-		`/slowlockdown - Locks down the server, but disables the automatic restart after all battles end.`,
-		`Requires: ~`,
+		TLkey`/slowlockdown - Locks down the server, but disables the automatic restart after all battles end.`,
+		TLkey`Requires: ~`,
 	],
 
 	crashfixed: 'endlockdown',
@@ -1230,96 +1243,96 @@ export const commands: Chat.ChatCommands = {
 		this.checkCan('lockdown');
 
 		if (!Rooms.global.lockdown) {
-			throw new Chat.ErrorMessage("We're not under lockdown right now.");
+			throw new Chat.ErrorMessage(this.TL`We're not under lockdown right now.`);
 		}
 		if (Rooms.global.lockdown !== true && cmd === 'crashfixed') {
-			throw new Chat.ErrorMessage('/crashfixed - There is no active crash.');
+			throw new Chat.ErrorMessage(this.TL`/crashfixed - There is no active crash.`);
 		}
 
-		const message = cmd === 'crashfixed' ?
-			`<div class="broadcast-green"><b>We fixed the crash without restarting the server!</b></div>` :
-			`<div class="broadcast-green"><b>The server restart was canceled.</b></div>`;
+		const message = (TL: Translator) => (cmd === 'crashfixed' ?
+			`<div class="broadcast-green"><b>${TL`We fixed the crash without restarting the server!`}</b></div>` :
+			`<div class="broadcast-green"><b>${TL`The server restart was canceled.`}</b></div>`);
 		if (Rooms.global.lockdown === true) {
 			for (const curRoom of Rooms.rooms.values()) {
-				curRoom.addRaw(message).update();
+				curRoom.addRaw(message(Chat.getTranslator(curRoom.settings.language || null))).update();
 			}
 			for (const curUser of Users.users.values()) {
-				curUser.send(`|pm|~|${curUser.tempGroup}${curUser.name}|/raw ${message}`);
+				curUser.send(`|pm|~|${curUser.tempGroup}${curUser.name}|/raw ${message(curUser.TL)}`);
 			}
 		} else {
-			this.sendReply("Preparation for the server shutdown was canceled.");
+			this.sendReply(this.TL`Preparation for the server shutdown was canceled.`);
 		}
 		Rooms.global.lockdown = false;
 
 		this.stafflog(`${user.name} used /endlockdown`);
 	},
 	endlockdownhelp: [
-		`/endlockdown - Cancels the server restart and takes the server out of lockdown state. Requires: ~`,
-		`/crashfixed - Ends the active lockdown caused by a crash without the need of a restart. Requires: ~`,
+		TLkey`/endlockdown - Cancels the server restart and takes the server out of lockdown state. Requires: ~`,
+		TLkey`/crashfixed - Ends the active lockdown caused by a crash without the need of a restart. Requires: ~`,
 	],
 
 	emergency(target, room, user) {
 		this.checkCan('lockdown');
 
 		if (Config.emergency) {
-			throw new Chat.ErrorMessage("We're already in emergency mode.");
+			throw new Chat.ErrorMessage(this.TL`We're already in emergency mode.`);
 		}
 		Config.emergency = true;
 		for (const curRoom of Rooms.rooms.values()) {
-			curRoom.addRaw(`<div class="broadcast-red">The server has entered emergency mode. Some features might be disabled or limited.</div>`).update();
+			curRoom.addRaw(`<div class="broadcast-red">${curRoom.TL`The server has entered emergency mode. Some features might be disabled or limited.`}</div>`).update();
 		}
 
 		this.stafflog(`${user.name} used /emergency.`);
 	},
 	emergencyhelp: [
-		`/emergency - Turns on emergency mode and enables extra logging. Requires: ~`,
+		TLkey`/emergency - Turns on emergency mode and enables extra logging. Requires: ~`,
 	],
 
 	endemergency(target, room, user) {
 		this.checkCan('lockdown');
 
 		if (!Config.emergency) {
-			throw new Chat.ErrorMessage("We're not in emergency mode.");
+			throw new Chat.ErrorMessage(this.TL`We're not in emergency mode.`);
 		}
 		Config.emergency = false;
 		for (const curRoom of Rooms.rooms.values()) {
-			curRoom.addRaw(`<div class="broadcast-green"><b>The server is no longer in emergency mode.</b></div>`).update();
+			curRoom.addRaw(`<div class="broadcast-green"><b>${curRoom.TL`The server is no longer in emergency mode.`}</b></div>`).update();
 		}
 
 		this.stafflog(`${user.name} used /endemergency.`);
 	},
 	endemergencyhelp: [
-		`/endemergency - Turns off emergency mode. Requires: ~`,
+		TLkey`/endemergency - Turns off emergency mode. Requires: ~`,
 	],
 
 	remainingbattles() {
 		this.checkCan('lockdown');
 
 		if (!Rooms.global.lockdown) {
-			throw new Chat.ErrorMessage("The server is not under lockdown right now.");
+			throw new Chat.ErrorMessage(this.TL`The server is not under lockdown right now.`);
 		}
 
 		const battleRooms = [...Rooms.rooms.values()].filter(x => x.battle?.rated && !x.battle?.ended);
-		let buf = `Total remaining rated battles: <b>${battleRooms.length}</b>`;
-		if (battleRooms.length > 10) buf += `<details><summary>View all battles</summary>`;
+		let buf = this.TL`Total remaining rated battles: <b>${battleRooms.length}</b>`;
+		if (battleRooms.length > 10) buf += `<details><summary>${this.TL`View all battles`}</summary>`;
 		for (const battle of battleRooms) {
 			buf += `<br />`;
 			buf += `<a href="${battle.roomid}">${battle.title}</a>`;
-			if (battle.settings.isPrivate) buf += ' (Private)';
+			if (battle.settings.isPrivate) buf += ` ${this.TL`(Private)`}`;
 		}
 		if (battleRooms.length > 10) buf += `</details>`;
 		this.sendReplyBox(buf);
 	},
 	remainingbattleshelp: [
-		`/remainingbattles - View a list of the remaining battles during lockdown. Requires: ~`,
+		TLkey`/remainingbattles - View a list of the remaining battles during lockdown. Requires: ~`,
 	],
 
 	async savebattles(target, room, user) {
 		this.checkCan('rangeban'); // admins can restart, so they should be able to do this if needed
-		this.sendReply(`Saving battles...`);
+		this.sendReply(this.TL`Saving battles...`);
 		const count = await Rooms.global.saveBattles();
-		this.sendReply(`DONE.`);
-		this.sendReply(`${count} battles saved.`);
+		this.sendReply(this.TL`DONE.`);
+		this.sendReply(this.TL`${count} battles saved.`);
 		this.addModAction(`${user.name} used /savebattles`);
 	},
 
@@ -1329,26 +1342,26 @@ export const commands: Chat.ChatCommands = {
 		if (!Config.usepostgres) noSave = true;
 
 		if (Rooms.global.lockdown !== true && noSave) {
-			throw new Chat.ErrorMessage("For safety reasons, using /kill without saving battles can only be done during lockdown.");
+			throw new Chat.ErrorMessage(this.TL`For safety reasons, using /kill without saving battles can only be done during lockdown.`);
 		}
 
 		if (Monitor.updateServerLock) {
-			throw new Chat.ErrorMessage("Wait for /updateserver to finish before using /kill.");
+			throw new Chat.ErrorMessage(this.TL`Wait for /updateserver to finish before using /kill.`);
 		}
 
 		if (!noSave) {
-			this.sendReply('Saving battles...');
+			this.sendReply(this.TL`Saving battles...`);
 			Rooms.global.lockdown = true; // we don't want more battles starting while we save
 			for (const u of Users.users.values()) {
 				u.send(
-					`|pm|~|${u.getIdentity()}|/raw <div class="broadcast-red"><b>The server is restarting soon.</b><br />` +
-					`While battles are being saved, no more can be started. If you're in a battle, it will be paused during saving.<br />` +
-					`After the restart, you will be able to resume your battles from where you left off.`
+					`|pm|~|${u.getIdentity()}|/raw <div class="broadcast-red"><b>${u.TL`The server is restarting soon.`}</b><br />` +
+					`${u.TL`While battles are being saved, no more can be started. If you're in a battle, it will be paused during saving.`}<br />` +
+					u.TL`After the restart, you will be able to resume your battles from where you left off.`
 				);
 			}
 			const count = await Rooms.global.saveBattles();
-			this.sendReply(`DONE.`);
-			this.sendReply(`${count} battles saved.`);
+			this.sendReply(this.TL`DONE.`);
+			this.sendReply(this.TL`${count} battles saved.`);
 		}
 
 		const logRoom = Rooms.get('staff') || Rooms.lobby || room;
@@ -1367,8 +1380,8 @@ export const commands: Chat.ChatCommands = {
 		}, 10000);
 	},
 	killhelp: [
-		`/kill - kills the server. Use the argument \`nosave\` to prevent the saving of battles.`,
-		` If this argument is used, the server must be in lockdown. Requires: ~`,
+		TLkey`/kill - kills the server. Use the argument \`nosave\` to prevent the saving of battles.`,
+		TLkey` If this argument is used, the server must be in lockdown. Requires: ~`,
 	],
 
 	loadbanlist(target, room, user, connection) {
@@ -1388,14 +1401,14 @@ export const commands: Chat.ChatCommands = {
 		this.checkCan('lockdown');
 		if (user.lastCommand !== 'refreshpage') {
 			user.lastCommand = 'refreshpage';
-			throw new Chat.ErrorMessage([`Are you sure you wish to refresh the page for every user online?`,
-				`If you are sure, please type /refreshpage again to confirm.`]);
+			throw new Chat.ErrorMessage([this.TL`Are you sure you wish to refresh the page for every user online?`,
+				this.TL`If you are sure, please type /refreshpage again to confirm.`]);
 		}
 		Rooms.global.sendAll('|refresh|');
 		this.stafflog(`${user.name} used /refreshpage`);
 	},
 	refreshpagehelp: [
-		`/refreshpage - refreshes the page for every user online. Requires: ~`,
+		TLkey`/refreshpage - refreshes the page for every user online. Requires: ~`,
 	],
 
 	async updateserver(target, room, user, connection) {
@@ -1669,24 +1682,24 @@ export const commands: Chat.ChatCommands = {
 		this.checkCan('forcewin');
 		if (!target) return this.parse('/help editbattle');
 		if (!room.battle) {
-			throw new Chat.ErrorMessage("/editbattle - This is not a battle room.");
+			throw new Chat.ErrorMessage(this.TL`/editbattle - This is not a battle room.`);
 		}
 		const battle = room.battle;
 		void battle.stream.write(`>editbattle user:${user.name}, ${target}`);
 	},
 	editbattlehelp: [
-		`/editbattle hp [player], [pokemon], [hp]`,
-		`/editbattle status [player], [pokemon], [status]`,
-		`/editbattle pp [player], [pokemon], [move], [pp]`,
-		`/editbattle boost [player], [pokemon], [stat], [amount]`,
-		`/editbattle volatile [player], [pokemon], [volatile]`,
-		`/editbattle sidecondition [player], [sidecondition]`,
-		`/editbattle fieldcondition [fieldcondition]`,
-		`/editbattle weather [weather]`,
-		`/editbattle terrain [terrain]`,
-		`/editbattle reseed [optional seed]`,
-		`Short forms: /ebat h OR s OR pp OR b OR v OR sc OR fc OR w OR t`,
-		`[player] must be a username or number, [pokemon] must be species name or party slot number (not nickname), [move] must be move name.`,
+		TLkey`/editbattle hp [player], [pokemon], [hp]`,
+		TLkey`/editbattle status [player], [pokemon], [status]`,
+		TLkey`/editbattle pp [player], [pokemon], [move], [pp]`,
+		TLkey`/editbattle boost [player], [pokemon], [stat], [amount]`,
+		TLkey`/editbattle volatile [player], [pokemon], [volatile]`,
+		TLkey`/editbattle sidecondition [player], [sidecondition]`,
+		TLkey`/editbattle fieldcondition [fieldcondition]`,
+		TLkey`/editbattle weather [weather]`,
+		TLkey`/editbattle terrain [terrain]`,
+		TLkey`/editbattle reseed [optional seed]`,
+		TLkey`Short forms: /ebat h OR s OR pp OR b OR v OR sc OR fc OR w OR t`,
+		TLkey`[player] must be a username or number, [pokemon] must be species name or party slot number (not nickname), [move] must be move name.`,
 	],
 };
 
@@ -1695,11 +1708,11 @@ export const pages: Chat.PageTable = {
 		const [botid, ...pageArgs] = args;
 		const pageid = pageArgs.join('-');
 		if (pageid.length > 300) {
-			throw new Chat.ErrorMessage(`The page ID specified is too long.`);
+			throw new Chat.ErrorMessage(this.TL`The page ID specified is too long.`);
 		}
 		const bot = Users.get(botid);
 		if (!bot) {
-			return `<div class="pad"><h2>The bot "${bot}" is not available.</h2></div>`;
+			return `<div class="pad"><h2>${this.TL`The bot "${bot}" is not available.`}</h2></div>`;
 		}
 		let canSend = Users.globalAuth.get(bot) === '*';
 		let room;
@@ -1710,7 +1723,7 @@ export const pages: Chat.PageTable = {
 			}
 		}
 		if (!canSend) {
-			return `<div class="pad"><h2>"${bot}" is not a bot.</h2></div>`;
+			return `<div class="pad"><h2>${this.TL`"${bot}" is not a bot.`}</h2></div>`;
 		}
 		connection.lastRequestedPage = `${bot.id}-${pageid}`;
 		bot.sendTo(

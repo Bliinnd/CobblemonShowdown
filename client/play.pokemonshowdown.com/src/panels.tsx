@@ -100,7 +100,7 @@ export class PSRouter {
 		const panelState = (PS.leftPanelWidth && PS.baseRoom ?
 			PS.leftPanel.id + '..' + PS.rightPanel!.id :
 			room.id);
-		const newTitle = roomid === '' ? 'Showdown!' : `${room.getTitle()} - Showdown!`;
+		const newTitle = roomid === '' ? 'CobblemonShowdown' : `${room.getTitle()} - CobblemonShowdown`;
 		let changed: boolean | null = (roomid !== this.roomid);
 
 		this.roomid = roomid;
@@ -867,7 +867,7 @@ export class PSView extends preact.Component {
 		let buf = ' ';
 		const leftRoom = PS.rooms[rooms[index - 1]];
 		if (leftRoom) buf += `\u2190 ${leftRoom.title}`;
-		buf += (PS.arrowKeysUsed || isMiniRoom ? " | " : " (use arrow keys) ");
+		buf += (PS.arrowKeysUsed || isMiniRoom ? " | " : ` ${TL`(use arrow keys)`} `);
 		const rightRoom = PS.rooms[rooms[index + 1]];
 		if (rightRoom) buf += `${rightRoom.title} \u2192`;
 		return buf;
@@ -989,7 +989,7 @@ export class PSView extends preact.Component {
 				if (typeof interruptClose === 'string') return interruptClose;
 			}
 			if (PS.prefs.refreshprompt) {
-				return "Are you sure you want to leave?";
+				return TL`Are you sure you want to leave?`;
 			}
 			return null;
 		};
@@ -1514,7 +1514,7 @@ Supported file types:
 			dummyInput.select();
 			document.execCommand("copy");
 			elem.removeChild(dummyInput);
-			elem.innerText = 'Copied!';
+			elem.innerText = TL`Copied!`;
 			return true;
 		case 'send':
 		case 'cmd':
@@ -1731,7 +1731,7 @@ export class ReconnectTimer extends preact.Component {
 		const nextRetryTime = PS.connection?.nextRetryTime;
 		if (!nextRetryTime) return null;
 		const secs = Math.ceil((nextRetryTime - Date.now()) / 1000);
-		return <small>{secs > 0 ? `(Autoreconnect in ${secs}s)` : `(Reconnecting...)`}</small>;
+		return <small>{secs > 0 ? TL`(Autoreconnect in ${secs}s)` : TL`(Reconnecting...)`}</small>;
 	}
 }
 

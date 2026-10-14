@@ -119,7 +119,8 @@ export class Challenges extends Map<ID, Challenge[]> {
 	add(challenge: Challenge): true {
 		const oldChallenge = this.search(challenge.to, challenge.from);
 		if (oldChallenge) {
-			throw new Chat.ErrorMessage(`There is already a challenge (${challenge.format}) between ${challenge.to} and ${challenge.from}!`);
+			const TL = Chat.getTranslator(Users.get(challenge.from)?.language || null);
+			throw new Chat.ErrorMessage(TL`There is already a challenge (${challenge.format}) between ${challenge.to} and ${challenge.from}!`);
 		}
 		const to = this.getOrCreate(challenge.to);
 		const from = this.getOrCreate(challenge.from);
@@ -181,7 +182,7 @@ export class Challenges extends Map<ID, Challenge[]> {
 		const targetid = context.target as ID;
 		const chall = this.search(context.user.id, targetid);
 		if (!chall || chall.to !== context.user.id || chall.acceptCommand !== context.message) {
-			throw new Chat.ErrorMessage(`Challenge not found. You are using the wrong command. Challenges should be accepted with /accept`);
+			throw new Chat.ErrorMessage(context.TL`Challenge not found. You are using the wrong command. Challenges should be accepted with /accept`);
 		}
 		return chall;
 	}
@@ -189,9 +190,13 @@ export class Challenges extends Map<ID, Challenge[]> {
 		const chall = this.resolveAcceptCommand(context);
 		this.remove(chall, true);
 		const fromUser = Users.get(chall.from);
-		if (!fromUser) throw new Chat.ErrorMessage(`User "${chall.from}" is not available right now.`);
+		if (!fromUser) throw new Chat.ErrorMessage(context.TL`User "${chall.from}" is not available right now.`);
 		return fromUser;
 	}
+	/**
+	 * `reason` is a whole sentence marked with `TLkey`, translated for each recipient
+	 * (e.g. TLkey`Challenge cancelled because they changed their username.`).
+	 */
 	clearFor(userid: ID, reason?: string): number {
 		const user = Users.get(userid);
 		const userIdentity = user ? user.getIdentity() : ` ${userid}`;
@@ -209,10 +214,12 @@ export class Challenges extends Map<ID, Challenge[]> {
 
 			if (!user && !otherUser) continue;
 			const header = `|pm|${userIdentity}|${otherIdentity}|`;
-			let message = `${header}/challenge`;
-			if (reason) message = `${header}/text Challenge cancelled because ${reason}.\n${message}`;
-			user?.send(message);
-			otherUser?.send(message);
+			const message = (recipient: User) => {
+				const update = `${header}/challenge`;
+				return reason ? `${header}/text ${recipient.TL(reason)}\n${update}` : update;
+			};
+			user?.send(message(user));
+			otherUser?.send(message(otherUser));
 		}
 		this.delete(userid);
 		return challenges.length;
@@ -228,14 +235,16 @@ export class Challenges extends Map<ID, Challenge[]> {
 		userid2 = challenge ? challenge.to : userid2;
 		this.send(userid1, userid2, this.getUpdate(challenge));
 	}
-	send(userid1: ID, userid2: ID, message: string) {
+	/** `message` can be a function, to translate the message for each recipient. */
+	send(userid1: ID, userid2: ID, message: string | ((recipient: User) => string)) {
 		const user1 = Users.get(userid1);
 		const user2 = Users.get(userid2);
 		const user1Identity = user1 ? user1.getIdentity() : ` ${userid1}`;
 		const user2Identity = user2 ? user2.getIdentity() : ` ${userid2}`;
-		const fullMessage = `|pm|${user1Identity}|${user2Identity}|${message}`;
-		user1?.send(fullMessage);
-		user2?.send(fullMessage);
+		const fullMessage = (recipient: User) =>
+			`|pm|${user1Identity}|${user2Identity}|${typeof message === 'string' ? message : message(recipient)}`;
+		user1?.send(fullMessage(user1));
+		user2?.send(fullMessage(user2));
 	}
 	updateFor(connection: Connection | User) {
 		const user = connection.user;

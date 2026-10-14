@@ -8,21 +8,14 @@ process.chdir(__dirname + '/..');
 
 fs.mkdirSync('play.pokemonshowdown.com/data', { recursive: true });
 
-const noUpdate = process.argv.includes('--no-update');
+// CobblemonShowdown : les données viennent du serveur de ce dépôt (../server),
+// relié à caches/pokemon-showdown par le script `build`.
 if (!fs.existsSync('caches/pokemon-showdown')) {
-	if (noUpdate) {
-		console.error('Missing caches/pokemon-showdown. Check out the server before using --no-update.');
-		process.exit(1);
-	}
-	child_process.execSync('git clone https://github.com/smogon/pokemon-showdown.git', {
-		cwd: 'caches',
-	});
+	console.error('Missing caches/pokemon-showdown. Run `node build` from the client folder first.');
+	process.exit(1);
 }
 
-process.stdout.write(
-	noUpdate ? "Building data from existing server checkout... " : "Syncing data from Git repository... "
-);
-if (!noUpdate) child_process.execSync('git pull', { cwd: 'caches/pokemon-showdown' });
+process.stdout.write("Building data from the server in this repository... ");
 child_process.execSync('npm run build', { cwd: 'caches/pokemon-showdown' });
 console.log("DONE");
 
@@ -167,6 +160,28 @@ function requireNoCache(pathSpec) {
 		index.push(`${ubCode} pokemon ${id} 0`);
 	}
 
+	// CobblemonShowdown : recherche par nom français ("carchacrok" trouve Garchomp),
+	// avec ou sans accents ("electhor" comme "électhor").
+	{
+		const frText = Dex.loadTextData('fr');
+		const tables = { pokemon: frText.Pokedex, move: frText.Moves, item: frText.Items, ability: frText.Abilities };
+		const known = new Set(index);
+		for (const [type, table] of Object.entries(tables)) {
+			for (const id in table) {
+				const name = table[id]?.name;
+				if (!name || !known.has(`${id} ${type}`)) continue;
+				const withoutAccents = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+				for (const alias of new Set([toID(name), toID(withoutAccents)])) {
+					if (!alias || alias === id || known.has(`${alias} ${type}`)) continue;
+					const entry = `${alias} ${type} ${id} 0`;
+					if (known.has(entry)) continue;
+					known.add(entry);
+					index.push(entry);
+				}
+			}
+		}
+	}
+
 	index.sort();
 
 	// manually rearrange
@@ -271,6 +286,8 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 	const NATDEX = [9.1, 8.1];
 	// 68 = natdex champs
 	const CHAMPIONS = [9.67, 9.68];
+	// CobblemonShowdown : 81 = formats Cobblemon, 82 = Cobblemon National Dex
+	const COBBLEMON = [9.81, 9.82];
 	const OTHER = [
 		9.9, 9.6, 9.411, 9.41, 9.401, 9.4, 9.33, 9.2, -9.4, -9.401,
 		8.6, 8.4, 8.2, -8.4, -8.6,
@@ -280,7 +297,10 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 	];
 
 	// process.stdout.write("\n  ");
-	for (const genIdent of [...GENS, ...DOUBLES, ...VGC, ...NFE, ...STADIUM, ...OTHER, ...NATDEX, ...CHAMPIONS, ...LC]) {
+	const ALL_GEN_IDENTS = [
+		...GENS, ...DOUBLES, ...VGC, ...NFE, ...STADIUM, ...OTHER, ...NATDEX, ...CHAMPIONS, ...COBBLEMON, ...LC,
+	];
+	for (const genIdent of ALL_GEN_IDENTS) {
 		const isLetsGo = (genIdent === 7.1);
 		const isBDSP = (genIdent === 8.6 || genIdent === -8.6);
 		const isMetBattle = ('' + genIdent).endsWith('.2');
@@ -297,6 +317,8 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 		const isSSB = genIdent === 9.6;
 		const isChampions = genIdent === 9.67;
 		const isNDChampions = genIdent === 9.68;
+		const isCobblemon = genIdent === 9.81;
+		const isNDCobblemon = genIdent === 9.82;
 		const genNum = Math.floor(isDoubles ? -genIdent : genIdent);
 		const isBW1 = genIdent === 5.1;
 		const isRS = genIdent === 3.1;
@@ -314,6 +336,7 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 			if (isRS) genStr += 'rs';
 			if (isFRLG) genStr += 'frlg';
 			if (isChampions || isNDChampions) genStr = 'champions';
+			if (isCobblemon || isNDCobblemon) genStr = 'cobblemon';
 			return genStr;
 		})();
 		// process.stdout.write("" + gen + (isDoubles ? " doubles" : "") + "... ");
@@ -322,6 +345,9 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 		const tierTable = {};
 		const overrideTier = {};
 		const metagameBans = {};
+		const metagameOthers = {};
+		/** Cobblemon : tiers en double, affichés dans les formats Doubles OU. */
+		const overrideDoublesTier = {};
 		const nonstandardMoves = [];
 		for (const id of pokemon) {
 			const species = Dex.mod(gen).species.get(id);
@@ -428,6 +454,7 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 					if (species.tier === 'Illegal') return Dex.mod('gen9').species.get(species.id).natDexTier;
 					return species.tier;
 				}
+				if (isNDCobblemon) return species.natDexTier;
 				return species.tier;
 			})();
 			overrideTier[species.id] = speciesTier;
@@ -486,6 +513,36 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 							}
 						}
 						metagameBans[meta][species.id] = 1;
+					}
+				}
+				if (isCobblemon && speciesTier !== 'Illegal') overrideDoublesTier[species.id] = species.doublesTier;
+				if (isCobblemon || isNDCobblemon) {
+					// Pour chaque format Cobblemon (et sa variante "Egg Moves") : les Pokémon interdits
+					// (metagameBans, liste "Illegal") et ceux autorisés mais hors du tier du format
+					// (metagameOthers, liste "Autres").
+					const metas = isCobblemon ? ['ou', 'ubers', 'monotype', 'lc', 'doublesou', 'vgc'] : ['nationaldex'];
+					for (const meta of metas) {
+						const format = Dex.formats.get(`gen9cobblemon${meta}`);
+						let banned = Dex.formats.getRuleTable(format).isBannedSpecies(species);
+						if (meta === 'lc' && (!species.nfe || species.prevo)) banned = true;
+						if (banned) {
+							if (!metagameBans[meta]) metagameBans[meta] = {};
+							metagameBans[meta][species.id] = 1;
+							continue;
+						}
+						const inFormatTier = {
+							ou: species.tier === 'OU',
+							monotype: species.tier === 'OU',
+							ubers: species.tier === 'Uber' || species.tier === 'AG',
+							lc: true, // tous les Pokémon autorisés en LC sont de tier LC
+							doublesou: species.doublesTier === 'DOU' || species.doublesTier === 'DBL',
+							vgc: !species.nfe,
+							nationaldex: species.natDexTier === 'OU',
+						}[meta];
+						if (!inFormatTier) {
+							if (!metagameOthers[meta]) metagameOthers[meta] = {};
+							metagameOthers[meta][species.id] = 1;
+						}
 					}
 				}
 				const nd35Pokes = Dex.formats.get(gen + 'nationaldex35pokes');
@@ -551,6 +608,17 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 			BattleTeambuilderTable['champions'].metagameBans = metagameBans;
 			BattleTeambuilderTable['champions'].overrideTier = overrideTier;
 			BattleTeambuilderTable['champions'].formatSlices = formatSlices;
+		} else if (isCobblemon || isNDCobblemon) {
+			const key = isCobblemon ? 'cobblemon' : 'natdexcobblemon';
+			BattleTeambuilderTable[key] = {};
+			BattleTeambuilderTable[key].learnsets = {};
+			BattleTeambuilderTable[key].tiers = tiers;
+			BattleTeambuilderTable[key].items = items;
+			BattleTeambuilderTable[key].metagameBans = metagameBans;
+			BattleTeambuilderTable[key].metagameOthers = metagameOthers;
+			if (isCobblemon) BattleTeambuilderTable[key].overrideDoublesTier = overrideDoublesTier;
+			BattleTeambuilderTable[key].overrideTier = overrideTier;
+			BattleTeambuilderTable[key].formatSlices = formatSlices;
 		} else if (isNDChampions) {
 			BattleTeambuilderTable['natdexchampions'] = {};
 			BattleTeambuilderTable['natdexchampions'].learnsets = {};
@@ -672,14 +740,17 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 				continue;
 			}
 			if (item.isNonstandard && !isMetBattle) {
-				if (isNatDex || isNDChampions) {
+				if (isNatDex || isNDChampions || isNDCobblemon) {
 					let curItem = item;
 					let curGen = genNum;
 					while (curItem.isNonstandard && curGen >= 7) {
 						curItem = Dex.forGen(curGen).items.get(item.id);
 						curGen--;
 					}
-					if (curItem.isNonstandard) continue;
+					// Cobblemon National Dex : les méga-gemmes des nouvelles méga-évolutions sont autorisées.
+					const isNewMegaStone = isNDCobblemon && item.isNonstandard === 'Past' &&
+						Dex.items.get(item.id).isNonstandard === 'Future';
+					if (curItem.isNonstandard && !isNewMegaStone) continue;
 				} else if (genNum !== 2) {
 					continue;
 				}
@@ -1073,6 +1144,26 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 				BattleTeambuilderTable['natdexchampions'].learnsets[id][moveid] = '9a';
 			}
 		}
+	}
+	// CobblemonShowdown : attaques apprises dans Cobblemon. "9a" = disponible,
+	// "E" = seulement par reproduction (egg move, autorisé dans les variantes "Egg Moves").
+	const CobblemonLearnsets = requireNoCache('../caches/pokemon-showdown/dist/data/mods/cobblemon/learnsets.js').Learnsets;
+	for (const id in learnsets) {
+		BattleTeambuilderTable['natdexcobblemon'].learnsets[id] = learnsets[id];
+	}
+	for (const id in CobblemonLearnsets) {
+		const learnset = CobblemonLearnsets[id].learnset;
+		if (!learnset) {
+			// Forme sans attaques propres : on reprend celles de la forme de base.
+			delete BattleTeambuilderTable['natdexcobblemon'].learnsets[id];
+			continue;
+		}
+		const entry = {};
+		for (const moveid in learnset) {
+			entry[moveid] = learnset[moveid].every(source => source.charAt(1) === 'E') ? 'E' : '9a';
+		}
+		BattleTeambuilderTable['cobblemon'].learnsets[id] = entry;
+		BattleTeambuilderTable['natdexcobblemon'].learnsets[id] = entry;
 	}
 	const SSDLC1Learnsets = Dex.mod('gen8dlc1').data.Learnsets;
 	for (const id in SSDLC1Learnsets) {

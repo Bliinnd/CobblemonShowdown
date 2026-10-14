@@ -189,6 +189,25 @@ export const TL = Object.assign(translate, {
 		const labelText = TL`${label}: `;
 		return value === undefined ? labelText : labelText + String(value as any);
 	},
+	/**
+	 * Splits an already-translated sentence on literal `{NAME}` markers and
+	 * replaces each marker with `values[NAME]` (often a JSX element), so a
+	 * sentence containing links or markup is still translated as one string.
+	 * For instance, if `text` is the translation of "Type {CMD} for help.",
+	 * `TL.parts(text, { CMD: <code>/help</code> })` renders the command in
+	 * a `<code>` tag wherever the translator put `{CMD}`.
+	 *
+	 * The markers must be written literally inside the tagged TL template
+	 * (not as `${}` substitutions), since the extractor would otherwise turn
+	 * them into positional placeholders.
+	 */
+	parts<T>(text: string, values: { [name: string]: T }): (string | T)[] {
+		return text.split(/(\{[A-Z][A-Z0-9_]*\})/).map(part => {
+			// marker names are upper-case, so they can't collide with Object.prototype keys
+			const name = /^\{([A-Z][A-Z0-9_]*)\}$/.exec(part)?.[1];
+			return name !== undefined && name in values ? values[name] : part;
+		}).filter(part => part !== '');
+	},
 	orList(items: readonly string[]) {
 		if (items.length <= 1) return items.join();
 		if (items.length === 2) {
@@ -596,20 +615,12 @@ export const Dex = new class implements ModdedDex {
 			return lang;
 		},
 		getBrowserLanguage() {
-			if (typeof navigator === 'undefined') return 'en';
-			const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
-			for (let language of languages) {
-				language = language.toLowerCase().replace(/_/g, '-');
-				if (language === 'zh' || language.startsWith('zh-')) {
-					return /(?:^|-)(?:hant|tw|hk|mo)(?:-|$)/.test(language) ? 'zh-tw' : 'zh-cn';
-				}
-				const baseLanguage = language.split('-')[0];
-				if (baseLanguage in TEXT_LANGUAGE_TABLE) return baseLanguage;
-			}
-			return 'en';
+			// CobblemonShowdown : le site est en français par défaut (anglais au choix dans les options)
+			return 'fr';
 		},
 		languages() {
-			return TEXT_LANGUAGES;
+			// CobblemonShowdown : l'interface n'est traduite qu'en français
+			return TEXT_LANGUAGES.filter(language => ['fr', 'en'].includes(language.code));
 		},
 		findLanguage(lang: string) {
 			return TEXT_LANGUAGE_TABLE[lang.toLowerCase()] || TEXT_LANGUAGE_TABLE[toID(lang)] || null;
@@ -1288,8 +1299,10 @@ export class ModdedDex {
 	constructor(modid: ID) {
 		this.modid = modid;
 		let gen = parseInt(modid.charAt(3), 10);
-		if (this.modid === 'champions') gen = 9;
-		if ((modid !== 'champions' && !modid.startsWith('gen')) || !gen) throw new Error("Unsupported modid");
+		if (this.modid === 'champions' || this.modid === 'cobblemon') gen = 9;
+		if ((modid !== 'champions' && modid !== 'cobblemon' && !modid.startsWith('gen')) || !gen) {
+			throw new Error("Unsupported modid");
+		}
 		this.gen = gen;
 	}
 	text: ClientDexText = {

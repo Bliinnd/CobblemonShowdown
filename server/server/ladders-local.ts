@@ -125,15 +125,18 @@ export class LadderStore {
 	/**
 	 * Returns [formatid, html], where html is an the HTML source of a
 	 * ladder toplist, to be displayed directly in the ladder tab of the
-	 * client.
+	 * client, in the given `language` (the viewer's).
 	 */
-	async getTop(prefix?: string): Promise<[string, string]> {
+	async getTop(prefix?: string, language: ID | null = null): Promise<[string, string]> {
+		const TL = Chat.getTranslator(language);
 		const formatid = this.formatid;
 		const name = Dex.formats.get(formatid).name;
 		const ladder = await this.getLadder();
-		let buf = `<h3>${name} Top 100</h3>`;
+		let buf = `<h3>${TL`${name} Top 100`}</h3>`;
 		buf += `<table>`;
-		buf += `<tr><th>` + ['', 'Username', '<abbr title="Elo rating">Elo</abbr>', 'W', 'L', 'T'].join(`</th><th>`) + `</th></tr>`;
+		buf += `<tr><th>` + [
+			'', TL`Username`, `<abbr title="${TL`Elo rating`}">Elo</abbr>`, TL`W`, TL`L`, TL`T`,
+		].join(`</th><th>`) + `</th></tr>`;
 		for (const [i, row] of ladder.entries()) {
 			if (prefix && !row[0].startsWith(prefix)) continue;
 			buf += `<tr><td>` + [
@@ -189,7 +192,7 @@ export class LadderStore {
 	 */
 	async updateRating(p1name: string, p2name: string, p1score: number, room: AnyObject): Promise<LadderUpdate> {
 		if (Ladders.disabled) {
-			room.addRaw(`Ratings not updated. The ladders are currently disabled.`).update();
+			room.addRaw(room.TL`Ratings not updated. The ladders are currently disabled.`).update();
 			return [p1score, null, null];
 		}
 
@@ -258,22 +261,24 @@ export class LadderStore {
 				return [p1score, null, null];
 			}
 
-			let reasons = `${Math.round(p1newElo) - Math.round(p1elo)} for ${p1score > 0.9 ? 'winning' : (p1score < 0.1 ? 'losing' : 'tying')}`;
-			if (!reasons.startsWith('-')) reasons = '+' + reasons;
-			room.addRaw(
-				Utils.html`${p1name}'s rating: ${Math.round(p1elo)} &rarr; <strong>${Math.round(p1newElo)}</strong><br />(${reasons})`
-			);
-
-			reasons = `${Math.round(p2newElo) - Math.round(p2elo)} for ${p2score > 0.9 ? 'winning' : (p2score < 0.1 ? 'losing' : 'tying')}`;
-			if (!reasons.startsWith('-')) reasons = '+' + reasons;
-			room.addRaw(
-				Utils.html`${p2name}'s rating: ${Math.round(p2elo)} &rarr; <strong>${Math.round(p2newElo)}</strong><br />(${reasons})`
-			);
+			const ratingChange = (name: string, oldElo: number, newElo: number, score: number): string => {
+				const diff = Math.round(newElo) - Math.round(oldElo);
+				const change = diff < 0 ? `${diff}` : `+${diff}`;
+				const reasons: string = score > 0.9 ? room.TL`${change} for winning` :
+					score < 0.1 ? room.TL`${change} for losing` : room.TL`${change} for tying`;
+				const oldRating = Math.round(oldElo);
+				const newRating = Math.round(newElo);
+				const playerName = Utils.escapeHTML(name);
+				return room.TL`${playerName}'s rating: ${oldRating} &rarr; <strong>${newRating}</strong>` +
+					Utils.html`<br />(${reasons})`;
+			};
+			room.addRaw(ratingChange(p1name, p1elo, p1newElo, p1score));
+			room.addRaw(ratingChange(p2name, p2elo, p2newElo, p2score));
 
 			room.update();
 		} catch (e: any) {
 			if (!room.battle) return [p1score, null, null];
-			room.addRaw(`There was an error calculating rating changes:`);
+			room.addRaw(room.TL`There was an error calculating rating changes:`);
 			room.add(e.stack);
 			room.update();
 		}

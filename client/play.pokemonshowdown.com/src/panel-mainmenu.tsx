@@ -38,6 +38,7 @@ export class MainMenuRoom extends PSRoom {
 			group?: string,
 			customgroup?: string,
 			rooms?: { [roomid: string]: { isPrivate?: true, p1?: string, p2?: string } },
+			friended?: boolean,
 		},
 	} = {};
 	roomsCache: {
@@ -124,6 +125,10 @@ export class MainMenuRoom extends PSRoom {
 			).then(res => {
 				if (!res?.username) {
 					PS.user.initializing = false;
+					// CobblemonShowdown : affiche « Choisir un pseudo » tout de suite, et retire
+					// les équipes d'un compte dont la session a expiré
+					PS.user.update(null);
+					if (res && !res.loggedin) PS.teams.clearAccountTeams();
 					return;
 				}
 				// | , ; are not valid characters in names
@@ -146,7 +151,7 @@ export class MainMenuRoom extends PSRoom {
 			}
 			void Dex.loadTextData().then(() => PS.updateTranslatedText());
 			PS.user.setName(fullName, named, avatar);
-			PS.teams.loadRemoteTeams();
+			if (named) PS.teams.syncAccount();
 			return true;
 		} case 'updatechallenges': {
 			const [, challengesBuf] = args;
@@ -192,7 +197,7 @@ export class MainMenuRoom extends PSRoom {
 			return true;
 		}
 		}
-		const lobby = PS.rooms['lobby'];
+		const lobby = PS.rooms['lobby'] || PS.rooms['discussion'];
 		if (lobby) lobby.receiveBatch([args]);
 		return true;
 	}
@@ -235,9 +240,9 @@ export class MainMenuRoom extends PSRoom {
 
 		let column = 0;
 
-		window.NonBattleGames = { rps: 'Rock Paper Scissors' };
+		window.NonBattleGames = { rps: TL`Rock Paper Scissors` };
 		for (let i = 3; i <= 9; i += 2) {
-			window.NonBattleGames[`bestof${i}`] = `Best-of-${i}`;
+			window.NonBattleGames[`bestof${i}`] = TL`Best-of-{NUMBER}`.replace('{NUMBER}', `${i}`);
 		}
 		window.BattleFormats = {};
 		for (let j = 1; j < formatsList.length; j++) {
@@ -418,6 +423,7 @@ export class MainMenuRoom extends PSRoom {
 				this.userdetailsCache[userid] = response;
 			} else {
 				response.status ||= '';
+				response.friended ||= false;
 				Object.assign(userdetails, response);
 			}
 			if (userid === PS.user.userid) {
@@ -432,7 +438,7 @@ export class MainMenuRoom extends PSRoom {
 			break;
 		case 'rooms':
 			if (response.pspl) {
-				for (const roomInfo of response.pspl) roomInfo.spotlight = "Spotlight";
+				for (const roomInfo of response.pspl) roomInfo.spotlight = TL`Spotlight`;
 				response.chat = [...response.pspl, ...response.chat];
 				response.pspl = null;
 			}
@@ -661,17 +667,17 @@ class MainMenuPanel extends PSRoomPanel<MainMenuRoom> {
 		if (PS.down) {
 			return <div class="menugroup" style="background: rgba(10,10,10,.6)">
 				{PS.down === 'ddos' ? (
-					<p class="error"><strong>Pok&eacute;mon Showdown is offline due to a DDoS attack!</strong></p>
+					<p class="error"><strong>{TL`Pokémon Showdown is offline due to a DDoS attack!`}</strong></p>
 				) : (
-					<p class="error"><strong>Pok&eacute;mon Showdown is offline due to technical difficulties!</strong></p>
+					<p class="error"><strong>{TL`Pokémon Showdown is offline due to technical difficulties!`}</strong></p>
 				)}
 				<p>
 					<div style={{ textAlign: 'center' }}>
 						<img width="96" height="96" src={`//${Config.routes.client}/sprites/gen5/teddiursa.png`} alt="" />
 					</div>
-					Bear with us as we freak out.
+					{TL`Bear with us as we freak out.`}
 				</p>
-				<p>(We'll be back up in a few hours.)</p>
+				<p>{TL`(We'll be back up in a few hours.)`}</p>
 			</div>;
 		}
 
@@ -766,19 +772,18 @@ class MainMenuPanel extends PSRoomPanel<MainMenuRoom> {
 					<div class="menugroup">
 						<p><a class={"mainmenu1 mainmenu" + onlineButton} href="rooms">{TL`Chat rooms`}</a></p>
 						{PS.server.id !== 'showdown' && (
-							<p><a class={"mainmenu2 mainmenu" + onlineButton} href="lobby">{TL`Lobby chat`}</a></p>
+							<p><a class={"mainmenu2 mainmenu" + onlineButton} href="discussion">{TL`Discussion`}</a></p>
 						)}
 					</div>
 				</div>
 				<div class="mainmenu-footer">
 					<div class="bgcredit">{this.renderBackgroundCredit()}</div>
 					<small>
+						{/* CobblemonShowdown : le code source doit rester accessible aux joueurs (licence AGPL) */}
 						<a href={`//${Config.routes.dex}/`} target="_blank">{TL`Pokédex`}</a> | {}
-						<a href={`//${Config.routes.replays}/`} target="_blank">{TL`Replays`}</a> | {}
-						<a href="//smogon.com/forums/" target="_blank">{TL`Forum`}</a> | {}
-						<a href={`//${Config.routes.root}/rules`} target="_blank">{TL`Rules`}</a> | {}
-						<a href={`//${Config.routes.root}/credits`} target="_blank">{TL`Credits`}</a> | {}
-						<a href={`//${Config.routes.root}/privacy`} target="_blank">{TL`Privacy`}</a>
+						<a href="https://cobblemon.com/" target="_blank">Cobblemon</a> | {}
+						<a href="https://github.com/Bliinnd/CobblemonShowdown" target="_blank">{TL`Source code`}</a> | {}
+						<a href="//pokemonshowdown.com/credits" target="_blank">{TL`Credits`}</a>
 					</small>
 					<CCPAIntercept />
 				</div>
@@ -1021,7 +1026,8 @@ export class TeamForm extends preact.Component<{
 		if (window.BattleFormats) {
 			this.format ||= this.props.defaultFormat || '';
 			if (!this.format) {
-				this.format = `gen${Dex.gen}randombattle`;
+				// CobblemonShowdown : format proposé par défaut
+				this.format = 'gen9cobblemonou';
 
 				const starredPrefs = PS.prefs.starredformats || {};
 				// .reverse() because the newest starred format should be the default one
@@ -1066,40 +1072,42 @@ export class TeamForm extends preact.Component<{
 			{showCustomRules && (!this.customRules ? <p>
 				<label class="checkbox"><input
 					type="checkbox" name="customrules" checked={this.customRules} onChange={this.toggleCustomRule}
-				/> Custom rules</label>
+				/> {TL`Custom rules`}</label>
 			</p> : <fieldset class="fieldset">
 				<legend><label class="checkbox"><input
 					type="checkbox" name="customrules" checked={this.customRules} onChange={this.toggleCustomRule}
-				/> Custom rules</label></legend>
+				/> {TL`Custom rules`}</label></legend>
 				{(format?.bestOfDefault || this.bestOf) && <p>
 					<label class="checkbox">
 						<input
 							type="checkbox" name="bestof" checked={this.bestOf} onChange={this.toggleCustomRule}
 						/>
-						<abbr title="Start a team-locked best-of-n series">Best-of-<input
-							name="bestofvalue" type="number" min="3" max="9" step="2" value={this.bestOfValue}
-							onInput={this.changeBestOfValue}
-							style="width: 28px; vertical-align: initial;"
-						/></abbr></label>
+						<abbr title={TL`Start a team-locked best-of-n series`}>{TL.parts(TL`Best-of-{NUMBER}`, {
+							NUMBER: <input
+								name="bestofvalue" type="number" min="3" max="9" step="2" value={this.bestOfValue}
+								onInput={this.changeBestOfValue}
+								style="width: 28px; vertical-align: initial;"
+							/>,
+						})}</abbr></label>
 				</p>}
 				{(format?.teraPreviewDefault || this.teraPreview) && <p>
 					<label class="checkbox"><input
 						type="checkbox" name="terapreview" checked={this.teraPreview} onChange={this.toggleCustomRule}
-					/> Tera Type Preview</label>
+					/> {TL`Tera Type Preview`}</label>
 				</p>}
 				{(format?.itemClauseDefault || this.itemClause) && <p>
 					<label class="checkbox"><input
 						type="checkbox" name="itemclause" checked={this.itemClause} onChange={this.toggleCustomRule}
-					/> Item Clause</label>
+					/> {TL`Item Clause`}</label>
 				</p>}
 				<textarea
-					name="customrules" class="textbox" rows={3} placeholder="Rules separated by commas or lines"
+					name="customrules" class="textbox" rows={3} placeholder={TL`Rules separated by commas or lines`}
 					value={this.customRuleText} onInput={this.changeCustomRules}
 					style="min-height:3em"
 				/>
 				<small><a
 					href="https://github.com/smogon/pokemon-showdown/blob/master/config/CUSTOM-RULES.md" target="_blank"
-				>Custom rules guide</a></small>
+				>{TL`Custom rules guide`}</a></small>
 			</fieldset>)}
 			<p>{this.props.children}</p>
 		</form>;

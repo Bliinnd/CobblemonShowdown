@@ -748,7 +748,7 @@ export class TournamentTreeBracket extends preact.Component<{
 			return div;
 		}
 		if (!window.d3) {
-			div.innerHTML = `<b>d3 not loaded yet</b>`;
+			div.innerHTML = `<b>${BattleLog.escapeHTML(TL`d3 not loaded yet`)}</b>`;
 			this.d3Loader ||= PS.libsLoaded.then(() => {
 				this.forceUpdate();
 			});

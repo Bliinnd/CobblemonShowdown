@@ -8,7 +8,7 @@
  * @license MIT
  */
 
-import { Dex, toID, type ID } from "./battle-dex";
+import { Dex, TL, toID, type ID } from "./battle-dex";
 
 export type Args = [string, ...string[]];
 export type KWArgs = { [kw: string]: string };
@@ -23,10 +23,10 @@ type RenderValue = string | {
 };
 
 export class BattleTextParser {
-	p1 = "Player 1";
-	p2 = "Player 2";
-	p3 = "Player 3";
-	p4 = "Player 4";
+	p1 = TL`Player ${1}`;
+	p2 = TL`Player ${2}`;
+	p3 = TL`Player ${3}`;
+	p4 = TL`Player ${4}`;
 	perspective: SideID;
 	language: string;
 	gen = 9;
@@ -559,10 +559,55 @@ export class BattleTextParser {
 	pokemonName = (pokemon: string) => {
 		if (!pokemon) return '';
 		if (!pokemon.startsWith('p')) return `???pokemon:${pokemon}???`;
-		if (pokemon.charAt(3) === ':') return pokemon.slice(4).trim();
-		else if (pokemon.charAt(2) === ':') return pokemon.slice(3).trim();
-		return `???pokemon:${pokemon}???`;
+		let name;
+		if (pokemon.charAt(3) === ':') name = pokemon.slice(4).trim();
+		else if (pokemon.charAt(2) === ':') name = pokemon.slice(3).trim();
+		else return `???pokemon:${pokemon}???`;
+		return BattleTextParser.pokemonDisplayName(name, undefined, this.language);
 	};
+
+	private static isEnglish(language: string) {
+		return language === 'en' || language.startsWith('en-');
+	}
+	/**
+	 * CobblemonShowdown : nom d'une espèce (ou forme) dans la langue affichée.
+	 * Ne change rien en anglais.
+	 */
+	static speciesDisplayName(speciesForme: string, language = Dex.text.getLanguage()) {
+		if (!speciesForme || BattleTextParser.isEnglish(language) || typeof BattleText === 'undefined') {
+			return speciesForme;
+		}
+		const species = Dex.species.get(speciesForme);
+		if (!species.exists) return speciesForme;
+		return Dex.text.get(species, language).name || speciesForme;
+	}
+	/**
+	 * CobblemonShowdown : un Pokémon sans surnom porte le nom anglais de son
+	 * espèce (« Garchomp »), ce qui donnait « Garchomp (Carchacrok) » en français.
+	 * Si le nom est exactement celui de son espèce ou de son espèce de base, on
+	 * affiche le nom traduit de l'espèce. Les vrais surnoms ne changent pas, et
+	 * l'anglais non plus.
+	 *
+	 * Sans `speciesForme` (on n'a que l'identifiant `p1a: Nom`), le nom est
+	 * reconnu s'il est exactement celui d'une espèce : la Nickname Clause interdit
+	 * de surnommer un Pokémon comme une autre espèce.
+	 */
+	static pokemonDisplayName(name: string, speciesForme?: string, language = Dex.text.getLanguage()) {
+		if (!name || BattleTextParser.isEnglish(language)) return name;
+		const species = Dex.species.get(speciesForme || name);
+		if (!species.exists) return name;
+		if (name === species.name) return BattleTextParser.speciesDisplayName(species.name, language);
+		if (name === species.baseSpecies) return BattleTextParser.speciesDisplayName(species.baseSpecies, language);
+		return name;
+	}
+	/** CobblemonShowdown : noms de types traduits (« Fire/Flying » compris) */
+	static typeName(type: string, language = Dex.text.getLanguage()) {
+		if (!type || typeof BattleText === 'undefined') return type;
+		return type.split('/').map(name => {
+			const translated = BattleText[language]?.TypeNames?.[name] || BattleText.en?.TypeNames?.[name];
+			return typeof translated === 'string' ? translated : name;
+		}).join('/');
+	}
 
 	pokemon(pokemon: string) {
 		if (!pokemon) return '';
@@ -978,12 +1023,16 @@ export class BattleTextParser {
 			if (id === 'typechange') {
 				const template = this.template('typeChange', kwArgs.from);
 				return line1 + this.render(template, {
-					POKEMON: this.pokemon(pokemon), TYPE: arg3, SOURCE: this.pokemon(kwArgs.of),
+					POKEMON: this.pokemon(pokemon),
+					TYPE: BattleTextParser.typeName(arg3, this.language),
+					SOURCE: this.pokemon(kwArgs.of),
 				});
 			}
 			if (id === 'typeadd') {
 				const template = this.template('typeAdd', kwArgs.from);
-				return line1 + this.render(template, { POKEMON: this.pokemon(pokemon), TYPE: arg3 });
+				return line1 + this.render(template, {
+					POKEMON: this.pokemon(pokemon), TYPE: BattleTextParser.typeName(arg3, this.language),
+				});
 			}
 			if (id.startsWith('stockpile')) {
 				const num = id.slice(9);
@@ -1643,7 +1692,7 @@ export class BattleTextParser {
 			let templateId = cmd.slice(1);
 			let template = this.template(templateId, id);
 			const pokemonName = this.pokemon(pokemon);
-			return this.render(template, { POKEMON: pokemonName, TYPE: type });
+			return this.render(template, { POKEMON: pokemonName, TYPE: BattleTextParser.typeName(type, this.language) });
 		}
 
 		case '-zpower': {

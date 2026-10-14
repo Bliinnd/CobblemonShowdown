@@ -282,7 +282,7 @@ class PSPrefs extends PSStreamModel<string | null> {
 			}
 		} else if (isChrome64) {
 			newPrefs['nogif'] = true;
-			PS.alert('Your version of Chrome has a bug that makes animated GIFs freeze games sometimes, so certain animations have been disabled. Only some people have the problem, so you can experiment and enable them in the Options menu setting "Disable GIFs for Chrome 64 bug".');
+			PS.alert(TL`Your version of Chrome has a bug that makes animated GIFs freeze games sometimes, so certain animations have been disabled. Only some people have the problem, so you can experiment and enable them in the Options menu setting "Disable GIFs for Chrome 64 bug".`);
 		}
 
 		const colorSchemeQuerySupported = window.matchMedia?.('(prefers-color-scheme: dark)').media !== 'not all';
@@ -326,21 +326,21 @@ class PSPrefs extends PSStreamModel<string | null> {
 	}
 	doAutojoin() {
 		let autojoin = PS.prefs.autojoin;
-		if (autojoin) {
-			if (typeof autojoin === 'string') {
-				autojoin = { showdown: autojoin };
-			}
-			let rooms = autojoin[PS.server.id] || '';
-			for (let title of rooms.split(",")) {
-				const id = /[^a-z0-9-]/.test(title) ? toID(title) as any as RoomID : title as RoomID;
-				PS.addRoom({ id, title, connected: 'pending', autofocus: false });
-			}
-			const cmd = `/autojoin ${rooms}`;
-			// Don't jam up the queue with duplicate autojoin requests.
-			// Sending multiple autojoins is a server error.
-			if (PS.connection?.queue.includes(cmd)) return;
-			PS.send(cmd);
+		if (typeof autojoin === 'string') {
+			autojoin = { showdown: autojoin };
 		}
+		let rooms = autojoin?.[PS.server.id] || '';
+		for (let title of rooms.split(",")) {
+			if (!title) continue;
+			const id = /[^a-z0-9-]/.test(title) ? toID(title) as any as RoomID : title as RoomID;
+			PS.addRoom({ id, title, connected: 'pending', autofocus: false });
+		}
+		// CobblemonShowdown : comme l'ancien client, on envoie toujours /autojoin, pour que
+		// le serveur fasse rejoindre à chacun ses salons automatiques (Discussion).
+		const cmd = `/autojoin ${rooms}`;
+		// Don't jam up the queue with duplicate autojoin requests.
+		// Sending multiple autojoins is a server error.
+		if (!PS.connection?.queue.includes(cmd)) PS.send(cmd);
 
 		for (const roomid in PS.rooms) {
 			const room = PS.rooms[roomid]!;
@@ -404,10 +404,22 @@ class PSTeams extends PSStreamModel<'team' | 'format'> {
 	byKey: { [key: string]: Team | undefined } = {};
 	deletedTeams: [Team, number][] = [];
 	uploading: Team | null = null;
+	/**
+	 * CobblemonShowdown : les équipes sont sauvegardées sur le compte du joueur
+	 * (serveur de comptes, actions `cobblemonloadteams`/`cobblemonsaveteams`) ;
+	 * le navigateur n'en garde qu'une copie. `accountOwner` est le compte dont
+	 * les équipes sont affichées, ou null pour les équipes d'un invité.
+	 */
+	accountOwner: ID | null = null;
+	/** Des modifications attendent d'être envoyées au compte. */
+	accountDirty = false;
+	accountSaveTimer: ReturnType<typeof setTimeout> | null = null;
+	accountErrorShown = false;
 	constructor() {
 		super();
 		try {
 			this.unpackAll(localStorage.getItem('showdown_teams'));
+			this.accountOwner = (localStorage.getItem('cobblemon_teams_owner') || null) as ID | null;
 		} catch {}
 	}
 	teambuilderFormat(format: string): ID {
@@ -491,10 +503,106 @@ class PSTeams extends PSStreamModel<'team' | 'format'> {
 		)).join('\n');
 	}
 	save() {
+		this.saveLocal();
+		this.scheduleAccountSave();
+	}
+	saveLocal() {
 		try {
 			localStorage.setItem('showdown_teams', this.packAll(this.list));
 		} catch {}
 		this.update('team');
+	}
+	setAccountOwner(userid: ID | null) {
+		this.accountOwner = userid;
+		try {
+			if (userid) {
+				localStorage.setItem('cobblemon_teams_owner', userid);
+			} else {
+				localStorage.removeItem('cobblemon_teams_owner');
+			}
+		} catch {}
+	}
+	replaceAll(buffer: string) {
+		this.byKey = {};
+		this.deletedTeams = [];
+		this.unpackAll(buffer);
+	}
+	/**
+	 * Récupère les équipes du compte connecté. Les équipes faites en invité
+	 * sont ajoutées au compte à la première connexion.
+	 */
+	syncAccount() {
+		PSLoginServer.query('cobblemonloadteams').then(data => {
+			if (!data) return; // serveur injoignable : on garde la copie locale
+			if (data.actionerror) {
+				return PS.alert(TL`Error loading uploaded teams: ${data.actionerror}`);
+			}
+			if (!data.loggedIn) {
+				this.clearAccountTeams();
+				return;
+			}
+			const userid = data.loggedIn as ID;
+			const accountTeams: string | null = data.teams;
+			if (this.accountOwner === userid) {
+				if (this.accountDirty || accountTeams === null) {
+					void this.flushAccountSave();
+				} else if (accountTeams !== this.packAll(this.list)) {
+					this.replaceAll(accountTeams);
+					this.saveLocal();
+				}
+				return;
+			}
+			let needsUpload = false;
+			if (this.accountOwner) {
+				// Équipes d'un autre compte : remplacées par celles de ce compte.
+				this.replaceAll(accountTeams || '');
+			} else {
+				const accountLines = accountTeams ? accountTeams.split('\n') : [];
+				const guestLines = this.list.length ? this.packAll(this.list).split('\n') : [];
+				const newLines = guestLines.filter(line => !accountLines.includes(line));
+				this.replaceAll([...accountLines, ...newLines].join('\n'));
+				needsUpload = !!newLines.length;
+			}
+			this.setAccountOwner(userid);
+			this.accountDirty = false;
+			this.saveLocal();
+			if (needsUpload) void this.flushAccountSave();
+		});
+	}
+	scheduleAccountSave() {
+		if (!this.accountOwner) return;
+		this.accountDirty = true;
+		if (this.accountSaveTimer) clearTimeout(this.accountSaveTimer);
+		this.accountSaveTimer = setTimeout(() => void this.flushAccountSave(), 1000);
+	}
+	/** Envoie tout de suite les équipes au compte. */
+	flushAccountSave(): Promise<void> {
+		if (this.accountSaveTimer) clearTimeout(this.accountSaveTimer);
+		this.accountSaveTimer = null;
+		if (!this.accountOwner) return Promise.resolve();
+		this.accountDirty = true;
+		const teams = this.packAll(this.list);
+		return PSLoginServer.query('cobblemonsaveteams', { teams }).then(data => {
+			if (data?.success) {
+				if (this.packAll(this.list) === teams) this.accountDirty = false;
+				this.accountErrorShown = false;
+				return;
+			}
+			if (this.accountErrorShown) return;
+			this.accountErrorShown = true;
+			const error = data?.actionerror || TL`The login server did not respond.`;
+			PS.alert(TL`Your teams could not be saved to your account: ${error}`);
+		});
+	}
+	/** Déconnexion : les équipes du compte ne restent pas dans le navigateur. */
+	clearAccountTeams() {
+		if (!this.accountOwner) return;
+		if (this.accountSaveTimer) clearTimeout(this.accountSaveTimer);
+		this.accountSaveTimer = null;
+		this.accountDirty = false;
+		this.setAccountOwner(null);
+		this.replaceAll('');
+		this.saveLocal();
 	}
 	unpackLine(line: string): Team | null {
 		const pipeIndex = line.indexOf('|');
@@ -527,7 +635,8 @@ class PSTeams extends PSStreamModel<'team' | 'format'> {
 		PSLoginServer.query('getteams').then(data => {
 			if (!data) return;
 			if (data.actionerror) {
-				return PS.alert(TL`Error loading uploaded teams: ${data.actionerror}`);
+				const error = PSLoginServer.errorText(data.actionerror);
+				return PS.alert(TL`Error loading uploaded teams: ${error}`);
 			}
 			const teams: { [key: string]: UploadedTeam } = {};
 			for (const team of data.teams) {
@@ -610,7 +719,8 @@ class PSTeams extends PSStreamModel<'team' | 'format'> {
 		}).then(data => {
 			if (!team.uploaded) return;
 			if (!data?.team) {
-				const actionError = data?.actionerror as string || TL`Error unknown. Try again later.`;
+				const actionError = data?.actionerror ?
+					PSLoginServer.errorText(data.actionerror as string) : TL`Error unknown. Try again later.`;
 				PS.alert(TL`Failed to load team: ${actionError}`);
 				return;
 			}
@@ -709,7 +819,7 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 		name = this.validateName(name);
 		const userid = toID(name);
 		if (!userid) {
-			this.updateLogin({ name, error: "Usernames must contain at least one letter." });
+			this.updateLogin({ name, error: TL`Usernames must contain at least one letter.` });
 			return;
 		}
 
@@ -732,7 +842,7 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 		if (!password && !special) {
 			this.updateLogin({
 				name,
-				error: "Password can't be empty.",
+				error: TL`Password can't be empty.`,
 				...special as any,
 			});
 		}
@@ -746,6 +856,8 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 				const username = data.curuser.username;
 				this.registered = { name: username, userid: toID(username) };
 				this.handleAssertion(name, data.assertion);
+				// CobblemonShowdown : récupère les équipes du compte
+				PS.teams.syncAccount();
 			} else {
 				// wrong password
 				if (special.needsGoogle) {
@@ -756,7 +868,8 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 				}
 				this.updateLogin({
 					name,
-					error: data?.error || 'Wrong password.',
+					// translated if it's a known login server message
+					error: PSLoginServer.errorText(data?.error || 'Wrong password.'),
 					...special as any,
 				});
 			}
@@ -768,7 +881,8 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 			PS.join('login' as RoomID, { args: update });
 		}
 	}
-	handleAssertion(name: string, assertion?: string | null) {
+	/** @param newlyRegistered the name was just registered (the server needs it to accept the new account) */
+	handleAssertion(name: string, assertion?: string | null, newlyRegistered = false) {
 		if (!assertion) {
 			PS.alert(TL`Error logging in.`);
 			return;
@@ -790,18 +904,21 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 		} else if (assertion === ';;@gmail') {
 			this.updateLogin({ name, needsGoogle: true });
 		} else if (assertion.startsWith(';;')) {
-			this.updateLogin({ error: assertion.slice(2) });
+			this.updateLogin({ error: PSLoginServer.errorText(assertion.slice(2)) });
 		} else if (assertion.includes('\n') || !assertion) {
 			PS.alert(TL`Something is interfering with our connection to the login server.`);
 		} else {
-			PS.send(`/trn ${name},0,${assertion}`);
+			PS.send(`/trn ${name},${newlyRegistered ? 1 : 0},${assertion}`);
 			this.update({ success: true });
 		}
 	}
 	logOut() {
-		PSLoginServer.query(
-			'logout', { userid: this.userid }
-		);
+		// CobblemonShowdown : dernières modifications envoyées au compte avant la déconnexion
+		const userid = this.userid;
+		void PS.teams.flushAccountSave().then(() => PSLoginServer.query(
+			'logout', { userid }
+		));
+		PS.teams.clearAccountTeams();
 		PS.send(`/logout`);
 		PS.connection?.disconnect();
 
@@ -1189,7 +1306,8 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 		return false;
 	}
 	connect(): void {
-		throw new Error(`This room is not designed to connect to a server room`);
+		// shown to the player by /reconnect
+		throw new Error(TL`This room is not designed to connect to a server room`);
 	}
 	/**
 	 * By default, a reconnected room will receive the init message in `receiveBatch`
@@ -1253,6 +1371,16 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 			this.add(`|error|${message}`);
 		}
 	}
+	/** `/highlight` lists: `key` is `global` or `serverid#roomid` */
+	highlightListText(key: string, words: string[], updated?: boolean) {
+		const list = words.join(', ');
+		if (updated) {
+			return key === 'global' ?
+				TL`Now highlighting on (everywhere): ${list}` : TL`Now highlighting on (in ${key}): ${list}`;
+		}
+		return key === 'global' ?
+			TL`Current highlight list (everywhere): ${list}` : TL`Current highlight list (in ${key}): ${list}`;
+	}
 	parseClientCommands(commands: ClientCommands<this>) {
 		const parsedCommands: ParsedClientCommands = {};
 		for (const cmd in commands) {
@@ -1311,14 +1439,14 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 		'maximize'(target) {
 			const roomid = /[^a-z0-9-]/.test(target) ? toID(target) as any as RoomID : target as RoomID;
 			const targetRoom = roomid ? PS.rooms[roomid] : this;
-			if (!targetRoom) return this.errorReply(`Room '${roomid}' not found.`);
+			if (!targetRoom) return this.errorReply(TL`Room '${roomid}' not found.`);
 			if (PS.isPanel(targetRoom)) {
-				this.errorReply(`'${roomid}' is already maximized.`);
+				this.errorReply(TL`'${roomid}' is already maximized.`);
 			} else if (!PS.isPopup(targetRoom)) {
 				PS.moveRoom(targetRoom, 'left', false, 0);
 				PS.update();
 			} else {
-				this.errorReply(`'${roomid}' is a popup and can't be maximized.`);
+				this.errorReply(TL`'${roomid}' is a popup and can't be maximized.`);
 			}
 		},
 		'logout'() {
@@ -1326,8 +1454,8 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 		},
 		'reconnect,connect'() {
 			if (this.connected) {
-				if (this.connected !== true) return this.errorReply(`You are already connecting.`);
-				return this.errorReply(`You are already connected.`);
+				if (this.connected !== true) return this.errorReply(TL`You are already connecting.`);
+				return this.errorReply(TL`You are already connected.`);
 			}
 
 			if (!PS.isOffline) {
@@ -1357,15 +1485,15 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 		},
 		'workoffline'() {
 			if (PS.isOffline) {
-				return this.errorReply(`You are already offline.`);
+				return this.errorReply(TL`You are already offline.`);
 			}
 			PS.connection?.disconnect();
 		},
 		'cancelsearch'() {
 			if (PS.mainmenu.cancelSearch()) {
-				this.add(`||Search cancelled.`, true);
+				this.add(`||${TL`Search cancelled.`}`, true);
 			} else {
-				this.errorReply(`You're not currently searching.`);
+				this.errorReply(TL`You're not currently searching.`);
 			}
 		},
 		'disallowspectators'(target) {
@@ -1374,29 +1502,29 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 		'star'(target) {
 			const id = toID(target);
 			if (!window.BattleFormats[id] && !/^gen[1-9]$/.test(id)) {
-				this.errorReply(`Format ${id} does not exist`);
+				this.errorReply(TL`Format ${id} does not exist`);
 				return;
 			}
 			let starred = PS.prefs.starredformats || {};
 			starred[id] = true;
 			PS.prefs.set('starredformats', starred);
-			this.add(`||Added format ${id} to favourites`);
+			this.add(`||${TL`Added format ${id} to favourites`}`);
 			this.update(null);
 		},
 		'unstar'(target) {
 			const id = toID(target);
 			if (!window.BattleFormats[id] && !/^gen[1-9]$/.test(id)) {
-				this.errorReply(`Format ${id} does not exist`);
+				this.errorReply(TL`Format ${id} does not exist`);
 				return;
 			}
 			let starred = PS.prefs.starredformats || {};
 			if (!starred[id]) {
-				this.errorReply(`${id} is not in your favourites!`);
+				this.errorReply(TL`${id} is not in your favourites!`);
 				return;
 			}
 			delete starred[id];
 			PS.prefs.set('starredformats', starred);
-			this.add(`||Removed format ${id} from favourites`);
+			this.add(`||${TL`Removed format ${id} from favourites`}`);
 			this.update(null);
 		},
 		'nick'(target, cmd, element) {
@@ -1433,13 +1561,12 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 				return;
 			}
 			if (toID(target) === PS.user.userid) {
-				this.add(`||You are not able to ignore yourself.`);
+				this.add(`||${TL`You are not able to ignore yourself.`}`);
 			} else if (ignore[toID(target)]) {
-				this.add(`||User '${target}' is already on your ignore list. ` +
-					`(Moderator messages will not be ignored.)`);
+				this.add(`||${TL`User '${target}' is already on your ignore list. (Moderator messages will not be ignored.)`}`);
 			} else {
 				ignore[toID(target)] = 1;
-				this.add(`||User '${target}' ignored. (Moderator messages will not be ignored.)`);
+				this.add(`||${TL`User '${target}' ignored. (Moderator messages will not be ignored.)`}`);
 				PS.prefs.set("ignore", ignore);
 			}
 		},
@@ -1451,35 +1578,36 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 				return;
 			}
 			if (!ignore[toID(target)]) {
-				this.add(`||User '${target}' isn't on your ignore list.`);
+				this.add(`||${TL`User '${target}' isn't on your ignore list.`}`);
 			} else {
 				ignore[toID(target)] = 0;
-				this.add(`||User '${target}' no longer ignored.`);
+				this.add(`||${TL`User '${target}' no longer ignored.`}`);
 				PS.prefs.set("ignore", ignore);
 			}
 		},
 		'clearignore'(target) {
 			if (toID(target) !== 'confirm') {
-				this.add("||Are you sure you want to clear your ignore list?");
-				this.add('|html|If you\'re sure, use <code>/clearignore confirm</code>');
+				this.add(`||${TL`Are you sure you want to clear your ignore list?`}`);
+				this.add(`|html|${TL`If you're sure, use <code>/clearignore confirm</code>`}`);
 				return false;
 			}
 			let ignoreList = PS.prefs.ignore || {};
-			if (!Object.keys(ignoreList).length) return this.add("You have no ignored users.");
+			if (!Object.keys(ignoreList).length) return this.add(TL`You have no ignored users.`);
 			PS.prefs.set('ignore', null);
-			this.add("||Your ignore list was cleared.");
+			this.add(`||${TL`Your ignore list was cleared.`}`);
 		},
 		'ignorelist'(target) {
 			let ignoreList = Object.keys(PS.prefs.ignore || {});
 			if (ignoreList.length === 0) {
-				this.add('||You are currently not ignoring anyone.');
+				this.add(`||${TL`You are currently not ignoring anyone.`}`);
 			} else {
 				let ignoring: string[] = [];
 				for (const key in PS.prefs.ignore) {
 					if (PS.prefs.ignore[key] === 1) ignoring.push(key);
 				}
-				if (!ignoring.length) return this.add('||You are currently not ignoring anyone.');
-				this.add(`||You are currently ignoring: ${ignoring.join(', ')}`);
+				if (!ignoring.length) return this.add(`||${TL`You are currently not ignoring anyone.`}`);
+				const ignoringList = ignoring.join(', ');
+				this.add(`||${TL`You are currently ignoring: ${ignoringList}`}`);
 			}
 		},
 		'showjoins'(target) {
@@ -1492,10 +1620,10 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 				} else {
 					serverShowjoins[room] = 1;
 				}
-				this.add(`||Join/leave messages in room ${room}: ALWAYS ON`);
+				this.add(`||${TL`Join/leave messages in room ${room}: ALWAYS ON`}`);
 			} else {
 				serverShowjoins = { global: 1 };
-				this.add(`||Join/leave messages: ALWAYS ON`);
+				this.add(`||${TL`Join/leave messages: ALWAYS ON`}`);
 			}
 			showjoins[PS.server.id] = serverShowjoins;
 			PS.prefs.set("showjoins", showjoins);
@@ -1510,31 +1638,31 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 				} else {
 					serverShowjoins[room] = 0;
 				}
-				this.add(`||Join/leave messages on room ${room}: OFF`);
+				this.add(`||${TL`Join/leave messages on room ${room}: OFF`}`);
 			} else {
 				serverShowjoins = { global: 0 };
-				this.add(`||Join/leave messages: OFF`);
+				this.add(`||${TL`Join/leave messages: OFF`}`);
 			}
 			showjoins[PS.server.id] = serverShowjoins;
 			PS.prefs.set('showjoins', showjoins);
 		},
 		'showdebug'() {
 			PS.prefs.set('showdebug', true);
-			this.add('||Debug battle messages: ON');
+			this.add(`||${TL`Debug battle messages: ON`}`);
 			PS.prefs.setShowDebug(true);
 		},
 		'hidedebug'() {
 			PS.prefs.set('showdebug', false);
-			this.add('||Debug battle messages: OFF');
+			this.add(`||${TL`Debug battle messages: OFF`}`);
 			PS.prefs.setShowDebug(false);
 		},
 		'showbattles'() {
 			PS.prefs.set('showbattles', true);
-			this.add('||Battle Messages: ON');
+			this.add(`||${TL`Battle Messages: ON`}`);
 		},
 		'hidebattles'() {
 			PS.prefs.set('showbattles', false);
-			this.add('||Battle Messages: HIDDEN');
+			this.add(`||${TL`Battle Messages: HIDDEN`}`);
 		},
 		'afd'(target) {
 			if (!target) return this.send('/help afd');
@@ -1542,56 +1670,60 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 			if (mode === 'sprites') {
 				PS.prefs.set('afd', 'sprites');
 				PS.prefs.setAFD('sprites');
-				this.add('||April Fools\' Day mode set to SPRITES.');
+				this.add(`||${TL`April Fools' Day mode set to SPRITES.`}`);
 			} else if (mode === 'off') {
 				PS.prefs.set('afd', null);
 				PS.prefs.setAFD();
-				this.add('||April Fools\' Day mode set to OFF temporarily.');
-				this.add('||Trying to turn it off permanently? Use /afd never');
+				this.add(`||${TL`April Fools' Day mode set to OFF temporarily.`}`);
+				this.add(`||${TL`Trying to turn it off permanently? Use /afd never`}`);
 			} else if (mode === 'default') {
 				PS.prefs.setAFD();
 				PS.prefs.set('afd', null);
-				this.add('||April Fools\' Day mode set to DEFAULT (Currently ' + (Dex.afdMode ? 'FULL' : 'OFF') + ').');
+				const currentMode = Dex.afdMode ? 'FULL' : 'OFF';
+				this.add(`||${TL`April Fools' Day mode set to DEFAULT (Currently ${currentMode}).`}`);
 			} else if (mode === 'full') {
 				PS.prefs.set('afd', true);
 				PS.prefs.setAFD(true);
-				this.add('||April Fools\' Day mode set to FULL.');
+				this.add(`||${TL`April Fools' Day mode set to FULL.`}`);
 			} else if (target === 'never') {
 				PS.prefs.set('afd', false);
 				PS.prefs.setAFD(false);
-				this.add('||April Fools\' Day mode set to NEVER.');
+				this.add(`||${TL`April Fools' Day mode set to NEVER.`}`);
 				if (Config.server?.afd) {
-					this.add('||You\'re using the AFD URL, which will still override this setting and enable AFD mode on refresh.');
+					this.add(`||${TL`You're using the AFD URL, which will still override this setting and enable AFD mode on refresh.`}`);
 				}
 			} else {
-				if (target) this.add('||AFD option "' + target + '" not recognized');
+				if (target) this.add(`||${TL`AFD option "${target}" not recognized`}`);
 				let curMode = PS.prefs.afd as string | boolean;
 				if (curMode === true) curMode = 'FULL';
 				if (curMode === false) curMode = 'NEVER';
 				if (curMode) curMode = curMode.toUpperCase();
-				if (!curMode) curMode = 'DEFAULT (currently ' + (Dex.afdMode ? 'FULL' : 'OFF') + ')';
-				this.add('||AFD is currently set to ' + curMode);
+				if (!curMode) {
+					const currentMode = Dex.afdMode ? 'FULL' : 'OFF';
+					curMode = TL`DEFAULT (currently ${currentMode})`;
+				}
+				this.add(`||${TL`AFD is currently set to ${curMode}`}`);
 				this.send('/help afd');
 			}
 			void Dex.loadTextData().then(() => PS.updateTranslatedText());
 		},
 		'cleardms,clearpms'() {
-			if (!PS.clearDMs()) return this.add('||You do not have any DM windows open.');
-			this.add("||All DM windows cleared and closed.");
+			if (!PS.clearDMs()) return this.add(`||${TL`You do not have any DM windows open.`}`);
+			this.add(`||${TL`All DM windows cleared and closed.`}`);
 		},
 		'unpackhidden'() {
 			if (PS.prefs.nounlink) {
-				this.add('||(Already visible.)');
+				this.add(`||${TL`(Already visible.)`}`);
 			}
 			PS.prefs.set('nounlink', true);
-			this.add('||Locked/banned users\' chat messages: VISIBLE');
+			this.add(`||${TL`Locked/banned users' chat messages: VISIBLE`}`);
 		},
 		'packhidden'() {
 			if (!PS.prefs.nounlink) {
-				this.add('||(Already hidden.)');
+				this.add(`||${TL`(Already hidden.)`}`);
 			}
 			PS.prefs.set('nounlink', false);
-			this.add('||Locked/banned users\' chat messages: HIDDEN');
+			this.add(`||${TL`Locked/banned users' chat messages: HIDDEN`}`);
 		},
 		'hl,highlight'(target) {
 			let highlights = PS.prefs.highlights || {};
@@ -1614,19 +1746,22 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 							try {
 								new RegExp(targets[i]);
 							} catch (e: any) {
+								const word = targets[i];
+								const message = e.message as string;
 								return this.errorReply(
-									e.message.startsWith('Invalid regular expression: ') ?
-										e.message :
-										'Invalid regular expression: /' + targets[i] + '/: ' + e.message
+									message.startsWith('Invalid regular expression: ') ?
+										message :
+										TL`Invalid regular expression: /${word}/: ${message}`
 								);
 							}
 						}
 						if (highlightList.includes(targets[i])) {
-							return this.errorReply(`${targets[i]} is already on your highlights list.`);
+							const word = targets[i];
+							return this.errorReply(TL`${word} is already on your highlights list.`);
 						}
 					}
 					highlights[key] = highlightList.concat(targets);
-					this.add(`||Now highlighting on ${(key === 'global' ? "(everywhere): " : "(in " + key + "): ")} ${highlights[key].join(', ')}`);
+					this.add(`||${this.highlightListText(key, highlights[key], true)}`);
 					// We update the regex
 					ChatRoom.updateHighlightRegExp(highlights);
 					break;
@@ -1641,14 +1776,14 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 						}
 					}
 					highlights[key] = newHls;
-					this.add(`||Now highlighting on ${(key === 'global' ? "(everywhere): " : "(in " + key + "): ")} ${highlights[key].join(', ')}`);
+					this.add(`||${this.highlightListText(key, highlights[key], true)}`);
 					// We update the regex
 					ChatRoom.updateHighlightRegExp(highlights);
 					break;
 				}
 				default:
 					// Wrong command
-					this.errorReply('Invalid /highlight command.');
+					this.errorReply(TL`Invalid /highlight command.`);
 					this.handleSend('/help highlight'); // show help
 					return;
 				}
@@ -1658,24 +1793,24 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 					let key = (target === 'roomclear' ? (PS.server.id + '#' + this.id) : (target === 'clearall' ? '' : 'global'));
 					if (key) {
 						highlights[key] = [];
-						this.add(`||All highlights (${(key === 'global' ? "everywhere" : "in " + key)}) cleared.`);
+						this.add(`||${key === 'global' ? TL`All highlights (everywhere) cleared.` : TL`All highlights (in ${key}) cleared.`}`);
 						ChatRoom.updateHighlightRegExp(highlights);
 					} else {
 						PS.prefs.set('highlights', null);
-						this.add("||All highlights (in all rooms and globally) cleared.");
+						this.add(`||${TL`All highlights (in all rooms and globally) cleared.`}`);
 						ChatRoom.updateHighlightRegExp({});
 					}
 				} else if (['show', 'list', 'roomshow', 'roomlist'].includes(target)) {
 					// Shows a list of the current highlighting words
 					let key = target.startsWith('room') ? (PS.server.id + '#' + this.id) : 'global';
 					if (highlights[key] && highlights[key].length > 0) {
-						this.add(`||Current highlight list ${(key === 'global' ? "(everywhere): " : "(in " + key + "): ")}${highlights[key].join(", ")}`);
+						this.add(`||${this.highlightListText(key, highlights[key])}`);
 					} else {
-						this.add(`||Your highlight list${(key === 'global' ? '' : ' in ' + key)} is empty.`);
+						this.add(`||${key === 'global' ? TL`Your highlight list is empty.` : TL`Your highlight list in ${key} is empty.`}`);
 					}
 				} else {
 					// Wrong command
-					this.errorReply('Invalid /highlight command.');
+					this.errorReply(TL`Invalid /highlight command.`);
 					this.handleSend('/help highlight'); // show help
 				}
 			}
@@ -1687,114 +1822,117 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 			switch (toID(target)) {
 			case 'chal':
 			case 'chall':
-			case 'challenge':
-				this.add('||/challenge - Open a prompt to challenge a user to a battle.');
-				this.add('||/challenge [user] - Challenge the user [user] to a battle.');
-				this.add('||/challenge [user], [format] - Challenge the user [user] to a battle in the specified [format].');
-				this.add('||/challenge [user], [format] @@@ [rules] - Challenge the user [user] to a battle with custom rules.');
-				this.add('||[rules] can be a comma-separated list of: [added rule], ![removed rule], -[banned thing], *[restricted thing], +[unbanned/unrestricted thing]');
-				this.add('||If used in the DMs of a user, no [user] parameter can be used and it will challenge that user.');
-				this.add('||/battlerules - Detailed information on what can go in [rules].');
+			case 'challenge': {
+				this.add(`||${TL`/challenge - Open a prompt to challenge a user to a battle.`}`);
+				this.add(`||${TL`/challenge [user] - Challenge the user [user] to a battle.`}`);
+				this.add(`||${TL`/challenge [user], [format] - Challenge the user [user] to a battle in the specified [format].`}`);
+				this.add(`||${TL`/challenge [user], [format] @@@ [rules] - Challenge the user [user] to a battle with custom rules.`}`);
+				// not part of the key: TL takes a text in brackets, like `[rules] ... thing]`, for a button
+				const rules = '[rules]';
+				this.add(`||${TL`${rules} can be a comma-separated list of: [added rule], ![removed rule], -[banned thing], *[restricted thing], +[unbanned/unrestricted thing]`}`);
+				this.add(`||${TL`If used in the DMs of a user, no [user] parameter can be used and it will challenge that user.`}`);
+				this.add(`||${TL`/battlerules - Detailed information on what can go in [rules].`}`);
 				return;
+			}
 			case 'accept':
-				this.add('||/accept - Accept a challenge if only one is pending.');
-				this.add('||/accept [user] - Accept a challenge from the specified user.');
+				this.add(`||${TL`/accept - Accept a challenge if only one is pending.`}`);
+				this.add(`||${TL`/accept [user] - Accept a challenge from the specified user.`}`);
 				return;
 			case 'reject':
-				this.add('||/reject - Reject a challenge if only one is pending.');
-				this.add('||/reject [user] - Reject a challenge from the specified user.');
+				this.add(`||${TL`/reject - Reject a challenge if only one is pending.`}`);
+				this.add(`||${TL`/reject [user] - Reject a challenge from the specified user.`}`);
 				return;
 			case 'user':
 			case 'open':
-				this.add('||/user [user] - Open a popup containing the user [user]\'s avatar, name, rank, and chatroom list.');
+				this.add(`||${TL`/user [user] - Open a popup containing the user [user]'s avatar, name, rank, and chatroom list.`}`);
 				return;
 			case 'news':
-				this.add('||/news - Opens a popup containing the news.');
+				this.add(`||${TL`/news - Opens a popup containing the news.`}`);
 				return;
 			case 'ignore':
 			case 'unignore':
-				this.add('||/ignore [user] - Ignore all messages from the user [user].');
-				this.add('||/unignore [user] - Remove the user [user] from your ignore list.');
-				this.add('||/ignorelist - List all the users that you currently ignore.');
-				this.add('||/clearignore - Remove all users on your ignore list.');
-				this.add('||Note that staff messages cannot be ignored.');
+				this.add(`||${TL`/ignore [user] - Ignore all messages from the user [user].`}`);
+				this.add(`||${TL`/unignore [user] - Remove the user [user] from your ignore list.`}`);
+				this.add(`||${TL`/ignorelist - List all the users that you currently ignore.`}`);
+				this.add(`||${TL`/clearignore - Remove all users on your ignore list.`}`);
+				this.add(`||${TL`Note that staff messages cannot be ignored.`}`);
 				return;
 			case 'nick':
-				this.add('||/nick [new username] - Change your username.');
+				this.add(`||${TL`/nick [new username] - Change your username.`}`);
 				return;
 			case 'clear':
-				this.add('||/clear - Clear the room\'s chat log.');
+				this.add(`||${TL`/clear - Clear the room's chat log.`}`);
 				return;
 			case 'showdebug':
 			case 'hidedebug':
-				this.add('||/showdebug - Receive debug messages from battle events.');
-				this.add('||/hidedebug - Ignore debug messages from battle events.');
+				this.add(`||${TL`/showdebug - Receive debug messages from battle events.`}`);
+				this.add(`||${TL`/hidedebug - Ignore debug messages from battle events.`}`);
 				return;
 			case 'showjoins':
 			case 'hidejoins':
-				this.add('||/showjoins [room] - Receive users\' join/leave messages.');
-				this.add('||/hidejoins [room] - Ignore users\' join/leave messages.');
-				this.add('||If no [room] is provided, changes the global setting.');
+				this.add(`||${TL`/showjoins [room] - Receive users' join/leave messages.`}`);
+				this.add(`||${TL`/hidejoins [room] - Ignore users' join/leave messages.`}`);
+				this.add(`||${TL`If no [room] is provided, changes the global setting.`}`);
 				return;
 			case 'showbattles':
 			case 'hidebattles':
-				this.add('||/showbattles - Receive links to new battles in Lobby.');
-				this.add('||/hidebattles - Ignore links to new battles in Lobby.');
+				this.add(`||${TL`/showbattles - Receive links to new battles in Lobby.`}`);
+				this.add(`||${TL`/hidebattles - Ignore links to new battles in Lobby.`}`);
 				return;
 			case 'ffto':
 			case 'fastforwardto':
-				this.add('||/ffto [turn] - Skip to turn [turn] in the current battle.');
-				this.add('||/ffto +[turn] - Skip forward [turn] turns.');
-				this.add('||/ffto -[turn] - Skip backward [turn] turns.');
-				this.add('||/ffto 0 - Skip to the start of the battle.');
-				this.add('||/ffto end - Skip to the end of the battle.');
+				this.add(`||${TL`/ffto [turn] - Skip to turn [turn] in the current battle.`}`);
+				this.add(`||${TL`/ffto +[turn] - Skip forward [turn] turns.`}`);
+				this.add(`||${TL`/ffto -[turn] - Skip backward [turn] turns.`}`);
+				this.add(`||${TL`/ffto 0 - Skip to the start of the battle.`}`);
+				this.add(`||${TL`/ffto end - Skip to the end of the battle.`}`);
 				return;
 			case 'unpackhidden':
 			case 'packhidden':
-				this.add('||/unpackhidden - Suppress hiding locked or banned users\' chat messages after the fact.');
-				this.add('||/packhidden - Hide locked or banned users\' chat messages after the fact.');
-				this.add('||Hidden messages from a user can be restored by clicking the button underneath their lock/ban reason.');
+				this.add(`||${TL`/unpackhidden - Suppress hiding locked or banned users' chat messages after the fact.`}`);
+				this.add(`||${TL`/packhidden - Hide locked or banned users' chat messages after the fact.`}`);
+				this.add(`||${TL`Hidden messages from a user can be restored by clicking the button underneath their lock/ban reason.`}`);
 				return;
 			case 'timestamps':
-				this.add('||Set your timestamps preference:');
-				this.add('||/timestamps [all|lobby|pms], [minutes|seconds|off]');
-				this.add('||all - Change all timestamps preferences, lobby - Change only lobby chat preferences, pms - Change only PM preferences.');
-				this.add('||off - Set timestamps off, minutes - Show timestamps of the form [hh:mm], seconds - Show timestamps of the form [hh:mm:ss].');
+				this.add(`||${TL`Set your timestamps preference:`}`);
+				this.add(`||${TL`/timestamps [all|lobby|pms], [minutes|seconds|off]`}`);
+				this.add(`||${TL`all - Change all timestamps preferences, lobby - Change only lobby chat preferences, pms - Change only PM preferences.`}`);
+				this.add(`||${TL`off - Set timestamps off, minutes - Show timestamps of the form [hh:mm], seconds - Show timestamps of the form [hh:mm:ss].`}`);
 				return;
 			case 'highlight':
 			case 'hl':
-				this.add('||Set up highlights:');
-				this.add('||/highlight add [word 1], [word 2], [...] - Add the provided list of words to your highlight list.');
-				this.add('||/highlight roomadd [word 1], [word 2], [...] - Add the provided list of words to the highlight list of whichever room you used the command in.');
-				this.add('||/highlight list - List all words that currently highlight you.');
-				this.add('||/highlight roomlist - List all words that currently highlight you in whichever room you used the command in.');
-				this.add('||/highlight delete [word 1], [word 2], [...] - Delete the provided list of words from your entire highlight list.');
-				this.add('||/highlight roomdelete [word 1], [word 2], [...] - Delete the provided list of words from the highlight list of whichever room you used the command in.');
-				this.add('||/highlight clear - Clear your global highlight list.');
-				this.add('||/highlight roomclear - Clear the highlight list of whichever room you used the command in.');
-				this.add('||/highlight clearall - Clear your entire highlight list (all rooms and globally).');
+				this.add(`||${TL`Set up highlights:`}`);
+				this.add(`||${TL`/highlight add [word 1], [word 2], [...] - Add the provided list of words to your highlight list.`}`);
+				this.add(`||${TL`/highlight roomadd [word 1], [word 2], [...] - Add the provided list of words to the highlight list of whichever room you used the command in.`}`);
+				this.add(`||${TL`/highlight list - List all words that currently highlight you.`}`);
+				this.add(`||${TL`/highlight roomlist - List all words that currently highlight you in whichever room you used the command in.`}`);
+				this.add(`||${TL`/highlight delete [word 1], [word 2], [...] - Delete the provided list of words from your entire highlight list.`}`);
+				this.add(`||${TL`/highlight roomdelete [word 1], [word 2], [...] - Delete the provided list of words from the highlight list of whichever room you used the command in.`}`);
+				this.add(`||${TL`/highlight clear - Clear your global highlight list.`}`);
+				this.add(`||${TL`/highlight roomclear - Clear the highlight list of whichever room you used the command in.`}`);
+				this.add(`||${TL`/highlight clearall - Clear your entire highlight list (all rooms and globally).`}`);
 				return;
 			case 'rank':
 			case 'ranking':
 			case 'rating':
 			case 'ladder':
-				this.add('||/rank [user] - Shows all ladder ranks for the given [user].');
-				this.add('||/rank [user], [format] - Shows the rank of [user] in the given [format].');
-				this.add('||If no user is given, it defaults to the user of the command.');
+				this.add(`||${TL`/rank [user] - Shows all ladder ranks for the given [user].`}`);
+				this.add(`||${TL`/rank [user], [format] - Shows the rank of [user] in the given [format].`}`);
+				this.add(`||${TL`If no user is given, it defaults to the user of the command.`}`);
 				return;
 			case 'afd':
-				this.add('||/afd full - Enable all April Fools\' Day jokes.');
-				this.add('||/afd sprites - Enable April Fools\' Day sprites.');
-				this.add('||/afd default - Set April Fools\' Day to default (full on April 1st, off otherwise).');
-				this.add('||/afd off - Disable April Fools\' Day jokes until the next refresh, and set /afd default.');
-				this.add('||/afd never - Disable April Fools\' Day jokes permanently.');
+				this.add(`||${TL`/afd full - Enable all April Fools' Day jokes.`}`);
+				this.add(`||${TL`/afd sprites - Enable April Fools' Day sprites.`}`);
+				this.add(`||${TL`/afd default - Set April Fools' Day to default (full on April 1st, off otherwise).`}`);
+				this.add(`||${TL`/afd off - Disable April Fools' Day jokes until the next refresh, and set /afd default.`}`);
+				this.add(`||${TL`/afd never - Disable April Fools' Day jokes permanently.`}`);
 				return;
 			default:
 				return true;
 			}
 		},
 		'autojoin,cmd,crq,query'() {
-			this.errorReply(`This is a PS system command; do not use it.`);
+			this.errorReply(TL`This is a PS system command; do not use it.`);
 		},
 	});
 	clientCommands: ParsedClientCommands | null = null;
@@ -1827,10 +1965,10 @@ export class PSRoom extends PSStreamModel<Args | null> implements RoomOptions {
 	}
 	sendDirect(msg: string) {
 		if (this.connectMode === 'deleted') {
-			return this.errorReply(`This room has been deleted (you can't chat in it anymore)`);
+			return this.errorReply(TL`This room has been deleted (you can't chat in it anymore)`);
 		}
 		if (this.connectMode === 'not-found') {
-			return this.errorReply(`This room doesn't exist`);
+			return this.errorReply(TL`This room doesn't exist`);
 		}
 		PS.send(msg, this.id);
 	}
@@ -2032,6 +2170,8 @@ export const PS = new class extends PSModel {
 	 * width/height-dependent layout breakpoint changes.
 	 */
 	leftPanelWidth: number | null = 0;
+	/** CobblemonShowdown : /lobby (alias de Discussion) était ouvert, Discussion doit prendre sa place */
+	focusDiscussionOnInit = false;
 	mainmenu: MainMenuRoom = null!;
 	layoutViewportWidth = 0;
 
@@ -2327,7 +2467,9 @@ export const PS = new class extends PSModel {
 						id: roomid2,
 						type,
 						connected: 'init',
-						autofocus: roomid !== 'staff' && roomid !== 'upperstaff',
+						// CobblemonShowdown : sur mobile, Discussion reste un onglet au lieu de cacher l'accueil.
+						autofocus: roomid !== 'staff' && roomid !== 'upperstaff' &&
+							(roomid !== 'discussion' || !!this.leftPanelWidth || this.focusDiscussionOnInit),
 						// probably the only use for `autoclosePopups: false`.
 						// (the server sometimes sends a popup error message and a new room at the same time)
 						autoclosePopups: false,
@@ -2350,6 +2492,15 @@ export const PS = new class extends PSModel {
 						}
 					}
 					room.connected = true;
+					// CobblemonShowdown : comme le Lobby de l'ancien client, Discussion s'affiche
+					// à droite à chaque visite quand il y a la place (pas sur mobile).
+					if (roomid2 === 'discussion' && this.leftPanelWidth && this.rightPanel === this.rooms['rooms']) {
+						this.rightPanel = room;
+					}
+					if (roomid2 === 'discussion' && this.focusDiscussionOnInit) {
+						this.focusDiscussionOnInit = false;
+						if (this.room !== room) this.focusRoom(room.id);
+					}
 				}
 				this.updateAutojoin();
 				this.update();
@@ -2357,6 +2508,14 @@ export const PS = new class extends PSModel {
 			} case 'deinit': {
 				room = PS.rooms[roomid2];
 				if (room) {
+					// CobblemonShowdown : le serveur ferme « lobby » pour ouvrir Discussion à la place.
+					if (roomid2 === 'lobby' && this.room === room) {
+						if (this.rooms['discussion']?.connected === true) {
+							this.focusRoom('discussion' as RoomID);
+						} else {
+							this.focusDiscussionOnInit = true;
+						}
+					}
 					room.connected = false;
 					if (room.connectMode !== 'deleted') this.removeRoom(room);
 					this.updateAutojoin();
@@ -2399,7 +2558,8 @@ export const PS = new class extends PSModel {
 				this.update();
 				continue;
 			} case 'nametaken': {
-				PS.join('login' as RoomID, { args: { error: `Someone is already using the name ${args[1]}.` } });
+				const takenName = args[1];
+				PS.join('login' as RoomID, { args: { error: TL`Someone is already using the name ${takenName}.` } });
 				break;
 			} case 'chat': case 'c': {
 				if (args[1] === '~' && (args[2] + ' ').startsWith('/warn ')) {
@@ -3093,6 +3253,8 @@ export const PS = new class extends PSModel {
 			if (!room) return;
 			if (room.type !== 'chat' || room.pmTarget) continue;
 			autojoins.push(room.id.includes('-') ? room.id : (room.title || room.id));
+			// CobblemonShowdown : le serveur refuse /autojoin au-delà de 16 salons
+			if (autojoins.length >= 16) break;
 			if (room.id === 'staff' || room.id === 'upperstaff' || (PS.server.id !== 'showdown' && room.id === 'lobby')) continue;
 			autojoinCount++;
 			if (autojoinCount >= 15) break;

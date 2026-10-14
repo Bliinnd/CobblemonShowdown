@@ -368,10 +368,8 @@ class FormatDropdownPanel extends PSRoomPanel {
 	gen = '' as ID;
 	format: string | null = null;
 	search = '';
-	openSections = PS.prefs.openformats || {
-		'S/V Singles': true, 'S/V Doubles': true, 'Unofficial Metagames': true, 'National Dex': true,
-		'Ladder Spotlight': true, 'Other Metagames': true, 'Random Meta of the Decade': true,
-	};
+	/** CobblemonShowdown : les sections sont ouvertes sauf si le joueur les a fermées. */
+	openSections = PS.prefs.openformats || {};
 	click = (e: MouseEvent) => {
 		let curTarget = e.target as HTMLElement | null;
 		let target;
@@ -399,7 +397,7 @@ class FormatDropdownPanel extends PSRoomPanel {
 		const target = ev.currentTarget as HTMLDetailsElement;
 		const section = target.dataset.section!;
 		// Filtering temporarily opens sections (without changing saved preferences)
-		if (!toID(this.search) && !this.gen && target.open !== !!this.openSections[section]) {
+		if (!toID(this.search) && !this.gen && target.open !== (this.openSections[section] !== false)) {
 			this.openSections = { ...this.openSections, [section]: target.open };
 			PS.prefs.set('openformats', this.openSections);
 		}
@@ -429,21 +427,12 @@ class FormatDropdownPanel extends PSRoomPanel {
 				break;
 			}
 		}
-		const curGen = (gen: string) => this.gen === gen ? ' cur' : '';
 		const searchBar = <div>
 			<input
 				type="search" name="search" placeholder={TL`Search formats`} class="textbox autofocus" autocomplete="off"
 				onInput={this.updateSearch} onChange={this.updateSearch}
 			/> {}
-			<button onClick={this.toggleGen} value="gen9" class={`button button-first${curGen('gen9')}`}>{TL`Gen ${9}`}</button>
-			<button onClick={this.toggleGen} value="gen8" class={`button button-middle${curGen('gen8')}`}>8</button>
-			<button onClick={this.toggleGen} value="gen7" class={`button button-middle${curGen('gen7')}`}>7</button>
-			<button onClick={this.toggleGen} value="gen6" class={`button button-middle${curGen('gen6')}`}>6</button>
-			<button onClick={this.toggleGen} value="gen5" class={`button button-middle${curGen('gen5')}`}>5</button>
-			<button onClick={this.toggleGen} value="gen4" class={`button button-middle${curGen('gen4')}`}>4</button>
-			<button onClick={this.toggleGen} value="gen3" class={`button button-middle${curGen('gen3')}`}>3</button>
-			<button onClick={this.toggleGen} value="gen2" class={`button button-middle${curGen('gen2')}`}>2</button>
-			<button onClick={this.toggleGen} value="gen1" class={`button button-last${curGen('gen1')}`}>1</button>
+			{/* CobblemonShowdown : tous les formats sont en génération 9, pas de filtre par génération */}
 		</div>;
 		if (!formatsLoaded) {
 			return <PSPanelWrapper room={room}><div class="pad">
@@ -510,8 +499,11 @@ class FormatDropdownPanel extends PSRoomPanel {
 
 		return <PSPanelWrapper room={room} width={width}><div class="pad">
 			{searchBar}
-			{columns.map(column => (
-				<div class="options-column" onClick={this.click}>
+			{columns.map(column => {
+				// CobblemonShowdown : une section "Catégorie / Sous-section" s'affiche sur deux niveaux,
+				// avec le titre de la catégorie au-dessus de sa première sous-section.
+				let lastCategory = '';
+				return <div class="options-column" onClick={this.click}>
 					{!starredDone && !!starred.length && <ul>{starred.map((id, i) => {
 						if (this.gen && !id.startsWith(this.gen)) return null;
 						let format = BattleFormats[id] as FormatData | undefined;
@@ -540,27 +532,41 @@ class FormatDropdownPanel extends PSRoomPanel {
 						// don't repeat starred formats
 						const unstarred = sectionFormats.filter(format => !starred.includes(format.id));
 						if (!unstarred.length) return null;
-						const options = <ul>{unstarred.map(format => <li key={format.id}><button
-							value={format.name}
-							class={`option${curFormat === format.id ? ' cur' : ''}`}
-						>
-							{format.name.replace('[Gen 8 ', '[').replace('[Gen 9] ', '').replace('[Gen 7 ', '[')}
-							{format.section === 'No Format' && <em> {TL`(uncategorized)`}</em>}
-							<i class="star fa fa-star-o" data-cmd={`/star ${format.id}`}></i>
-						</button></li>)}</ul>;
+						const [category, subsection] = section.includes(' / ') ? section.split(' / ') : ['', section];
+						const hideEggMoves = category === 'Avec egg moves';
+						const options = <ul>{unstarred.map(format => {
+							let name = format.name.replace('[Gen 8 ', '[').replace('[Gen 9] ', '').replace('[Gen 7 ', '[');
+							// "+ Egg Moves" : déjà dit par le titre de la catégorie
+							if (hideEggMoves) name = name.replace(' + Egg Moves', '');
+							return <li key={format.id}><button
+								value={format.name}
+								class={`option${curFormat === format.id ? ' cur' : ''}`}
+							>
+								{name}
+								{format.section === 'No Format' && <em> {TL`(uncategorized)`}</em>}
+								<i class="star fa fa-star-o" data-cmd={`/star ${format.id}`}></i>
+							</button></li>;
+						})}</ul>;
 						if (!section) return options;
-						return <details
-							// reset open state when search/filter changes
-							key={`${section}:${this.gen}:${searchID}`} data-section={section} class="details"
-							// always default to open when searching/filtering
-							open={!!(searchID || this.gen || this.openSections[section])} onToggle={this.toggleSection}
-						>
-							<summary>{section}</summary>
-							{options}
-						</details>;
+						const categoryTitle = category && category !== lastCategory ?
+							<h3 class="formats-category">{category}</h3> : null;
+						lastCategory = category;
+						return <>
+							{categoryTitle}
+							<details
+								// reset open state when search/filter changes
+								key={`${section}:${this.gen}:${searchID}`} data-section={section} class="details"
+								// always default to open when searching/filtering
+								open={!!(searchID || this.gen || this.openSections[section] !== false)}
+								onToggle={this.toggleSection}
+							>
+								<summary>{subsection}</summary>
+								{options}
+							</details>
+						</>;
 					})}
-				</div>
-			))}
+				</div>;
+			})}
 			{noResults && <p><em>{searchID ? TL`No formats matching "${searchID}" found` : TL`No formats found`}</em></p>}
 			<div style="clear: left"></div>
 		</div></PSPanelWrapper>;

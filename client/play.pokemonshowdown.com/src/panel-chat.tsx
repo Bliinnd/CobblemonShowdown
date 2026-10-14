@@ -10,7 +10,7 @@ import type { PSSubscription } from "./client-core";
 import { PS, PSRoom, type RoomOptions, type RoomID, type Team, Config } from "./client-main";
 import { PSView, PSPanelWrapper, PSRoomPanel, ReconnectTimer } from "./panels";
 import { TeamForm } from "./panel-mainmenu";
-import { BattleLog, eHTML } from "./battle-log";
+import { BattleLog } from "./battle-log";
 import type { Battle } from "./battle";
 import { MiniEdit } from "./miniedit";
 import { Dex, PSUtils, TL, toID, type ID } from "./battle-dex";
@@ -127,19 +127,20 @@ export class ChatRoom extends PSRoom {
 			if (this.connectMode === 'deleted') {
 				if (args[2]) this.connectError = args[2];
 			} else if (this.battle && args[1] === 'joinfailed') {
-				this.connectError = args[2] || 'Not found';
+				this.connectError = args[2] || TL`Not found`;
 			} else if (this.battle) {
 				// check the Replays database
 				(this as any as BattleRoom).loadReplay();
 			} else {
-				this.connectError = args[2] || `Chatroom "${this.title}" not found`;
+				const title = this.title;
+				this.connectError = args[2] || TL`Chatroom "${title}" not found`;
 			}
 			this.update(null);
 			return true;
 		case 'expire':
 			this.connected = false;
 			this.connectMode = 'deleted';
-			this.connectError = args[1] || "This room has expired (you can't chat in it anymore)";
+			this.connectError = args[1] || TL`This room has expired (you can't chat in it anymore)`;
 			this.update(null);
 			return true;
 
@@ -190,7 +191,7 @@ export class ChatRoom extends PSRoom {
 		let cutOffEnd = lines.length;
 		const cutOffTime = PS.connection?.lastMessageTimeBeforeReconnect || 0;
 		const cutOffExactLine = this.lastMessage ? '|' + this.lastMessage?.join('|') : null;
-		let reconnectMessage = '|raw|<div class="infobox">You reconnected.</div>';
+		let reconnectMessage = `|raw|<div class="infobox">${TL`You reconnected.`}</div>`;
 		for (let i = 0; i < lines.length; i++) {
 			if (lines[i].startsWith('|users|')) {
 				this.add(lines[i]);
@@ -203,20 +204,20 @@ export class ChatRoom extends PSRoom {
 			}
 			if (lines[i].startsWith('|raw|<div class="infobox"> You joined ')) {
 				const timestamp = BattleLog.renderTimestamp(Date.now() / 1000, PS.prefs.timestamps?.chatrooms);
-				reconnectMessage = `|raw|<div class="infobox">${timestamp}You reconnected to ${lines[i].slice(38)}`;
+				reconnectMessage = `|raw|<div class="infobox">${timestamp}${TL`You reconnected to`} ${lines[i].slice(38)}`;
 				cutOffEnd = i;
 				if (!lines[i - 1]) cutOffEnd = i - 1;
 			}
 		}
 		lines = lines.slice(cutOffStart, cutOffEnd);
 		if (lines[0]?.startsWith('|init|')) {
-			lines[0] = `||Note: Scrollback doesn't go all the way back to when you disconnected.`;
+			lines[0] = `||${TL`Note: Scrollback doesn't go all the way back to when you disconnected.`}`;
 		}
 
 		if (lines.length) {
 			const timestamp = BattleLog.renderTimestamp(cutOffTime, PS.prefs.timestamps?.chatrooms);
 			this.receiveBatch([
-				[`raw`, `<div class="infobox">${timestamp}You disconnected.</div>`],
+				[`raw`, `<div class="infobox">${timestamp}${TL`You disconnected.`}</div>`],
 				...lines.map(line => BattleTextParser.parseLine(line)),
 				BattleTextParser.parseLine(reconnectMessage),
 			]);
@@ -229,7 +230,7 @@ export class ChatRoom extends PSRoom {
 		if (this.id === 'dm-') {
 			this.pmTarget = selfWithGroup;
 			this.setUsers(1, [selfWithGroup]);
-			this.title = `Console`;
+			this.title = TL`Console`;
 		} else if (this.id.startsWith('dm-')) {
 			const id = this.id.slice(3);
 			if (toID(name) !== id) name = null;
@@ -369,8 +370,9 @@ export class ChatRoom extends PSRoom {
 
 		if (ChatRoom.getHighlight(message, this.id)) {
 			if (!isBeforeLastSeenMessage) {
+				const roomid = this.id;
 				this.notify({
-					title: `Mentioned by ${name} in ${this.id}`,
+					title: TL`Mentioned by ${name} in ${roomid}`,
 					body: this.getChatNotificationBody(message),
 					id: 'highlight',
 				});
@@ -464,10 +466,14 @@ export class ChatRoom extends PSRoom {
 				});
 				isHidden = !isHidden;
 				const toggleButtons = this.log.innerElem.querySelectorAll(`button[name="toggleMessages"][value="${userid}"]`);
+				const hiddenCount = nodes.length;
+				const buttonText = isHidden ? (hiddenCount > 1 ?
+					TL`(${hiddenCount} lines from ${userid} hidden)` : TL`(${hiddenCount} line from ${userid} hidden)`
+				) : (hiddenCount > 1 ?
+					TL`(Hide ${hiddenCount} lines from ${userid})` : TL`(Hide ${hiddenCount} line from ${userid})`
+				);
 				for (const button of toggleButtons) {
-					button.innerHTML = isHidden ?
-						`<small>(${nodes.length} line${nodes.length > 1 ? 's' : ''} from ${userid} hidden)</small>` :
-						`<small>(Hide ${nodes.length} line${nodes.length > 1 ? 's' : ''} from ${userid})</small>`;
+					button.innerHTML = `<small>${buttonText}</small>`;
 				}
 			}
 		},
@@ -500,18 +506,24 @@ export class ChatRoom extends PSRoom {
 				user: targets[0],
 			}).then(data => {
 				if (!data || !Array.isArray(data)) return this.errorReply(TL`Error: corrupted ranking data`);
-				let buffer = `<div class="ladder"><table><tr><td colspan="9">User: <strong>${toID(targets[0])}</strong></td></tr>`;
+				const userLabel = TL.label(TL`User`);
+				let buffer = `<div class="ladder"><table><tr><td colspan="9">${userLabel}<strong>${toID(targets[0])}</strong></td></tr>`;
 				if (!data.length) {
-					buffer += '<tr><td colspan="9"><em>This user has not played any ladder games yet.</em></td></tr>';
+					buffer += `<tr><td colspan="9"><em>${TL`This user has not played any ladder games yet.`}</em></td></tr>`;
 					buffer += '</table></div>';
 					return this.add(`|html|${buffer}`);
 				}
-				buffer += '<tr><th>Format</th><th><abbr title="Elo rating">Elo</abbr></th><th><abbr title="user\'s percentage chance of winning a random battle (aka GLIXARE)">GXE</abbr></th><th><abbr title="Glicko-1 rating: rating &#177; deviation">Glicko-1</abbr></th><th>COIL</th><th>W</th><th>L</th><th>Total</th>';
+				const eloTitle = BattleLog.escapeHTML(TL`Elo rating`);
+				const gxeTitle = BattleLog.escapeHTML(TL`user's percentage chance of winning a random battle (aka GLIXARE)`);
+				const glickoTitle = BattleLog.escapeHTML(TL`Glicko-1 rating: rating ± deviation`);
+				buffer += `<tr><th>${TL`Format`}</th><th><abbr title="${eloTitle}">Elo</abbr></th>` +
+					`<th><abbr title="${gxeTitle}">GXE</abbr></th><th><abbr title="${glickoTitle}">Glicko-1</abbr></th>` +
+					`<th>COIL</th><th>${TL('W', 'wins')}</th><th>${TL('L', 'losses')}</th><th>${TL`Total`}</th>`;
 				let suspect = false;
 				for (const item of data) {
 					if ('suspect' in item) suspect = true;
 				}
-				if (suspect) buffer += '<th>Suspect reqs possible?</th>';
+				if (suspect) buffer += `<th>${TL`Suspect reqs possible?`}</th>`;
 				buffer += '</tr>';
 				const hiddenFormats = [];
 				for (const row of data) {
@@ -540,7 +552,7 @@ export class ChatRoom extends PSRoom {
 					if (row.rprd > 100) {
 						// High rating deviation. Provisional rating.
 						buffer += `<td>&ndash;</td>`;
-						buffer += `<td><span style="color:#888"><em>${Math.round(row.rpr)} <small> &#177; ${Math.round(row.rprd)} </small></em> <small>(provisional)</small></span></td>`;
+						buffer += `<td><span style="color:#888"><em>${Math.round(row.rpr)} <small> &#177; ${Math.round(row.rprd)} </small></em> <small>${TL`(provisional)`}</small></span></td>`;
 					} else {
 						buffer += `<td>${Math.trunc(row.gxe)}<small>.${row.gxe.toFixed(1).slice(-1)}%</small></td>`;
 						buffer += `<td><em>${Math.round(row.rpr)} <small> &#177; ${Math.round(row.rprd)}</small></em></td>`;
@@ -558,7 +570,7 @@ export class ChatRoom extends PSRoom {
 							buffer += '<td>&mdash;</td>';
 						} else {
 							buffer += '<td>';
-							buffer += (row.suspect ? "Yes" : "No");
+							buffer += (row.suspect ? TL`Yes` : TL`No`);
 							buffer += '</td>';
 						}
 					}
@@ -567,20 +579,23 @@ export class ChatRoom extends PSRoom {
 				if (hiddenFormats.length) {
 					if (hiddenFormats.length === data.length) {
 						if (formatTargeting) {
-							const formatsText = Object.keys(gens).concat(Object.keys(formats)).join(', ');
+							const formatsText = BattleLog.escapeHTML(Object.keys(gens).concat(Object.keys(formats)).join(', '));
 							buffer += `<tr class="no-matches"><td colspan="8">` +
-								eHTML`<em>This user has not played any ladder games that match ${formatsText}.</em></td></tr>`;
+								`<em>${TL`This user has not played any ladder games that match ${formatsText}.`}</em></td></tr>`;
 						} else {
-							buffer += `<tr class="no-matches"><td colspan="8"><em>This user has no notable ladder activity.</em></td></tr>`;
+							buffer += `<tr class="no-matches"><td colspan="8"><em>${TL`This user has no notable ladder activity.`}</em></td></tr>`;
 						}
 					}
+					const hiddenCount = hiddenFormats.length;
+					const showHiddenText = hiddenCount === 1 ?
+						TL`Show ${hiddenCount} hidden format` : TL`Show ${hiddenCount} hidden formats`;
 					buffer += `<tr><td colspan="8"><button class="button" name="showOtherFormats">` +
-						`Show ${hiddenFormats.length} hidden format${hiddenFormats.length === 1 ? '' : 's'}</button></td></tr>`;
+						`${showHiddenText}</button></td></tr>`;
 				}
 				let userid = toID(targets[0]);
 				let registered = PS.user.registered;
 				if (registered && PS.user.userid === userid) {
-					buffer += `<tr><td colspan="8" style="text-align:right"><a href="//${Config.routes.users}/${userid}">Reset W/L</a></tr></td>`;
+					buffer += `<tr><td colspan="8" style="text-align:right"><a href="//${Config.routes.users}/${userid}">${TL`Reset W/L`}</a></tr></td>`;
 				}
 				buffer += '</table></div>';
 				this.add(`|html|${buffer}`);
@@ -763,8 +778,8 @@ export class ChatRoom extends PSRoom {
 			// we are RECEIVER
 			this.challenged = challenge;
 			this.notify({
-				title: `Challenge from ${name}`,
-				body: `Format: ${BattleLog.formatName(challenge.formatName)}`,
+				title: TL`Challenge from ${name}`,
+				body: TL.label(TL`Format`, BattleLog.formatName(challenge.formatName)),
 				id: 'challenge',
 			});
 		}
@@ -868,30 +883,15 @@ export class ChatRoom extends PSRoom {
 	formatJoinLeave(preList: string[], action: 'joined' | 'left') {
 		if (!preList.length) return '';
 
-		let message = '';
-		let list: string[] = [];
-		let named: { [key: string]: boolean } = {};
-		for (let item of preList) {
-			if (!named[item]) list.push(item);
-			named[item] = true;
+		// CobblemonShowdown : messages traduits (ils étaient écrits en anglais en dur).
+		const list = preList.filter((name, i) => preList.indexOf(name) === i).map(name => BattleLog.escapeHTML(name));
+		let message = list[0];
+		if (list.length > 5) {
+			message = TL`${list.slice(0, 5).join(', ')} and ${list.length - 5} others`;
+		} else if (list.length > 1) {
+			message = TL`${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`;
 		}
-		for (let j = 0; j < list.length; j++) {
-			if (j >= 5) {
-				message += `, and ${(list.length - 5)} others`;
-				break;
-			}
-			if (j > 0) {
-				if (j === 1 && list.length === 2) {
-					message += ' and ';
-				} else if (j === list.length - 1) {
-					message += ', and ';
-				} else {
-					message += ', ';
-				}
-			}
-			message += BattleLog.escapeHTML(list[j]);
-		}
-		return `${message} ${action}`;
+		return action === 'joined' ? TL`${message} joined` : TL`${message} left`;
 	}
 
 	override destroy() {
@@ -1406,7 +1406,7 @@ class ChatPanel extends PSRoomPanel<ChatRoom> {
 
 		const challengeSent = room.teamSent && !room.challenged;
 		const challengeTo = room.challenging ? <div class="challenge outgoing">
-			<p>Waiting for {room.pmTarget}...</p>
+			<p>{TL`Waiting for ${room.pmTarget}...`}</p>
 			<TeamForm
 				format={room.challenging.formatName} teamFormat={room.challenging.teamFormat}
 				onSubmit={null} selectType="challenge"
@@ -1469,7 +1469,7 @@ class ChatPanel extends PSRoomPanel<ChatRoom> {
 			return null;
 		}
 		return <div class="pad"><div class="broadcast-red pad">
-			<h3>{room.connectError || "Error"}</h3>
+			<h3>{room.connectError || TL`Error`}</h3>
 			<p class="buttonbar"><button class="button" data-cmd="/close"><strong>{TL`[Close]`}</strong></button></p>
 		</div></div>;
 	}

@@ -47,18 +47,18 @@ export class ModifiableValue {
 	tryItem(itemName: string) {
 		if (itemName !== this.itemName) return false;
 		if (this.battle.hasPseudoWeather('Magic Room')) {
-			this.comment.push(` (${itemName} suppressed by Magic Room)`);
+			this.suppressedComment(itemName, 'Magic Room');
 			return false;
 		}
 		if (this.pokemon?.volatiles['embargo']) {
-			this.comment.push(` (${itemName} suppressed by Embargo)`);
+			this.suppressedComment(itemName, 'Embargo');
 			return false;
 		}
 		const ignoreKlutz = [
 			"Macho Brace", "Power Anklet", "Power Band", "Power Belt", "Power Bracer", "Power Lens", "Power Weight",
 		];
 		if (this.tryAbility('Klutz') && !ignoreKlutz.includes(itemName)) {
-			this.comment.push(` (${itemName} suppressed by Klutz)`);
+			this.suppressedComment(itemName, 'Klutz');
 			return false;
 		}
 		return true;
@@ -66,7 +66,7 @@ export class ModifiableValue {
 	tryAbility(abilityName: string) {
 		if (abilityName !== this.abilityName) return false;
 		if (this.pokemon?.volatiles['gastroacid']) {
-			this.comment.push(` (${abilityName} suppressed by Gastro Acid)`);
+			this.suppressedComment(abilityName, 'Gastro Acid');
 			return false;
 		}
 		// Check for Neutralizing Gas
@@ -80,7 +80,7 @@ export class ModifiableValue {
 		for (const side of this.battle.sides) {
 			for (const active of side.active) {
 				if (active && ['Air Lock', 'Cloud Nine'].includes(active.ability)) {
-					this.comment.push(` (${weatherName} suppressed by ${active.ability})`);
+					this.suppressedComment(weatherName, active.ability);
 					return false;
 				}
 			}
@@ -103,14 +103,33 @@ export class ModifiableValue {
 		if (!this.tryWeather(weatherName)) return false;
 		return this.modify(factor, name || weatherName);
 	}
+	/**
+	 * CobblemonShowdown : traduit un nom exact d'attaque, de talent ou d'objet
+	 * pour les commentaires affichés ; les autres raisons sont déjà passées
+	 * par TL là où elles sont écrites. Le nom anglais reste utilisé pour les
+	 * comparaisons (Technician, etc.).
+	 */
+	static effectName(name: string) {
+		for (const effect of [Dex.abilities.get(name), Dex.items.get(name), Dex.moves.get(name)]) {
+			if (effect.exists && effect.name === name) return TL(effect);
+		}
+		return name;
+	}
+	suppressedComment(name: string, by: string) {
+		const effect = ModifiableValue.effectName(name);
+		const suppressor = ModifiableValue.effectName(by);
+		this.comment.push(` (${TL`${effect} suppressed by ${suppressor}`})`);
+	}
 	modify(factor: number, name?: string) {
+		const label = name ? ModifiableValue.effectName(name) : '';
 		if (factor === 0) {
-			if (name) this.comment.push(` (${name})`);
+			if (name) this.comment.push(` (${label})`);
 			this.value = 0;
 			this.maxValue = 0;
 			return true;
 		}
-		if (name) this.comment.push(` (${this.round(factor)}&times; from ${name})`);
+		const multiplier = this.round(factor);
+		if (name) this.comment.push(` (${TL`${multiplier}&times; from ${label}`})`);
 		this.value *= factor;
 		if (!(name === 'Technician' && this.maxValue > 60)) this.maxValue *= factor;
 		if (this.battle.tier.includes('Super Staff Bros') &&
@@ -118,13 +137,13 @@ export class ModifiableValue {
 		return true;
 	}
 	set(value: number, reason?: string) {
-		if (reason) this.comment.push(` (${reason})`);
+		if (reason) this.comment.push(` (${ModifiableValue.effectName(reason)})`);
 		this.value = value;
 		this.maxValue = 0;
 		return true;
 	}
 	setRange(value: number, maxValue: number, reason?: string) {
-		if (reason) this.comment.push(` (${reason})`);
+		if (reason) this.comment.push(` (${ModifiableValue.effectName(reason)})`);
 		this.value = value;
 		this.maxValue = maxValue;
 		return true;
@@ -135,12 +154,14 @@ export class ModifiableValue {
 	toString() {
 		let valueString;
 		if (this.isAccuracy) {
-			valueString = this.value ? `${this.round(this.value)}%` : `can't miss`;
+			valueString = this.value ? `${this.round(this.value)}%` : TL`can't miss`;
 		} else {
 			valueString = this.value ? `${this.round(this.value)}` : ``;
 		}
 		if (this.maxValue) {
-			valueString += ` to ${this.round(this.maxValue)}` + (this.isAccuracy ? '%' : '');
+			const low = valueString;
+			const high = `${this.round(this.maxValue)}` + (this.isAccuracy ? '%' : '');
+			valueString = TL`${low} to ${high}`;
 		}
 		return valueString + this.comment.join('');
 	}
@@ -732,7 +753,8 @@ export class BattleTooltips {
 				basePower = `${value}`;
 				if (prevBasePower === null) prevBasePower = basePower;
 				if (prevBasePower !== basePower) difference = true;
-				basePowers.push(TL.label(TL`Base power vs. ${active.name}`, basePower));
+				const activeName = BattleTextParser.pokemonDisplayName(active.name, active.speciesForme);
+				basePowers.push(TL.label(TL`Base power vs. ${activeName}`, basePower));
 			}
 			if (difference) {
 				text += '<p>' + basePowers.join('<br />') + '</p>';
@@ -895,9 +917,45 @@ export class BattleTooltips {
 
 		return text;
 	}
+	/**
+	 * CobblemonShowdown : état de l'objet tenu (`Pokemon.itemEffect`). Les
+	 * valeurs anglaises restent celles comparées par battle.ts ; seule
+	 * l'infobulle les traduit.
+	 */
+	static itemEffectText(effect: string) {
+		switch (effect) {
+		case 'found': return TL`found`;
+		case 'frisked': return TL`frisked`;
+		case 'stolen': return TL`stolen`;
+		case 'harvested': return TL`harvested`;
+		case 'bestowed': return TL`bestowed`;
+		case 'tricked': return TL`tricked`;
+		case 'knocked off': return TL`knocked off`;
+		case 'disturbed': return TL`disturbed`;
+		case 'shared': return TL`shared`;
+		}
+		return effect;
+	}
+	/** CobblemonShowdown : phrase complète sur l'objet perdu (`Pokemon.prevItemEffect`). */
+	static prevItemText(item: string, effect: string) {
+		switch (effect) {
+		case '': return TL`was ${item}`;
+		case 'eaten': return TL`${item} was eaten`;
+		case 'consumed': return TL`${item} was consumed`;
+		case 'popped': return TL`${item} was popped`;
+		case 'held up': return TL`${item} was held up`;
+		case 'flung': return TL`${item} was flung`;
+		case 'knocked off': return TL`${item} was knocked off`;
+		case 'stolen': return TL`${item} was stolen`;
+		case 'incinerated': return TL`${item} was incinerated`;
+		case 'given away': return TL`${item} was given away`;
+		}
+		return `${item} was ${effect}`;
+	}
 	getNickname(pokemon: Pokemon | ServerPokemon) {
 		const ignoreNicks = this.battle.ignoreNicks || this.battle.ignoreOpponent;
-		if (!ignoreNicks) return pokemon.name;
+		// CobblemonShowdown : un Pokémon sans vrai surnom affiche le nom traduit de son espèce
+		if (!ignoreNicks) return BattleTextParser.pokemonDisplayName(pokemon.name, pokemon.speciesForme);
 		const species = this.battle.dex.species.get(pokemon.speciesForme);
 		return TL(this.battle.dex.species.get(species.baseSpecies));
 	}
@@ -950,9 +1008,9 @@ export class BattleTooltips {
 			let knownPokemon = serverPokemon || clientPokemon!;
 
 			if (pokemon.terastallized) {
-				text += `<small>(Terastallized)</small><br />`;
+				text += `<small>${TL`(Terastallized)`}</small><br />`;
 			} else if (clientPokemon?.volatiles.typechange || clientPokemon?.volatiles.typeadd) {
-				text += `<small>(Type changed)</small><br />`;
+				text += `<small>${TL`(Type changed)`}</small><br />`;
 			}
 			text += `<span class="textaligned-typeicons">${types.map(type => Dex.getTypeIcon(type)).join(' ')}</span>`;
 			if (pokemon.terastallized) {
@@ -1023,21 +1081,21 @@ export class BattleTooltips {
 			let item = '';
 			let itemEffect = '';
 			if (clientPokemon?.prevItem) {
-				item = 'None';
+				item = TL`None`;
 				let prevItem = TL(this.battle.dex.items.get(clientPokemon.prevItem));
-				itemEffect += clientPokemon.prevItemEffect ? prevItem + ' was ' + clientPokemon.prevItemEffect : 'was ' + prevItem;
+				itemEffect += BattleTooltips.prevItemText(prevItem, clientPokemon.prevItemEffect);
 			}
 			if (serverPokemon.item) item = TL(this.battle.dex.items.get(serverPokemon.item));
 			if (itemEffect) itemEffect = ' (' + itemEffect + ')';
 			if (item) itemText = `<small>${TL.label(TL`Item`)}</small>` + item + itemEffect;
 		} else if (clientPokemon) {
 			let item = '';
-			let itemEffect = clientPokemon.itemEffect || '';
+			let itemEffect = BattleTooltips.itemEffectText(clientPokemon.itemEffect || '');
 			if (clientPokemon.prevItem) {
-				item = 'None';
+				item = TL`None`;
 				if (itemEffect) itemEffect += '; ';
 				let prevItem = TL(this.battle.dex.items.get(clientPokemon.prevItem));
-				itemEffect += clientPokemon.prevItemEffect ? prevItem + ' was ' + clientPokemon.prevItemEffect : 'was ' + prevItem;
+				itemEffect += BattleTooltips.prevItemText(prevItem, clientPokemon.prevItemEffect);
 			}
 			if (pokemon.item) item = TL(this.battle.dex.items.get(pokemon.item));
 			if (itemEffect) itemEffect = ' (' + itemEffect + ')';
@@ -2194,7 +2252,7 @@ export class BattleTooltips {
 		let pokemon = value.pokemon;
 		// Sure-hit accuracy
 		if (move.id === 'toxic' && this.battle.gen >= 6 && this.pokemonHasType(pokemon, 'Poison')) {
-			value.set(0, "Poison type");
+			value.set(0, TL`Poison type`);
 			return value;
 		}
 		if (move.id === 'blizzard' && this.battle.gen >= 4) {
@@ -2211,22 +2269,22 @@ export class BattleTooltips {
 		// OHKO moves don't use standard accuracy / evasion modifiers
 		if (move.ohko) {
 			if (this.battle.gen === 1) {
-				value.set(value.value, `fails if target's Speed is higher`);
+				value.set(value.value, TL`fails if target's Speed is higher`);
 				return value;
 			}
 			if (move.id === 'sheercold' && this.battle.gen >= 7 && !this.pokemonHasType(pokemon, 'Ice')) {
-				value.set(20, 'not Ice-type');
+				value.set(20, TL`not Ice-type`);
 			}
 			if (target) {
 				if (pokemon.level < target.level) {
 					value.reset(0);
-					value.set(0, "FAILS: target's level is higher");
+					value.set(0, TL`FAILS: target's level is higher`);
 				} else if (pokemon.level > target.level) {
-					value.set(value.value + pokemon.level - target.level, "+1% per level above target");
+					value.set(value.value + pokemon.level - target.level, TL`+1% per level above target`);
 				}
 			} else {
-				if (pokemon.level < 100) value.set(value.value, "fails if target's level is higher");
-				if (pokemon.level > 1) value.set(value.value, "+1% per level above target");
+				if (pokemon.level < 100) value.set(value.value, TL`fails if target's level is higher`);
+				if (pokemon.level > 1) value.set(value.value, TL`+1% per level above target`);
 			}
 			return value;
 		}
@@ -2345,7 +2403,7 @@ export class BattleTooltips {
 
 		if (move.id === 'acrobatics') {
 			if (!serverPokemon.item) {
-				value.modify(2, "Acrobatics + no item");
+				value.modify(2, TL`Acrobatics + no item`);
 			}
 		}
 		let variableBPCap = ['crushgrip', 'wringout'].includes(move.id) ? 120 : move.id === 'hardpress' ? 100 : undefined;
@@ -2358,16 +2416,16 @@ export class BattleTooltips {
 			);
 		}
 		if (move.id === 'terablast' && pokemon.terastallized === 'Stellar') {
-			value.set(100, 'Tera Stellar boost');
+			value.set(100, TL`Tera Stellar boost`);
 		}
 		if (move.id === 'brine' && target && target.hp * 2 <= target.maxhp) {
-			value.modify(2, 'Brine + target below half HP');
+			value.modify(2, TL`Brine + target below half HP`);
 		}
 		if (move.id === 'eruption' || move.id === 'waterspout' || move.id === 'dragonenergy') {
 			value.set(Math.floor(150 * pokemon.hp / pokemon.maxhp) || 1);
 		}
 		if (move.id === 'facade' && !['', 'slp', 'frz'].includes(pokemon.status)) {
-			value.modify(2, 'Facade + status');
+			value.modify(2, TL`Facade + status`);
 		}
 		if (move.id === 'flail' || move.id === 'reversal') {
 			let multiplier;
@@ -2390,7 +2448,8 @@ export class BattleTooltips {
 			value.set(basePower);
 		}
 		if (['hex', 'infernalparade'].includes(move.id) && target?.status) {
-			value.modify(2, move.name + ' + status');
+			const moveName = TL(move);
+			value.modify(2, TL`${moveName} + status`);
 		}
 		if (move.id === 'lastrespects') {
 			value.set(Math.min(50 + 50 * pokemon.side.faintCounter));
@@ -2404,7 +2463,7 @@ export class BattleTooltips {
 		}
 		if (move.id === 'smellingsalts' && target) {
 			if (target.status === 'par') {
-				value.modify(2, 'Smelling Salts + Paralysis');
+				value.modify(2, TL`Smelling Salts + Paralysis`);
 			}
 		}
 		if (['storedpower', 'powertrip'].includes(move.id) && target) {
@@ -2429,12 +2488,13 @@ export class BattleTooltips {
 		}
 		if (['venoshock', 'barbbarrage'].includes(move.id) && target) {
 			if (['psn', 'tox'].includes(target.status)) {
-				value.modify(2, move.name + ' + Poison');
+				const moveName = TL(move);
+				value.modify(2, TL`${moveName} + Poison`);
 			}
 		}
 		if (move.id === 'wakeupslap' && target) {
 			if (target.status === 'slp') {
-				value.modify(2, 'Wake-Up Slap + Sleep');
+				value.modify(2, TL`Wake-Up Slap + Sleep`);
 			}
 		}
 		if (move.id === 'weatherball') {
@@ -2467,7 +2527,7 @@ export class BattleTooltips {
 				this.battle.hasPseudoWeather('Misty Terrain') ||
 				this.battle.hasPseudoWeather('Psychic Terrain')
 			) {
-				value.modify(2, 'Terrain Pulse boost');
+				value.modify(2, TL`Terrain Pulse boost`);
 			}
 		}
 		if (
@@ -2537,7 +2597,7 @@ export class BattleTooltips {
 					else if (pokemonWeight >= targetWeight * 2) basePower = 60;
 				}
 				if (target.volatiles['dynamax']) {
-					value.set(0, 'blocked by target\'s Dynamax');
+					value.set(0, TL`blocked by target's Dynamax`);
 				} else {
 					value.set(basePower);
 				}
@@ -2655,7 +2715,8 @@ export class BattleTooltips {
 			}
 			if (auraBoosted) {
 				if (auraBroken) {
-					value.modify(0.75, auraBoosted + ' + Aura Break');
+					const aura = ModifiableValue.effectName(auraBoosted);
+					value.modify(0.75, TL`${aura} + Aura Break`);
 				} else {
 					value.modify(1.33, auraBoosted);
 				}
@@ -2667,17 +2728,17 @@ export class BattleTooltips {
 			(this.battle.hasPseudoWeather('Grassy Terrain') && moveType === 'Grass') ||
 			(this.battle.hasPseudoWeather('Psychic Terrain') && moveType === 'Psychic')) {
 			if (pokemon.isGrounded(serverPokemon)) {
-				value.modify(this.battle.gen > 7 ? 1.3 : 1.5, 'Terrain boost');
+				value.modify(this.battle.gen > 7 ? 1.3 : 1.5, TL`Terrain boost`);
 			}
 		} else if (this.battle.hasPseudoWeather('Misty Terrain') && moveType === 'Dragon') {
 			if (target ? target.isGrounded() : true) {
-				value.modify(0.5, 'Misty Terrain + grounded target');
+				value.modify(0.5, TL`Misty Terrain + grounded target`);
 			}
 		} else if (
 			this.battle.hasPseudoWeather('Grassy Terrain') && ['earthquake', 'bulldoze', 'magnitude'].includes(move.id)
 		) {
 			if (target ? target.isGrounded() : true) {
-				value.modify(0.5, 'Grassy Terrain + grounded target');
+				value.modify(0.5, TL`Grassy Terrain + grounded target`);
 			}
 		}
 		if (
@@ -2685,13 +2746,13 @@ export class BattleTooltips {
 			this.battle.hasPseudoWeather('Psychic Terrain') &&
 			pokemon.isGrounded(serverPokemon)
 		) {
-			value.modify(1.5, 'Expanding Force + Psychic Terrain boost');
+			value.modify(1.5, TL`Expanding Force + Psychic Terrain boost`);
 		}
 		if (move.id === 'mistyexplosion' && this.battle.hasPseudoWeather('Misty Terrain')) {
-			value.modify(1.5, 'Misty Explosion + Misty Terrain boost');
+			value.modify(1.5, TL`Misty Explosion + Misty Terrain boost`);
 		}
 		if (move.id === 'risingvoltage' && this.battle.hasPseudoWeather('Electric Terrain') && target?.isGrounded()) {
-			value.modify(2, 'Rising Voltage + Electric Terrain boost');
+			value.modify(2, TL`Rising Voltage + Electric Terrain boost`);
 		}
 
 		// Item
@@ -2704,12 +2765,12 @@ export class BattleTooltips {
 				(move.basePower === 0 || move.basePower === 150) && move.basePowerCallback
 			)
 		) {
-			value.set(60, 'Tera type BP minimum');
+			value.set(60, TL`Tera type BP minimum`);
 		}
 
 		// Burn isn't really a base power modifier, so it needs to be applied after the Tera BP floor
 		if (this.battle.gen > 2 && serverPokemon.status === 'brn' && move.id !== 'facade' && move.category === 'Physical') {
-			if (!value.tryAbility("Guts")) value.modify(0.5, 'Burn');
+			if (!value.tryAbility("Guts")) value.modify(0.5, TL`Burn`);
 		}
 
 		if (
@@ -2719,7 +2780,7 @@ export class BattleTooltips {
 			!this.battle.hasPseudoWeather('Misty Terrain') &&
 			!this.battle.hasPseudoWeather('Psychic Terrain')
 		) {
-			value.set(0, 'no Terrain');
+			value.set(0, TL`no Terrain`);
 		}
 
 		// SSB

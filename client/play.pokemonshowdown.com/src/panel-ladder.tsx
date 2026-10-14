@@ -125,7 +125,7 @@ class LadderFormatPanel extends PSRoomPanel<LadderFormatRoom> {
 					const [format, ladderData] = response;
 					if (room.format === format) {
 						if (!ladderData) {
-							room.setError(new Error('No data returned from server.'));
+							room.setError(new Error(TL`No data returned from server.`));
 						} else {
 							room.setLadderHTML(ladderData);
 						}
@@ -148,9 +148,9 @@ class LadderFormatPanel extends PSRoomPanel<LadderFormatRoom> {
 		if (PS.teams.usesLocalLadder) return null;
 
 		const room = this.props.room;
+		const formatName = BattleLog.formatName(room.format);
 		return <h3>
-			{BattleLog.formatName(room.format)} Top
-			{room.searchValue ? ` - '${room.searchValue}'` : " 500"}
+			{room.searchValue ? TL`${formatName} Top - '${room.searchValue}'` : TL`${formatName} Top 500`}
 		</h3>;
 	}
 	renderSearch() {
@@ -163,7 +163,7 @@ class LadderFormatPanel extends PSRoomPanel<LadderFormatRoom> {
 				name="searchValue"
 				class="textbox searchinput"
 				value={BattleLog.escapeHTML(room.searchValue)}
-				placeholder="username prefix"
+				placeholder={TL`username prefix`}
 				onChange={this.changeSearch}
 			/> {}
 			<button type="submit" class="button">{TL`[Search]`}</button>
@@ -175,7 +175,7 @@ class LadderFormatPanel extends PSRoomPanel<LadderFormatRoom> {
 		if (room.loading || !BattleFormats) {
 			return <p><i class="fa fa-refresh fa-spin" aria-hidden></i> <em>{TL`Loading...`}</em></p>;
 		} else if (room.error !== undefined) {
-			return <p>Error: {room.error}</p>;
+			return <p>{TL.label(TL`Error`, room.error)}</p>;
 		} else if (!room.ladderHTML) {
 			return null;
 		}
@@ -187,7 +187,7 @@ class LadderFormatPanel extends PSRoomPanel<LadderFormatRoom> {
 		if (room.loading || !BattleFormats) {
 			return <p><i class="fa fa-refresh fa-spin" aria-hidden></i> <em>{TL`Loading...`}</em></p>;
 		} else if (room.error !== undefined) {
-			return <p>Error: {room.error}</p>;
+			return <p>{TL.label(TL`Error`, room.error)}</p>;
 		} else if (!room.ladderData) {
 			return null;
 		}

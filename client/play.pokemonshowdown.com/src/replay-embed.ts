@@ -15,7 +15,7 @@
  */
 
 import { Battle } from "./battle";
-import type { ID } from "./battle-dex";
+import { TL, type ID } from "./battle-dex";
 import { BattleLog } from "./battle-log";
 import { BattleSound } from "./battle-sound";
 
@@ -55,6 +55,31 @@ requireScript('https://play.pokemonshowdown.com/data/teambuilder-tables.js?a7');
 requireScript('https://play.pokemonshowdown.com/js/battle-tooltips.js?a7');
 requireScript('https://play.pokemonshowdown.com/js/battle.js?a7');
 
+/**
+ * CobblemonShowdown : the scripts above come from play.pokemonshowdown.com,
+ * which may not define TL (nor load the translation catalog). Without it,
+ * this stand-in keeps the replay controls working, in English.
+ */
+function ensureTL() {
+	const win = window as any;
+	if (typeof win.TL === 'function') return;
+	win.TL = (strings: string | readonly string[], ...values: unknown[]) => {
+		let source = typeof strings === 'string' ? strings :
+			strings.map((part, i) => (i ? `{${i - 1}}` : '') + part).join('');
+		if (typeof strings === 'string') values = [];
+		if (source.startsWith('[') && source.endsWith(']')) source = source.slice(1, -1);
+		return source.replace(/\{(\d+)\}/g, (placeholder, indexText: string) => {
+			const index = Number(indexText);
+			return index < values.length ? String(values[index]) : placeholder;
+		});
+	};
+}
+
+/** translated labels go into HTML strings */
+function escTL(text: string) {
+	return BattleLog.escapeHTML(text);
+}
+
 const Replays = {
 	$el: null! as JQuery,
 	battle: null! as Battle,
@@ -87,7 +112,24 @@ const Replays = {
 			autoresize: true,
 		});
 
-		this.$('.replay-controls-2').html('<div class="chooser leftchooser speedchooser"> <em>Speed:</em> <div><button value="hyperfast">Hyperfast</button><button value="fast">Fast</button><button value="normal" class="sel">Normal</button><button value="slow">Slow</button><button value="reallyslow">Really Slow</button></div> </div> <div class="chooser colorchooser"> <em>Color&nbsp;scheme:</em> <div><button class="sel" value="light">Light</button><button value="dark">Dark</button></div> </div> <div class="chooser soundchooser" style="display:none"> <em>Music:</em> <div><button class="sel" value="on">On</button><button value="off">Off</button></div> </div>');
+		const colorScheme = escTL(TL`Color scheme:`).replace(/ /g, '&nbsp;');
+		this.$('.replay-controls-2').html(
+			`<div class="chooser leftchooser speedchooser"> <em>${escTL(TL`Speed:`)}</em> <div>` +
+			`<button value="hyperfast">${escTL(TL`Hyperfast`)}</button>` +
+			`<button value="fast">${escTL(TL`Fast`)}</button>` +
+			`<button value="normal" class="sel">${escTL(TL`Normal`)}</button>` +
+			`<button value="slow">${escTL(TL`Slow`)}</button>` +
+			`<button value="reallyslow">${escTL(TL`Really Slow`)}</button>` +
+			`</div> </div> ` +
+			`<div class="chooser colorchooser"> <em>${colorScheme}</em> <div>` +
+			`<button class="sel" value="light">${escTL(TL`Light`)}</button>` +
+			`<button value="dark">${escTL(TL`Dark`)}</button>` +
+			`</div> </div> ` +
+			`<div class="chooser soundchooser" style="display:none"> <em>${escTL(TL`Music:`)}</em> <div>` +
+			`<button class="sel" value="on">${escTL(TL`On`)}</button>` +
+			`<button value="off">${escTL(TL`Off`)}</button>` +
+			`</div> </div>`
+		);
 
 		// this works around a WebKit/Blink bug relating to float layout
 		const rc2 = this.$('.replay-controls-2')[0];
@@ -168,18 +210,32 @@ const Replays = {
 		if (state === 'error') {
 			const m = /^([a-z0-9]+)-[a-z0-9]+-[0-9]+$/.exec(this.battle.id);
 			if (m) {
-				this.battle.scene.message('<hr /><div class="chat">This replay was uploaded from a third-party server (<code>' + BattleLog.escapeHTML(m[1]) + '</code>). It contains errors.</div><div class="chat">Replays uploaded from third-party servers can contain errors if the server is running custom code, or the server operator has otherwise incorrectly configured their server.</div>');
+				const server = `<code>${BattleLog.escapeHTML(m[1])}</code>`;
+				this.battle.scene.message(
+					`<hr /><div class="chat">${TL`This replay was uploaded from a third-party server (${server}). It contains errors.`}</div>` +
+					`<div class="chat">${escTL(TL`Replays uploaded from third-party servers can contain errors if the server is running custom code, or the server operator has otherwise incorrectly configured their server.`)}</div>`
+				);
 			}
 			return;
 		}
 
 		if (BattleSound.muted && !this.muted) this.changeSetting('sound', 'off');
 
+		const otherButtons = (resetDisabled: string) =>
+			`<button data-action="reset"${resetDisabled}><i class="fa fa-undo"></i> ${escTL(TL`[Reset]`)}</button> ` +
+			`<button data-action="rewind"><i class="fa fa-step-backward"></i> ${escTL(TL`[Last turn]`)}</button>` +
+			`<button data-action="ff"><i class="fa fa-step-forward"></i> ${escTL(TL`[Next turn]`)}</button> ` +
+			`<button data-action="ffto"><i class="fa fa-fast-forward"></i> ${escTL(TL`[Go to turn...]`)}</button> ` +
+			`<button data-action="switchViewpoint"><i class="fa fa-random"></i> ${escTL(TL`[Switch sides]`)}</button>`;
 		if (this.battle.paused) {
 			const resetDisabled = !this.battle.started ? ' disabled' : '';
-			this.$('.replay-controls').html('<button data-action="play"><i class="fa fa-play"></i> Play</button><button data-action="reset"' + resetDisabled + '><i class="fa fa-undo"></i> Reset</button> <button data-action="rewind"><i class="fa fa-step-backward"></i> Last turn</button><button data-action="ff"><i class="fa fa-step-forward"></i> Next turn</button> <button data-action="ffto"><i class="fa fa-fast-forward"></i> Go to turn...</button> <button data-action="switchViewpoint"><i class="fa fa-random"></i> Switch sides</button>');
+			this.$('.replay-controls').html(
+				`<button data-action="play"><i class="fa fa-play"></i> ${escTL(TL`[Play]`)}</button>` + otherButtons(resetDisabled)
+			);
 		} else {
-			this.$('.replay-controls').html('<button data-action="pause"><i class="fa fa-pause"></i> Pause</button><button data-action="reset"><i class="fa fa-undo"></i> Reset</button> <button data-action="rewind"><i class="fa fa-step-backward"></i> Last turn</button><button data-action="ff"><i class="fa fa-step-forward"></i> Next turn</button> <button data-action="ffto"><i class="fa fa-fast-forward"></i> Go to turn...</button> <button data-action="switchViewpoint"><i class="fa fa-random"></i> Switch sides</button>');
+			this.$('.replay-controls').html(
+				`<button data-action="pause"><i class="fa fa-pause"></i> ${escTL(TL`[Pause]`)}</button>` + otherButtons('')
+			);
 		}
 	},
 	pause() {
@@ -198,11 +254,11 @@ const Replays = {
 		this.battle.seekBy(-1);
 	},
 	ffto() {
-		let turn: string | number | null = prompt('Turn?');
+		let turn: string | number | null = prompt(TL`Turn?`);
 		if (!turn?.trim()) return;
 		if (turn === 'e' || turn === 'end' || turn === 'f' || turn === 'finish') turn = Infinity;
 		turn = Number(turn);
-		if (isNaN(turn) || turn < 0) alert("Invalid turn");
+		if (isNaN(turn) || turn < 0) alert(TL`Invalid turn`);
 		this.battle.seekTurn(turn);
 	},
 	switchViewpoint() {
@@ -211,6 +267,7 @@ const Replays = {
 };
 
 window.onload = function () {
+	ensureTL();
 	Replays.init();
 };
 

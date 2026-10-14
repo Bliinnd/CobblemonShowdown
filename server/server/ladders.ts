@@ -70,18 +70,19 @@ class Ladder extends LadderStore {
 		// all validation for a battle goes through here
 		const user = connection.user;
 		const userid = user.id;
+		const TL = user.TL;
 		if (team === null) team = user.battleSettings.team;
 
 		if (Rooms.global.lockdown && Rooms.global.lockdown !== 'pre') {
-			let message = `The server is restarting. Battles will be available again in a few minutes.`;
+			let message = TL`The server is restarting. Battles will be available again in a few minutes.`;
 			if (Rooms.global.lockdown === 'ddos') {
-				message = `The server is under attack. Battles cannot be started at this time.`;
+				message = TL`The server is under attack. Battles cannot be started at this time.`;
 			}
 			connection.popup(message);
 			return null;
 		}
 		if (Punishments.isBattleBanned(user)) {
-			connection.popup(`You are barred from starting any new games until your battle ban expires.`);
+			connection.popup(TL`You are barred from starting any new games until your battle ban expires.`);
 			return null;
 		}
 		const gameCount = user.games.size;
@@ -93,13 +94,13 @@ class Ladder extends LadderStore {
 		}
 
 		if (this.virtualCustom && (challengeType === 'challenge' || challengeType === 'tour')) {
-			connection.popup(`Virtual formats can only be used for ladder searches.`);
+			connection.popup(TL`Virtual formats can only be used for ladder searches.`);
 			return null;
 		}
 		if (user.isUserBot && this.virtualCustom === 'suspect') {
 			connection.popup(
-				`Bots are not allowed to queue for suspect tests.\n\n` +
-				`If you feel this designation is in error, please contact staff by typing /helpticket in chat.`
+				TL`Bots are not allowed to queue for suspect tests.` + `\n\n` +
+				TL`If you feel this designation is in error, please contact staff by typing /helpticket in chat.`
 			);
 			return null;
 		}
@@ -107,7 +108,7 @@ class Ladder extends LadderStore {
 		try {
 			this.formatid = Dex.formats.validate(this.formatid);
 		} catch (e: any) {
-			connection.popup(`Your selected format is invalid:\n\n- ${e.message}`);
+			connection.popup(`${TL`Your selected format is invalid:`}\n\n- ${e.message}`);
 			return null;
 		}
 
@@ -127,9 +128,10 @@ class Ladder extends LadderStore {
 			if (nickname) {
 				const filtered = Chat.nicknamefilter(nickname, user);
 				if (typeof filtered === 'string' && (!filtered || filtered !== match[1])) {
+					const bannedNickname = match[1];
 					connection.popup(
-						`Your team was rejected for the following reason:\n\n` +
-						`- Your Pokémon has a banned nickname: ${match[1]}`
+						TL`Your team was rejected for the following reason:` + `\n\n` +
+						`- ` + TL`Your Pokémon has a banned nickname: ${bannedNickname}`
 					);
 					return null;
 				} else if (filtered === false) {
@@ -141,9 +143,10 @@ class Ladder extends LadderStore {
 		if (unownWord) {
 			const filtered = Chat.nicknamefilter(unownWord, user);
 			if (!filtered || filtered !== unownWord) {
+				const bannedWord = unownWord.toUpperCase();
 				connection.popup(
-					`Your team was rejected for the following reason:\n\n` +
-					`- Your Unowns spell out a banned word: ${unownWord.toUpperCase()}`
+					TL`Your team was rejected for the following reason:` + `\n\n` +
+					`- ` + TL`Your Unowns spell out a banned word: ${bannedWord}`
 				);
 				return null;
 			}
@@ -162,7 +165,7 @@ class Ladder extends LadderStore {
 			if (!rating) rating = 1;
 		} else {
 			if (Ladders.disabled) {
-				connection.popup(`The ladder is temporarily disabled due to technical difficulties - you will not receive ladder rating for this game.`);
+				connection.popup(TL`The ladder is temporarily disabled due to technical difficulties - you will not receive ladder rating for this game.`);
 				rating = 1;
 			}
 			const validator = TeamValidatorAsync.get(this.formatid);
@@ -171,7 +174,7 @@ class Ladder extends LadderStore {
 
 		if (!valResult.startsWith('1')) {
 			connection.popup(
-				`Your team was rejected for the following reasons:\n\n` +
+				TL`Your team was rejected for the following reasons:` + `\n\n` +
 				`- ` + valResult.slice(1).replace(/\n/g, `\n- `)
 			);
 			return null;
@@ -195,12 +198,13 @@ class Ladder extends LadderStore {
 
 	async makeChallenge(connection: Connection, targetUser: User) {
 		const user = connection.user;
+		const TL = user.TL;
 		if (targetUser === user) {
-			connection.popup(`You can't battle yourself. The best you can do is open PS in Private Browsing (or another browser) and log into a different username, and battle that username.`);
+			connection.popup(TL`You can't battle yourself. The best you can do is open PS in Private Browsing (or another browser) and log into a different username, and battle that username.`);
 			return false;
 		}
 		if (Ladder.getChallenging(user.id)) {
-			connection.popup(`You are already challenging someone. Cancel that challenge before challenging someone else.`);
+			connection.popup(TL`You are already challenging someone. Cancel that challenge before challenging someone else.`);
 			return false;
 		}
 
@@ -214,20 +218,20 @@ class Ladder extends LadderStore {
 		}
 
 		if (blockChallenge && !user.can('bypassblocks', targetUser)) {
-			connection.popup(`The user '${targetUser.name}' is not accepting challenges right now.`);
+			connection.popup(TL`The user '${targetUser.name}' is not accepting challenges right now.`);
 			Chat.maybeNotifyBlocked('challenge', targetUser, user);
 			return false;
 		}
 		if (Date.now() < user.lastChallenge + 10 * SECONDS && !Config.nothrottle) {
 			// 10 seconds ago, probable misclick
-			connection.popup(`You challenged less than 10 seconds after your last challenge! It's cancelled in case it's a misclick.`);
+			connection.popup(TL`You challenged less than 10 seconds after your last challenge! It's cancelled in case it's a misclick.`);
 			return false;
 		}
 		const currentChallenges = Ladders.challenges.get(targetUser.id);
 		if (currentChallenges && currentChallenges.length >= 3 && !user.autoconfirmed) {
 			connection.popup(
-				`This user already has 3 pending challenges.\n` +
-				`You must be autoconfirmed to challenge them.`
+				TL`This user already has 3 pending challenges.` + `\n` +
+				TL`You must be autoconfirmed to challenge them.`
 			);
 			return false;
 		}
@@ -248,13 +252,13 @@ class Ladder extends LadderStore {
 					return true;
 				}
 			} else {
-				connection.popup(`There's already a challenge (${existingChall.format}) between you and ${targetUser.name}!`);
+				connection.popup(TL`There's already a challenge (${existingChall.format}) between you and ${targetUser.name}!`);
 				Ladders.challenges.update(user.id, targetUser.id);
 				return false;
 			}
 		}
 		Ladders.challenges.add(new BattleChallenge(user.id, targetUser.id, ready));
-		Ladders.challenges.send(user.id, targetUser.id, `/log ${user.name} wants to battle!`);
+		Ladders.challenges.send(user.id, targetUser.id, recipient => `/log ${recipient.TL`${user.name} wants to battle!`}`);
 		user.lastChallenge = Date.now();
 		Chat.runHandlers('onChallenge', user, targetUser, ready.formatid);
 		return true;
@@ -301,7 +305,7 @@ class Ladder extends LadderStore {
 			const formatTable = Ladders.searches.get(formatid);
 			if (formatTable) formatTable.searches.delete(search.userid);
 			if (user?.connected) {
-				user.popup(`You changed your name and are no longer looking for a battle in ${formatid}`);
+				user.popup(user.TL`You changed your name and are no longer looking for a battle in ${formatid}`);
 				Ladder.updateSearch(user);
 			}
 			return null;
@@ -358,7 +362,7 @@ class Ladder extends LadderStore {
 
 		const format = Dex.formats.get(this.formatid);
 		if (!format.searchShow) {
-			connection.popup(`Error: Your format ${format.id} is not ladderable.`);
+			connection.popup(user.TL`Error: Your format ${format.id} is not ladderable.`);
 			return;
 		}
 
@@ -438,7 +442,7 @@ class Ladder extends LadderStore {
 			Ladders.searches.set(formatid, formatTable);
 		}
 		if (formatTable.searches.has(user.id)) {
-			user.popup(`Couldn't search: You are already searching for a ${formatid} battle.`);
+			user.popup(user.TL`Couldn't search: You are already searching for a ${formatid} battle.`);
 			return;
 		}
 
@@ -518,7 +522,8 @@ class Ladder extends LadderStore {
 		}
 		if (missingUser) {
 			for (const ready of readies) {
-				Users.get(ready.userid)?.popup(`Sorry, your opponent ${missingUser} went offline before your battle could start.`);
+				const readyUser = Users.get(ready.userid);
+				readyUser?.popup(readyUser.TL`Sorry, your opponent ${missingUser} went offline before your battle could start.`);
 			}
 			return undefined;
 		}
