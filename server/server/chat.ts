@@ -1037,7 +1037,8 @@ export class CommandContext extends MessageContext {
 	checkCan(permission: GlobalPermission, target?: User | ID | null): undefined;
 	checkCan(permission: string, target: User | ID | null = null, room: Room | null = null) {
 		if (!Users.Auth.hasPermission(this.user, permission, target, room, this.fullCmd, this.cmdToken)) {
-			throw new Chat.ErrorMessage(`${this.cmdToken}${this.fullCmd} - Access denied.`);
+			const command = `${this.cmdToken}${this.fullCmd}`;
+			throw new Chat.ErrorMessage(this.TL`${command} - Access denied.`);
 		}
 	}
 	privatelyCheckCan(permission: RoomPermission, target: User | ID | null, room: Room): boolean;
@@ -2436,18 +2437,20 @@ export const Chat = new class {
 			}
 			buf += '</span>';
 		}
+		const statNames = dex.loadTextData(lang).StatShortNames;
+		const TL = Chat.getTranslator(options.language);
 		buf += '<span style="float:left;min-height:26px">';
-		buf += `<span class="col statcol"><em>HP</em><br />${species.baseStats.hp}</span> `;
-		buf += `<span class="col statcol"><em>Atk</em><br />${species.baseStats.atk}</span> `;
-		buf += `<span class="col statcol"><em>Def</em><br />${species.baseStats.def}</span> `;
+		buf += `<span class="col statcol"><em>${statNames.hp}</em><br />${species.baseStats.hp}</span> `;
+		buf += `<span class="col statcol"><em>${statNames.atk}</em><br />${species.baseStats.atk}</span> `;
+		buf += `<span class="col statcol"><em>${statNames.def}</em><br />${species.baseStats.def}</span> `;
 		if (gen <= 1) {
-			buf += `<span class="col statcol"><em>Spc</em><br />${species.baseStats.spa}</span> `;
+			buf += `<span class="col statcol"><em>${statNames.spc}</em><br />${species.baseStats.spa}</span> `;
 		} else {
-			buf += `<span class="col statcol"><em>SpA</em><br />${species.baseStats.spa}</span> `;
-			buf += `<span class="col statcol"><em>SpD</em><br />${species.baseStats.spd}</span> `;
+			buf += `<span class="col statcol"><em>${statNames.spa}</em><br />${species.baseStats.spa}</span> `;
+			buf += `<span class="col statcol"><em>${statNames.spd}</em><br />${species.baseStats.spd}</span> `;
 		}
-		buf += `<span class="col statcol"><em>Spe</em><br />${species.baseStats.spe}</span> `;
-		buf += `<span class="col bstcol"><em>BST<br />${species.bst}</em></span> `;
+		buf += `<span class="col statcol"><em>${statNames.spe}</em><br />${species.baseStats.spe}</span> `;
+		buf += `<span class="col bstcol"><em>${TL`BST`}<br />${species.bst}</em></span> `;
 		buf += '</span>';
 		buf += '</li>';
 		return `<div class="message"><ul class="utilichart">${buf}<li style="clear:both"></li></ul></div>`;
@@ -2455,6 +2458,7 @@ export const Chat = new class {
 	getDataMoveHTML(move: Move, options: DataHTMLRenderOptions = {}) {
 		const { dex = Dex } = options;
 		const text = dex.text.get(move, Chat.getDexLanguage(options.language));
+		const TL = Chat.getTranslator(options.language);
 		let buf = `<ul class="utilichart"><li class="result">`;
 		buf += `<span class="col movenamecol"><a href="https://${Config.routes.dex}/moves/${move.id}">${text.name}</a></span> `;
 		// encoding is important for the ??? type icon
@@ -2462,9 +2466,9 @@ export const Chat = new class {
 		buf += `<span class="col typecol"><img src="//${Config.routes.client}/sprites/types/${encodedMoveType}.png" alt="${move.type}" width="32" height="14">`;
 		buf += `<img src="//${Config.routes.client}/sprites/categories/${move.category}.png" alt="${move.category}" width="32" height="14"></span> `;
 		if (move.basePower) {
-			buf += `<span class="col labelcol"><em>Power</em><br>${typeof move.basePower === 'number' ? move.basePower : '—'}</span> `;
+			buf += `<span class="col labelcol"><em>${TL`Power`}</em><br>${typeof move.basePower === 'number' ? move.basePower : '—'}</span> `;
 		}
-		buf += `<span class="col widelabelcol"><em>Accuracy</em><br>${typeof move.accuracy === 'number' ? (`${move.accuracy}%`) : '—'}</span> `;
+		buf += `<span class="col widelabelcol"><em>${TL`Accuracy`}</em><br>${typeof move.accuracy === 'number' ? (`${move.accuracy}%`) : '—'}</span> `;
 		const basePP = move.pp || 1;
 		let pp = Math.floor(move.noPPBoosts ? basePP : basePP * 8 / 5);
 		if (dex.currentMod.startsWith('champions')) pp = move.noPPBoosts ? basePP : (basePP / 5 + 1) * 4;

@@ -994,10 +994,10 @@ export const commands: Chat.ChatCommands = {
 			const speciesSearchResults = dex.dataSearch(targets[0], ['Pokedex']);
 			if (typeSearchResults && typeSearchResults[0].name !== "") {
 				type1 = dex.types.get(typeSearchResults[0].name);
-				imperfectMatch = true;
+				if (typeSearchResults[0].isInexact) imperfectMatch = true;
 			} else if (speciesSearchResults && speciesSearchResults[0].name !== "") {
 				species = dex.species.get(speciesSearchResults[0].name);
-				imperfectMatch = true;
+				if (speciesSearchResults[0].isInexact) imperfectMatch = true;
 			} else {
 				return this.sendReplyBox(notRecognized());
 			}
@@ -1007,7 +1007,7 @@ export const commands: Chat.ChatCommands = {
 			const searchResults = dex.dataSearch(targets[1], ['TypeChart']);
 			if (searchResults && searchResults[0].name !== "") {
 				type2 = dex.types.get(searchResults[0].name);
-				imperfectMatch = true;
+				if (searchResults[0].isInexact) imperfectMatch = true;
 			} else {
 				return this.sendReplyBox(notRecognized());
 			}
@@ -1017,22 +1017,24 @@ export const commands: Chat.ChatCommands = {
 			const searchResults = dex.dataSearch(targets[2], ['TypeChart']);
 			if (searchResults && searchResults[0].name !== "") {
 				type3 = dex.types.get(searchResults[0].name);
-				imperfectMatch = true;
+				if (searchResults[0].isInexact) imperfectMatch = true;
 			} else {
 				return this.sendReplyBox(notRecognized());
 			}
 		}
 
+		const textLanguage = Chat.getDexLanguage(this.language);
+		const typeName = (type: string) => dex.text.get(dex.types.get(type), textLanguage).name;
 		const types = [];
 		if (species.exists) {
 			for (const type of species.types) {
 				types.push(type);
 			}
-			target = species.name;
+			target = dex.text.get(species, textLanguage).name;
 			isMatch = true;
 		} else if (type1.exists) {
 			types.push(type1.name);
-			target = type1.name;
+			target = typeName(type1.name);
 			isMatch = true;
 		}
 
@@ -1050,11 +1052,11 @@ export const commands: Chat.ChatCommands = {
 			searchTarget.push(target);
 			if (type2.exists && !alreadyFoundType2) {
 				types.push(type2.name);
-				searchTarget.push(type2.name);
+				searchTarget.push(typeName(type2.name));
 			}
 			if (type3.exists && !alreadyFoundType3) {
 				types.push(type3.name);
-				searchTarget.push(type3.name);
+				searchTarget.push(typeName(type3.name));
 			}
 			target = searchTarget.join("/");
 		}
@@ -1074,26 +1076,26 @@ export const commands: Chat.ChatCommands = {
 				typeMod += (isInverse ? -1 : 1) * dex.getEffectiveness(type, types);
 				switch (typeMod) {
 				case 1:
-					weaknesses.push(type);
+					weaknesses.push(typeName(type));
 					break;
 				case 2:
-					weaknesses.push(`<b>${type}</b>`);
+					weaknesses.push(`<b>${typeName(type)}</b>`);
 					break;
 				case 3:
-					weaknesses.push(`<b><i>${type}</i></b>`);
+					weaknesses.push(`<b><i>${typeName(type)}</i></b>`);
 					break;
 				case -1:
-					resistances.push(type);
+					resistances.push(typeName(type));
 					break;
 				case -2:
-					resistances.push(`<b>${type}</b>`);
+					resistances.push(`<b>${typeName(type)}</b>`);
 					break;
 				case -3:
-					resistances.push(`<b><i>${type}</i></b>`);
+					resistances.push(`<b><i>${typeName(type)}</i></b>`);
 					break;
 				}
 			} else {
-				immunities.push(type);
+				immunities.push(typeName(type));
 			}
 		}
 
