@@ -21,6 +21,7 @@ import * as tables from './tables.ts';
 import { SQL } from './database.ts';
 import IPTools from './ip-tools.ts';
 import { cobblemonTeamActions } from './cobblemon-teams.ts';
+import { cobblemonBackgroundActions } from './cobblemon-backgrounds.ts';
 
 const require = module.createRequire(import.meta.url);
 
@@ -1376,6 +1377,8 @@ export const actions: { [k: string]: QueryHandler } = {
 
 // CobblemonShowdown : équipes sauvegardées sur le compte.
 Object.assign(actions, cobblemonTeamActions);
+// CobblemonShowdown : fond d'écran enregistré sur le compte.
+Object.assign(actions, cobblemonBackgroundActions);
 
 if (Config.actions) {
 	Object.assign(actions, Config.actions);

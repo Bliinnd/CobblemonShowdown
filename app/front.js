@@ -5,8 +5,9 @@
  * - /showdown/...            -> serveur de combat (connexion temps réel)
  * - /action.php, /api/...    -> serveur de comptes
  *
- * Il sert aussi les pages des joueurs (/users/<pseudo>, voir app/profiles.js)
- * et les avatars personnalisés du serveur de combat (/avatars/<fichier>).
+ * Il sert aussi les pages des joueurs (/users/<pseudo>, voir app/profiles.js),
+ * les avatars personnalisés du serveur de combat (/avatars/<fichier>)
+ * et les fonds d'écran Cobblemon du dossier fonds/ (/fonds/<fichier>).
  */
 const fs = require('fs');
 const http = require('http');
@@ -68,6 +69,34 @@ const EXTERNAL_HOST = 'https://play.pokemonshowdown.com';
 
 /** Avatars personnalisés (/addavatar, /personalavatar) : fichiers de server/config/avatars/. */
 const AVATAR_FILE = /^(?!.*\.\.)[a-z0-9-][a-z0-9.-]*\.(png|gif|jpe?g|webp)$/;
+
+/** Fonds d'écran Cobblemon : images du dossier fonds/ (voir fonds/LISEZMOI.md). */
+const BACKGROUND_FILE = /^(?!\.)[^/\\]+\.(png|jpe?g|webp)$/i;
+
+/**
+ * Liste des fonds d'écran pour le client, avec les crédits facultatifs de
+ * fonds/credits.json ({"fichier.jpg": {"title": "...", "artist": "...", "link": "..."}}).
+ */
+function listBackgrounds(dir) {
+	let files;
+	try {
+		files = fs.readdirSync(dir).filter(file => BACKGROUND_FILE.test(file)).sort();
+	} catch {
+		return [];
+	}
+	let credits = {};
+	try {
+		credits = JSON.parse(fs.readFileSync(path.join(dir, 'credits.json'), 'utf8')) || {};
+	} catch {}
+	return files.map(file => {
+		const credit = credits[file] || {};
+		const background = { url: '/fonds/' + encodeURIComponent(file) };
+		for (const key of ['title', 'artist', 'link']) {
+			if (typeof credit[key] === 'string' && credit[key]) background[key] = credit[key];
+		}
+		return background;
+	});
+}
 
 function forwardedHeaders(req) {
 	// Une adresse IPv4 reçue sur une socket IPv6 (« ::ffff:1.2.3.4 ») est transmise sous sa forme IPv4.
@@ -150,6 +179,7 @@ function createHandler(settings) {
 	const publicDir = path.join(settings.root, 'client/play.pokemonshowdown.com');
 	const indexPage = path.join(publicDir, 'caches/index-new.html');
 	const avatarsDir = path.join(settings.root, 'server/config/avatars');
+	const backgroundsDir = path.join(settings.root, 'fonds');
 	const profiles = createProfiles(settings);
 	let configJs = null;
 
@@ -180,8 +210,10 @@ function createHandler(settings) {
 		if (pathname.startsWith('/users/')) return profiles(req, res, pathname);
 		if (pathname === '/config/config.js') {
 			configJs ||= clientConfig(settings);
+			// Relu à chaque fois : un fond ajouté dans fonds/ apparaît sans redémarrer le site.
+			const backgrounds = `Config.cobblemonBackgrounds = ${JSON.stringify(listBackgrounds(backgroundsDir))};\n`;
 			res.writeHead(200, { 'Content-Type': TYPES['.js'], 'Cache-Control': 'no-cache' });
-			return res.end(configJs);
+			return res.end(configJs + backgrounds);
 		}
 		// Couleurs de pseudo personnalisées : aucune pour l'instant.
 		if (pathname === '/config/colors.json') {
@@ -195,6 +227,14 @@ function createHandler(settings) {
 				return res.end('Introuvable');
 			}
 			return sendFile(res, path.join(avatarsDir, name), req);
+		}
+		if (pathname.startsWith('/fonds/')) {
+			const name = pathname.slice('/fonds/'.length);
+			if (!BACKGROUND_FILE.test(name)) {
+				res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+				return res.end('Introuvable');
+			}
+			return sendFile(res, path.join(backgroundsDir, name), req);
 		}
 		if (EXTERNAL_RESOURCES.test(pathname) && !fs.existsSync(path.join(publicDir, pathname))) {
 			res.writeHead(302, { Location: EXTERNAL_HOST + req.url });

@@ -688,6 +688,18 @@ export const translations: TranslationCatalog = {
 	"Usernames": null,
 	"Your username can be chosen and changed at any time. Keep in mind:": null,
 	"Removed from your friends.": null,
+	"Couldn't load the avatar list.": null,
+	"Show all {all.length} avatars": null,
+	"No avatar matches your search.": null,
+	"Log in to an account to keep your avatar on all your devices.": null,
+	"Game heroes": null,
+	"All avatars": null,
+	"Search an avatar (e.g. guzma)": null,
+	"Log in to an account to find your background on all your devices.": null,
+	"Your image is saved on your account and follows you on all your devices.": null,
+	"Sending...": null,
+	"[Use my account background]": null,
+	"[Remove my account background]": null,
 
 	// #endregion Popups
 
@@ -743,6 +755,8 @@ export const translations: TranslationCatalog = {
 	"Number of games": null,
 	"A single battle.": null,
 	"Each game opens in a new tab.": null,
+	"Log in to an account to save a background on it.": null,
+	"The server can't be reached. Try again in a moment.": null,
 
 	// #endregion Main Menu
 

@@ -26,6 +26,98 @@ export type RoomInfo = {
 	spotlight?: string, subRooms?: string[],
 };
 
+/**
+ * CobblemonShowdown : fond d'écran enregistré sur le compte, retrouvé sur
+ * tous les appareils (voir loginserver/src/cobblemon-backgrounds.ts).
+ */
+export const AccountBackground = new class {
+	/** compte déjà synchronisé (updateuser arrive aussi à chaque changement de statut) */
+	syncedUser = '';
+	/** date du fond du compte connecté, 0 s'il n'en a pas */
+	updated = 0;
+	loadMarker() {
+		try {
+			return localStorage.getItem('cobblemon_bg_account') || '';
+		} catch {
+			return '';
+		}
+	}
+	saveMarker(marker: string) {
+		try {
+			localStorage.setItem('cobblemon_bg_account', marker);
+		} catch {}
+	}
+	sync(userid: ID, force?: boolean) {
+		if (this.syncedUser === userid && !force) return;
+		this.syncedUser = userid;
+		void PSLoginServer.query('cobblemonloadbackground').then(data => {
+			if (!data?.loggedIn || data.loggedIn !== userid) return;
+			this.updated = data.updated || 0;
+			PS.update();
+			if (!this.updated) {
+				if (PSBackground.id === 'account') PSBackground.set('', '');
+				return;
+			}
+			// un fond choisi exprès sur cet appareil (officiel, Cobblemon, image du navigateur) est gardé
+			if (!force && PSBackground.id !== '' && PSBackground.id !== 'account') return;
+			if (!force && PSBackground.id === 'account' && this.loadMarker() === `${userid}:${this.updated}`) return;
+			return this.apply(userid);
+		});
+	}
+	apply(userid: ID) {
+		return PSLoginServer.query('cobblemonloadbackground', { image: '1' }).then(data => {
+			if (!data?.image || data.loggedIn !== userid) return;
+			PSBackground.set(data.image, 'account');
+			this.saveMarker(`${userid}:${data.updated}`);
+		});
+	}
+	/** réduit l'image (1920 pixels au plus de côté, JPEG) avant l'envoi */
+	resize(file: File) {
+		return new Promise<string>((resolve, reject) => {
+			const url = URL.createObjectURL(file);
+			const img = new Image();
+			img.onload = () => {
+				URL.revokeObjectURL(url);
+				const scale = Math.min(1, 1920 / Math.max(img.naturalWidth, img.naturalHeight));
+				const canvas = document.createElement('canvas');
+				canvas.width = Math.round(img.naturalWidth * scale);
+				canvas.height = Math.round(img.naturalHeight * scale);
+				canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+				resolve(canvas.toDataURL('image/jpeg', 0.85));
+			};
+			img.onerror = () => {
+				URL.revokeObjectURL(url);
+				reject(new Error('image'));
+			};
+			img.src = url;
+		});
+	}
+	/** enregistre l'image sur le compte ; renvoie un message d'erreur, ou null si tout s'est bien passé */
+	upload(file: File): Promise<string | null> {
+		const userid = PS.user.registered?.userid;
+		if (!userid) return Promise.resolve(TL`Log in to an account to save a background on it.`);
+		return this.resize(file).then(image => (
+			PSLoginServer.query('cobblemonsavebackground', { image }).then(data => {
+				if (!data) return TL`The server can't be reached. Try again in a moment.`;
+				if (data.actionerror) return PSLoginServer.errorText(data.actionerror);
+				this.updated = data.updated;
+				PSBackground.set(image, 'account');
+				this.saveMarker(`${userid}:${data.updated}`);
+				return null;
+			})
+		), () => TL`Failed to load background image.`);
+	}
+	remove(): Promise<string | null> {
+		return PSLoginServer.query('cobblemonsavebackground', { image: '' }).then(data => {
+			if (!data) return TL`The server can't be reached. Try again in a moment.`;
+			if (data.actionerror) return PSLoginServer.errorText(data.actionerror);
+			this.updated = 0;
+			if (PSBackground.id === 'account') PSBackground.set('', '');
+			return null;
+		});
+	}
+};
+
 export class MainMenuRoom extends PSRoom {
 	override readonly classType: string = 'mainmenu';
 	listeners: Record<string, ((response: any) => void)[] | null> = {};
@@ -152,6 +244,8 @@ export class MainMenuRoom extends PSRoom {
 			void Dex.loadTextData().then(() => PS.updateTranslatedText());
 			PS.user.setName(fullName, named, avatar);
 			if (named) PS.teams.syncAccount();
+			if (!named) AccountBackground.syncedUser = '';
+			if (named && PS.user.registered?.userid === PS.user.userid) AccountBackground.sync(PS.user.userid);
 			return true;
 		} case 'updatechallenges': {
 			const [, challengesBuf] = args;

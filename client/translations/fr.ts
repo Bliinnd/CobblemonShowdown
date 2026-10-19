@@ -688,6 +688,18 @@ export const translations: TranslationCatalog = {
 	"Usernames": "Pseudos",
 	"Your username can be chosen and changed at any time. Keep in mind:": "Vous pouvez choisir et changer de pseudo à tout moment. Gardez à l’esprit les règles suivantes :",
 	"Removed from your friends.": "Retiré de vos amis.",
+	"Couldn't load the avatar list.": "Impossible de charger la liste des avatars.",
+	"Show all {all.length} avatars": "Afficher les {all.length} avatars",
+	"No avatar matches your search.": "Aucun avatar ne correspond à votre recherche.",
+	"Log in to an account to keep your avatar on all your devices.": "Connectez-vous à un compte pour garder votre avatar sur tous vos appareils.",
+	"Game heroes": "Héros des jeux",
+	"All avatars": "Tous les avatars",
+	"Search an avatar (e.g. guzma)": "Chercher un avatar (ex. : guzma)",
+	"Log in to an account to find your background on all your devices.": "Connectez-vous à un compte pour retrouver votre fond d'écran sur tous vos appareils.",
+	"Your image is saved on your account and follows you on all your devices.": "Votre image est enregistrée sur votre compte et vous suit sur tous vos appareils.",
+	"Sending...": "Envoi en cours...",
+	"[Use my account background]": "Utiliser le fond de mon compte",
+	"[Remove my account background]": "Retirer le fond de mon compte",
 
 	// #endregion Popups
 
@@ -743,6 +755,8 @@ export const translations: TranslationCatalog = {
 	"Number of games": "Nombre de manches",
 	"A single battle.": "Un seul combat.",
 	"Each game opens in a new tab.": "Chaque manche s'ouvre dans un nouvel onglet.",
+	"Log in to an account to save a background on it.": "Connectez-vous à un compte pour y enregistrer un fond d'écran.",
+	"The server can't be reached. Try again in a moment.": "Le serveur ne répond pas. Réessayez dans un instant.",
 
 	// #endregion Main Menu
 

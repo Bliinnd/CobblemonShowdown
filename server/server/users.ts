@@ -43,7 +43,11 @@ const NAMES_PER_THROTTLE = 3;
 
 const PERMALOCK_CACHE_TIME = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-const DEFAULT_TRAINER_SPRITES = [1, 2, 101, 102, 169, 170, 265, 266];
+// CobblemonShowdown : par défaut, un héros ou une héroïne des jeux principaux.
+const DEFAULT_TRAINER_SPRITES = [
+	'red', 'leaf-gen3', 'ethan', 'kris', 'lyra', 'brendan', 'may', 'lucas', 'dawn', 'hilbert', 'hilda',
+	'nate', 'rosa', 'calem', 'serena', 'elio', 'selene', 'victor', 'gloria', 'florian-s', 'juliana-s',
+];
 
 import { Utils, type ProcessManager } from '../lib';
 import { TLkey } from '../sim/dex-text';

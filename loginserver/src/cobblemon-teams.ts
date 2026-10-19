@@ -27,7 +27,7 @@ export const cobblemonTeams = loginDB.getTable<{
  * Les cookies de session sont envoyés même depuis un autre site
  * (SameSite=None), donc on refuse les requêtes venant d'une autre origine.
  */
-function requireSameOrigin(context: ActionContext) {
+export function requireSameOrigin(context: ActionContext) {
 	const origin = context.request.headers.origin;
 	if (!origin) return;
 	let originHost;

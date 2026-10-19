@@ -734,7 +734,8 @@ export const commands: Chat.ChatCommands = {
 		this.runBroadcast();
 		if (!this.broadcasting) {
 			user.avatar = avatar;
-			if (user.id in customAvatars && !avatar.endsWith('xmas')) {
+			// CobblemonShowdown : l'avatar choisi est gardé sur le compte et retrouvé à chaque connexion.
+			if ((user.registered || user.id in customAvatars) && !avatar.endsWith('xmas')) {
 				Avatars.setDefault(user.id, avatar);
 			}
 		}

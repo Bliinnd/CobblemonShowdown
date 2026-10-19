@@ -1,0 +1,28 @@
+#!/usr/bin/env node
+/**
+ * CobblemonShowdown : liste de tous les avatars de Showdown (y compris ceux
+ * qu'on n'obtient d'habitude qu'avec /avatar <nom>), pour le choix d'avatar.
+ *
+ * Lue dans les ensembles OFFICIAL_AVATARS* de server/server/chat-commands/avatars.tsx,
+ * écrite dans data/avatars.json.
+ */
+
+const fs = require('node:fs');
+const path = require('node:path');
+
+process.stdout.write('Building `data/avatars.json`... ');
+
+const source = fs.readFileSync(
+	path.join(__dirname, '../caches/pokemon-showdown/server/chat-commands/avatars.tsx'), 'utf8'
+);
+const avatars = new Set();
+for (const [, body] of source.matchAll(/const OFFICIAL_AVATARS\w* = new Set\(\[([\s\S]*?)\]\);/g)) {
+	for (const [, avatar] of body.matchAll(/'([a-z0-9-]+)'/g)) avatars.add(avatar);
+}
+if (avatars.size < 100) throw new Error(`Only ${avatars.size} avatars found: has avatars.tsx changed?`);
+
+fs.writeFileSync(
+	path.join(__dirname, '../play.pokemonshowdown.com/data/avatars.json'),
+	JSON.stringify([...avatars].sort())
+);
+console.log(`DONE (${avatars.size} avatars)`);
