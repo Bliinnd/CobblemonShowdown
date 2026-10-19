@@ -2,7 +2,7 @@ import preact from "../js/lib/preact";
 import { toID, toRoomid, toUserid, Dex, PSUtils, TL } from "./battle-dex";
 import type { ID } from "./battle-dex-data";
 import { BattleLog } from "./battle-log";
-import { PSLoginServer } from "./client-connection";
+import { Net, PSLoginServer } from "./client-connection";
 import { PSBackground } from "./client-core";
 import {
 	PS, PSRoom, Config, type PSRoomFocusOptions, type RoomOptions, type PSLoginState, type RoomID,
@@ -12,6 +12,7 @@ import { type BattleRoom } from "./panel-battle";
 import { ChatUserList, PSTextarea, type ChatRoom } from "./panel-chat";
 import { PSRoomPanel, PSPanelWrapper, PSView } from "./panels";
 import { PSHeader } from "./panel-topbar";
+import { AccountBackground } from "./panel-mainmenu";
 
 const WARNING_SECONDS = 5;
 // a function because it's evaluated before translations have loaded
@@ -1096,33 +1097,86 @@ class LoginPanel extends PSRoomPanel {
 	}
 }
 
+/** CobblemonShowdown : héros et héroïnes des jeux principaux, proposés en premier (et par défaut). */
+const HERO_AVATARS = [
+	'red', 'leaf-gen3', 'ethan', 'kris', 'lyra', 'brendan', 'may', 'lucas', 'dawn', 'hilbert', 'hilda',
+	'nate', 'rosa', 'calem', 'serena', 'elio', 'selene', 'victor', 'gloria', 'florian-s', 'juliana-s',
+];
+
+/**
+ * CobblemonShowdown : choix parmi tous les avatars de Showdown, y compris ceux
+ * qu'on n'obtient d'habitude qu'avec une commande (/avatar guzma...).
+ * L'avatar choisi est gardé sur le compte par le serveur.
+ */
 class AvatarsPanel extends PSRoomPanel {
 	static readonly id = 'avatars';
 	static readonly routes = ['avatars'];
 	static readonly location = 'modal-popup';
+	static allAvatars: string[] | null = null;
+
+	declare state: { search?: string, showAll?: boolean, loadError?: boolean };
+
+	override componentDidMount() {
+		super.componentDidMount();
+		if (AvatarsPanel.allAvatars) return;
+		Net(`${Dex.resourcePrefix}data/avatars.json`).get().then(json => {
+			AvatarsPanel.allAvatars = (JSON.parse(json) as string[]).sort();
+			this.forceUpdate();
+		}).catch(() => this.setState({ loadError: true }));
+	}
+	handleSearch = (ev: Event) => {
+		this.setState({ search: (ev.currentTarget as HTMLInputElement).value, showAll: true });
+	};
+	showAll = () => {
+		this.setState({ showAll: true });
+	};
+	renderAvatar(avatar: string) {
+		return <button
+			key={avatar} data-cmd={`/closeand /avatar ${avatar}`} title={avatar}
+			class={`option${avatar === PS.user.avatar ? ' cur' : ''}`}
+		>
+			<img
+				src={Dex.resolveAvatar(avatar)} width={80} height={80} class="pixelated" alt={avatar}
+				{...{ loading: 'lazy' } as any}
+			/>
+		</button>;
+	}
+	renderAll() {
+		if (this.state.loadError) return <p class="error">{TL`Couldn't load the avatar list.`}</p>;
+		const all = AvatarsPanel.allAvatars;
+		if (!all) return <p>{TL`Loading...`}</p>;
+		if (!this.state.showAll) {
+			return <p><button class="button" onClick={this.showAll}>{TL`Show all ${all.length} avatars`}</button></p>;
+		}
+		const search = toID(this.state.search || '');
+		const avatars = search ? all.filter(avatar => toID(avatar).includes(search)) : all;
+		if (!avatars.length) return <p>{TL`No avatar matches your search.`}</p>;
+		return <div class="avatarlist avatarlist-images">
+			{avatars.map(avatar => this.renderAvatar(avatar))}
+		</div>;
+	}
 
 	override render() {
 		const room = this.props.room;
-
-		const avatars: [number, string][] = [];
-		for (let i = 1; i <= 293; i++) {
-			if (i === 162 || i === 168) continue;
-			avatars.push([i, window.BattleAvatarNumbers?.[i] || `${i}`]);
-		}
 
 		return <PSPanelWrapper room={room} width={1210}><div class="pad">
 			<label class="optlabel"><strong>{TL`Choose an avatar or`} </strong>
 				<button class="button" data-cmd="/close"> {TL`[Cancel]`}</button>
 			</label>
-			<div class="avatarlist">
-				{avatars.map(([i, avatar]) => (
-					<button
-						data-cmd={`/closeand /avatar ${avatar}`} title={`/avatar ${avatar}`}
-						class={`option pixelated${avatar === PS.user.avatar ? ' cur' : ''}`}
-						style={`background-position: -${((i - 1) % 16) * 80 + 1}px -${Math.floor((i - 1) / 16) * 80 + 1}px`}
-					></button>
-				))}
+			{!PS.user.registered && <p class="small">{TL`Log in to an account to keep your avatar on all your devices.`}</p>}
+			<h3>{TL`Game heroes`}</h3>
+			<div class="avatarlist avatarlist-images">
+				{HERO_AVATARS.map(avatar => this.renderAvatar(avatar))}
 			</div>
+			<div style="clear:left"></div>
+			<h3>{TL`All avatars`}</h3>
+			<p>
+				<input
+					type="search" class="textbox" placeholder={TL`Search an avatar (e.g. guzma)`}
+					value={this.state.search || ''} onInput={this.handleSearch}
+				/>
+			</p>
+			{this.renderAll()}
 			<div style="clear:left"></div>
 			<p><button class="button" data-cmd="/close">{TL`[Cancel]`}</button></p>
 		</div></PSPanelWrapper>;
@@ -1396,7 +1450,7 @@ class BackgroundListPanel extends PSRoomPanel {
 		}
 	}
 
-	declare state: { status?: string, bgUrl?: string };
+	declare state: { status?: string, bgUrl?: string, busy?: boolean };
 
 	setBg = (ev: Event) => {
 		let curtarget = ev.currentTarget as HTMLButtonElement;
@@ -1442,6 +1496,79 @@ class BackgroundListPanel extends PSRoomPanel {
 			});
 		};
 		reader.readAsDataURL(file);
+	}
+
+	/** CobblemonShowdown : image enregistrée sur le compte, retrouvée sur tous les appareils */
+	uploadAccountBg = (ev: Event) => {
+		ev.preventDefault();
+		ev.stopImmediatePropagation();
+		const input = ev.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		this.setState({ status: undefined, busy: true });
+		void AccountBackground.upload(file).then(error => {
+			input.value = '';
+			this.setState({ status: error || undefined, busy: false });
+		});
+	};
+	removeAccountBg = (ev: Event) => {
+		ev.preventDefault();
+		ev.stopImmediatePropagation();
+		this.setState({ status: undefined, busy: true });
+		void AccountBackground.remove().then(error => this.setState({ status: error || undefined, busy: false }));
+	};
+	useAccountBg = (ev: Event) => {
+		ev.preventDefault();
+		ev.stopImmediatePropagation();
+		const userid = PS.user.registered?.userid;
+		if (userid) void AccountBackground.apply(userid).then(() => this.forceUpdate());
+	};
+	renderAccountBg() {
+		if (!PS.user.registered) {
+			return <>
+				<p>{TL.label(TL`Upload`)}</p>
+				<p><input type="file" accept="image/*" name="bgfile" onChange={this.uploadBg} /></p>
+				<p class="small">{TL`Log in to an account to find your background on all your devices.`}</p>
+			</>;
+		}
+		const hasAccountBg = !!AccountBackground.updated;
+		return <>
+			<p>{TL`Your image is saved on your account and follows you on all your devices.`}</p>
+			<p>
+				<input
+					type="file" accept="image/*" name="accountbgfile" onChange={this.uploadAccountBg}
+					disabled={this.state.busy}
+				/>
+			</p>
+			{this.state.busy && <p><em>{TL`Sending...`}</em></p>}
+			{hasAccountBg && <p class="buttonbar">
+				{PSBackground.id !== 'account' && <><button class="button" onClick={this.useAccountBg}>
+					{TL`[Use my account background]`}
+				</button> </>}
+				<button class="button" onClick={this.removeAccountBg} disabled={this.state.busy}>
+					{TL`[Remove my account background]`}
+				</button>
+			</p>}
+		</>;
+	}
+	renderCobblemonBgs(option: (val: string) => string) {
+		const backgrounds = Config.cobblemonBackgrounds || [];
+		if (!backgrounds.length) return null;
+		return <>
+			<p><strong>Cobblemon</strong></p>
+			<div class="bglist">
+				{backgrounds.map(bg => (
+					<button
+						onClick={this.setBg} value={`cobblemon:${bg.url}`} class={option(`cobblemon:${bg.url}`)}
+						title={bg.title || ''}
+					>
+						<span class="bg" style={`background: url("${bg.url}") center / cover no-repeat`}></span>{}
+						{bg.title || ''}
+					</button>
+				))}
+			</div>
+			<div style="clear: left"></div>
+		</>;
 	}
 
 	uploadBg = (ev: Event) => {
@@ -1497,6 +1624,7 @@ class BackgroundListPanel extends PSRoomPanel {
 				</button>
 			</div>
 			<div style="clear: left"></div>
+			{this.renderCobblemonBgs(option)}
 			<p><strong>{TL`Official`}</strong></p>
 			<div class="bglist">
 				<button onClick={this.setBg} value="charizards" class={option('charizards')}>
@@ -1522,10 +1650,7 @@ class BackgroundListPanel extends PSRoomPanel {
 			</div>
 			<div style="clear: left"></div>
 			<p><strong>{TL`Custom`}</strong></p>
-			<p>
-				{TL.label(TL`Upload`)}
-			</p>
-			<p><input type="file" accept="image/*" name="bgfile" onChange={this.uploadBg} /></p>
+			{this.renderAccountBg()}
 			{!!this.state.status && <p class="error">{this.state.status}</p>}
 			<p class="buttonbar">
 				<button data-cmd="/close" class="button"><strong>{TL`[Done]`}</strong></button>

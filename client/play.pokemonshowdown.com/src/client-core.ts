@@ -141,7 +141,8 @@ export const PSBackground = new class extends PSStreamModel<string | null> {
 		} catch {}
 	}
 	save(bgUrl: string) {
-		if (this.id !== 'custom') {
+		// CobblemonShowdown : le fond du compte ('account') est gardé comme une image personnalisée
+		if (this.id !== 'custom' && this.id !== 'account') {
 			localStorage.setItem('showdown_bg', this.id);
 		} else if (this.menuColors) {
 			localStorage.setItem('showdown_bg', bgUrl + '\n' + this.id + '\n' + this.menuColors.join('\n'));
@@ -157,6 +158,20 @@ export const PSBackground = new class extends PSStreamModel<string | null> {
 	load(bgUrl: string, bgid: string, menuColors: string[] | null = null) {
 		// id
 		this.id = bgid;
+
+		// CobblemonShowdown : fonds d'écran Cobblemon, au hasard ou choisis ("cobblemon:<adresse>")
+		let cobblemonBg: NonNullable<typeof Config.cobblemonBackgrounds>[number] | undefined;
+		const cobblemonBgs = Config.cobblemonBackgrounds || [];
+		if ((!bgid || bgid === 'waterfall') && cobblemonBgs.length) {
+			const pick = () => cobblemonBgs[Math.floor(Math.random() * cobblemonBgs.length)];
+			cobblemonBg = pick();
+			// au clic sur « Aléatoire », on essaie d'en tirer un autre que l'actuel
+			if (cobblemonBgs.length > 1 && `cobblemon:${cobblemonBg.url}` === this.curId) cobblemonBg = pick();
+			bgid = `cobblemon:${cobblemonBg.url}`;
+		} else if (bgid.startsWith('cobblemon:')) {
+			cobblemonBg = cobblemonBgs.find(bg => bg.url === bgid.slice(10)) || { url: bgid.slice(10) };
+		}
+		if (cobblemonBg) bgUrl = cobblemonBg.url;
 
 		// curid
 		if (!bgid || bgid === 'waterfall') {
@@ -260,6 +275,9 @@ export const PSBackground = new class extends PSStreamModel<string | null> {
 			const b = parseInt(bgUrl.slice(5, 7), 16) / 255;
 			const hs = this.getHueSat(r, g, b);
 			menuColors = [hs, hs, hs, hs, hs, hs];
+		}
+		if (cobblemonBg?.title && cobblemonBg.artist) {
+			attrib = { url: cobblemonBg.link || cobblemonBg.url, title: cobblemonBg.title, artist: cobblemonBg.artist };
 		}
 		this.attrib = attrib;
 		this.menuColors = menuColors;

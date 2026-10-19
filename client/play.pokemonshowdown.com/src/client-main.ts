@@ -10,7 +10,7 @@
  */
 
 import { PSConnection, PSLoginServer } from './client-connection';
-import { PSModel, PSStreamModel } from './client-core';
+import { PSBackground, PSModel, PSStreamModel } from './client-core';
 import type { PSRoomPanel, PSRouter } from './panels';
 import { ChatRoom } from './panel-chat';
 import type { MainMenuRoom } from './panel-mainmenu';
@@ -57,6 +57,8 @@ export interface PSConfig {
 	};
 	customcolors: Record<string, string>;
 	translationCachebuster?: string;
+	/** CobblemonShowdown : fonds d'écran Cobblemon (dossier fonds/ du site), tirés au hasard. */
+	cobblemonBackgrounds?: { url: string, title?: string, artist?: string, link?: string }[];
 	whitelist?: string[];
 	testclient?: boolean;
 }
@@ -919,6 +921,8 @@ class PSUser extends PSStreamModel<PSLoginState | null> {
 			'logout', { userid }
 		));
 		PS.teams.clearAccountTeams();
+		// CobblemonShowdown : le fond d'écran du compte ne reste pas après la déconnexion
+		if (PSBackground.id === 'account') PSBackground.set('', '');
 		PS.send(`/logout`);
 		PS.connection?.disconnect();
 

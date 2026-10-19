@@ -2646,3 +2646,14 @@ pre.textbox.textbox-empty[placeholder]:before {
 		margin-left: -28px;
 	}
 }
+
+/* CobblemonShowdown : choix d'avatar avec une image par avatar (au lieu de la planche de Showdown) */
+.avatarlist-images button,
+.dark .avatarlist-images button {
+	background: transparent;
+	width: 86px;
+	height: 86px;
+}
+.avatarlist-images button img {
+	display: block;
+}
