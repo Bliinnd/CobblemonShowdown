@@ -6,7 +6,8 @@ choisir un précis dans le menu Fond d'écran (bouton ⚙ en haut à droite).
 
 - Pas besoin de redémarrer le site : une image ajoutée ici apparaît à la visite suivante.
 - Conseillé : images en paysage, au moins 1920 × 1080, moins de 1 Mo (JPEG qualité 85).
-- Tant que le dossier ne contient aucune image, le site garde les fonds de Pokémon Showdown.
+- Tant que le dossier ne contient aucune image, le site tire au hasard l'un de ses trois paysages
+  en pixels (prairie, crépuscule, nuit), dessinés par `tools/fonds-pixel.py`.
 
 ## Crédits (facultatif)
 

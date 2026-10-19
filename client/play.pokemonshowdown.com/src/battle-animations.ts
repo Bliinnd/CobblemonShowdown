@@ -619,7 +619,8 @@ export class BattleScene implements BattleSceneStub {
 			else if (gen <= 3) bg = `fx/${BattleBackdropsThree[this.numericId % BattleBackdropsThree.length]}?`;
 			else if (gen <= 4) bg = `fx/${BattleBackdropsFour[this.numericId % BattleBackdropsFour.length]}`;
 			else if (gen <= 5) bg = `fx/${BattleBackdropsFive[this.numericId % BattleBackdropsFive.length]}`;
-			else bg = `sprites/gen6bgs/${BattleBackdrops[this.numericId % BattleBackdrops.length]}`;
+			// CobblemonShowdown : terrains en pixels façon Cobblemon (dessinés par tools/fonds-pixel.py)
+			else bg = `cobblemon/combat/${CobblemonBackdrops[this.numericId % CobblemonBackdrops.length]}`;
 		}
 
 		this.backdropImage = bg;
@@ -3333,26 +3334,8 @@ const BattleBackdropsFive = [
 	'bg-icecave.png',
 	'bg-route.png',
 ];
-const BattleBackdrops = [
-	'bg-aquacordetown.jpg',
-	'bg-beach.jpg',
-	'bg-city.jpg',
-	'bg-dampcave.jpg',
-	'bg-darkbeach.jpg',
-	'bg-darkcity.jpg',
-	'bg-darkmeadow.jpg',
-	'bg-deepsea.jpg',
-	'bg-desert.jpg',
-	'bg-earthycave.jpg',
-	'bg-elite4drake.jpg',
-	'bg-forest.jpg',
-	'bg-icecave.jpg',
-	'bg-leaderwallace.jpg',
-	'bg-library.jpg',
-	'bg-meadow.jpg',
-	'bg-orasdesert.jpg',
-	'bg-orassea.jpg',
-	'bg-skypillar.jpg',
+const CobblemonBackdrops = [
+	'plaine.png', 'foret.png', 'desert.png', 'neige.png', 'plage.png', 'grotte.png',
 ];
 
 export const BattleOtherAnims: AnimTable = {
