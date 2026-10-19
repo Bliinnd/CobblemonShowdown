@@ -53,6 +53,9 @@ Puis, dans **Custom environment variables**, ajoutez :
 | `DB_PASSWORD` | son mot de passe |
 | `ADMINS` | `Bliinnd` : le ou les pseudos administrateurs, séparés par des virgules (Bliinnd si la variable est absente) |
 
+Le classement (ladder) fonctionne mais reste caché. Pour l'afficher sur le site,
+ajoutez `CLASSEMENT_VISIBLE` avec la valeur `1`, puis redémarrez l'application.
+
 Si les ports 8000 ou 9000 sont déjà utilisés sur le serveur, ajoutez aussi
 `SIM_PORT` et `LOGIN_PORT` avec deux ports libres.
 

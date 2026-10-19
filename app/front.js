@@ -201,6 +201,11 @@ function createHandler(settings) {
 			return proxyRequest(req, res, settings.loginPort, '/action.php' + query);
 		}
 		if (pathname.startsWith('/api/')) return proxyRequest(req, res, settings.loginPort);
+		// Replays sauvegardés : /replays/<id>.json, lu par le client pour rejouer un combat (/battle-<id>).
+		const replay = /^\/replays\/([a-z0-9-]+)\.json$/.exec(pathname);
+		if (replay && (req.method === 'GET' || req.method === 'HEAD')) {
+			return proxyRequest(req, res, settings.loginPort, `/api/replays/get.json?id=${replay[1]}&countview`);
+		}
 
 		if (req.method !== 'GET' && req.method !== 'HEAD') {
 			res.writeHead(405);

@@ -2142,7 +2142,8 @@ export class GameRoom extends BasicRoom {
 					inputlog: battle.inputLog?.join('\n') || null,
 					uploadtime: Math.trunc(Date.now() / 1000),
 				});
-				const url = `https://${Config.routes.replays}/${fullid}`;
+				// CobblemonShowdown : le replay se regarde dans le client du site (/battle-<id>)
+				const url = `https://${Config.routes.replays}/battle-${fullid}`;
 				connection?.popup(
 					`|html|<p>${connection.user.TL`Your replay has been uploaded! It's available at:`}</p><p> ` +
 					`<a class="no-panel-intercept" href="${url}" target="_blank">${url}</a> ` +
@@ -2165,7 +2166,8 @@ export class GameRoom extends BasicRoom {
 			rating, // will probably do nothing
 			hidden: hidden === 0 ? '' : hidden,
 			inputlog: battle.inputLog?.join('\n') || undefined,
-			password,
+			// CobblemonShowdown : sans mot de passe, rien n'est envoyé (sinon le lien finit par « -nullpw »)
+			password: password || undefined,
 		});
 		if (result?.errorip) {
 			connection?.popup(connection.user.TL`This server's request IP ${result.errorip} is not a registered server.`);
@@ -2173,7 +2175,8 @@ export class GameRoom extends BasicRoom {
 		}
 
 		const fullid = result?.replayid;
-		const url = `https://${Config.routes.replays}/${fullid}`;
+		// CobblemonShowdown : le replay se regarde dans le client du site (/battle-<id>)
+		const url = `https://${Config.routes.replays}/battle-${fullid}`;
 		connection?.popup(
 			`|html|<p>${connection.user.TL`Your replay has been uploaded! It's available at:`}</p><p> ` +
 			`<a class="no-panel-intercept" href="${url}" target="_blank">${url}</a> ` +

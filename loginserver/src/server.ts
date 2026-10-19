@@ -313,6 +313,15 @@ export const SimServers = new class SimServersT {
 		return server;
 	}
 	loadServers(path = Config.serverlist): { [k: string]: RegisteredServer } {
+		// CobblemonShowdown : le serveur de combat du site, reconnu par son jeton (voir app/configs.js)
+		if (Config.mainservertoken) {
+			return {
+				[Config.mainserver]: {
+					name: Config.mainserver, id: Config.mainserver, server: '127.0.0.1', port: 0,
+					token: Config.mainservertoken, skipipcheck: true,
+				},
+			};
+		}
 		if (!path) return {};
 		try {
 			const stdout = child.execFileSync(

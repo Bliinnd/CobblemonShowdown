@@ -727,7 +727,7 @@ export const translations: TranslationCatalog = {
 	"Searching in {NUMBER}...": null,
 	"Searching...": null,
 	"Pokédex": null,
-	"Replays": null, // NOT USED
+	"Replays": null,
 	"Forum": null, // NOT USED
 	"Rules": null, // NOT USED
 	"Credits": null,
@@ -946,6 +946,15 @@ export const translations: TranslationCatalog = {
 	"Waiting for your opponent...": null,
 	"I'm ready for the next game!": null,
 	"View the series": null,
+	"private": null,
+	"Link copied!": null,
+	"Copy link": null,
+	"You haven't saved any replay yet. At the end of a battle, click \"Upload and share replay\".": null,
+	"No replay found.": null,
+	"My replays": null,
+	"Recent replays": null,
+	"Player name": null,
+	"Log in to an account to see your own replays.": null,
 
 	// #endregion Battle
 

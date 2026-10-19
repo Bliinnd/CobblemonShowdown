@@ -946,6 +946,15 @@ export const translations: TranslationCatalog = {
 	"Waiting for your opponent...": "En attente de votre adversaire…",
 	"I'm ready for the next game!": "Je suis prêt pour la manche suivante !",
 	"View the series": "Voir la série",
+	"private": "privé",
+	"Link copied!": "Lien copié !",
+	"Copy link": "Copier le lien",
+	"You haven't saved any replay yet. At the end of a battle, click \"Upload and share replay\".": "Vous n'avez encore sauvegardé aucun replay. À la fin d'un combat, cliquez sur « Mettre en ligne et partager le replay ».",
+	"No replay found.": "Aucun replay trouvé.",
+	"My replays": "Mes replays",
+	"Recent replays": "Replays récents",
+	"Player name": "Pseudo du joueur",
+	"Log in to an account to see your own replays.": "Connectez-vous à un compte pour voir vos propres replays.",
 
 	// #endregion Battle
 

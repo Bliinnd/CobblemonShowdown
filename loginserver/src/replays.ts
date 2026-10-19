@@ -80,7 +80,8 @@ export const Replays = new class {
 				});
 			}
 		} catch (e: any) {
-			if (e?.routine !== 'NewUniquenessConstraintViolationError') throw e;
+			// CobblemonShowdown : replay déjà enregistré (Postgres ou MySQL), on le met à jour
+			if (e?.routine !== 'NewUniquenessConstraintViolationError' && e?.code !== 'ER_DUP_ENTRY') throw e;
 			await replays.update(replay.id, {
 				log: replayData.log,
 				inputlog: replayData.inputlog,
@@ -189,7 +190,7 @@ export const Replays = new class {
 				if (format) {
 					return replays.query()`SELECT
 							uploadtime, id, format, players, rating, private, password FROM replayplayers
-						WHERE playerid = ${userid} AND formatid = ${format} AND "private" = ${isPrivate}
+						WHERE playerid = ${userid} AND formatid = ${format} AND private = ${isPrivate}
 						${before} ${order} ${paginate};`.then(this.toReplays);
 				} else {
 					return replays.query()`SELECT
