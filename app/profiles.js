@@ -223,7 +223,7 @@ const SECURITY_HEADERS = {
 	'X-Content-Type-Options': 'nosniff',
 };
 
-function page(title, description, body) {
+function page(title, description, body, head = '') {
 	return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -233,7 +233,7 @@ function page(title, description, body) {
 <meta name="description" content="${escapeHTML(description)}">
 <link rel="icon" href="/favicon.ico">
 <style>${STYLE}</style>
-</head>
+${head}</head>
 <body>
 <header class="top">
 <a class="brand" href="/">
@@ -449,4 +449,4 @@ function createProfiles(settings) {
 	};
 }
 
-module.exports = { createProfiles };
+module.exports = { createProfiles, page, send, escapeHTML, toID, formatDate, HTML_TYPE, SECURITY_HEADERS };

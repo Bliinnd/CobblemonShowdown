@@ -6,6 +6,7 @@
  * - /action.php, /api/...    -> serveur de comptes
  *
  * Il sert aussi les pages des joueurs (/users/<pseudo>, voir app/profiles.js),
+ * les équipes partagées (/equipe/<id>, voir app/pastes.js),
  * les avatars personnalisés du serveur de combat (/avatars/<fichier>)
  * et les fonds d'écran Cobblemon du dossier fonds/ (/fonds/<fichier>).
  */
@@ -18,6 +19,7 @@ const childProcess = require('child_process');
 const zlib = require('zlib');
 const { clientConfig } = require('./configs');
 const { createProfiles } = require('./profiles');
+const { createPastes } = require('./pastes');
 
 const TYPES = {
 	'.html': 'text/html; charset=utf-8',
@@ -181,6 +183,7 @@ function createHandler(settings) {
 	const avatarsDir = path.join(settings.root, 'server/config/avatars');
 	const backgroundsDir = path.join(settings.root, 'fonds');
 	const profiles = createProfiles(settings);
+	const pastes = createPastes(settings);
 	let configJs = null;
 
 	return (req, res) => {
@@ -213,6 +216,8 @@ function createHandler(settings) {
 		}
 		// Pages des joueurs, comme pokemonshowdown.com/users/<pseudo> (/users seul reste une page de l'application).
 		if (pathname.startsWith('/users/')) return profiles(req, res, pathname);
+		// Équipes partagées depuis le teambuilder, comme pokepast.es.
+		if (pathname.startsWith('/equipe/')) return pastes(req, res, pathname);
 		if (pathname === '/config/config.js') {
 			configJs ||= clientConfig(settings);
 			// Relu à chaque fois : un fond ajouté dans fonds/ apparaît sans redémarrer le site.

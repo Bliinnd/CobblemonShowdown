@@ -7,7 +7,7 @@
 
 import { PS, PSRoom, type RoomOptions, type Team } from "./client-main";
 import { PSPanelWrapper, PSRoomPanel } from "./panels";
-import { TL, toID, type ID } from "./battle-dex";
+import { Dex, TL, toID, type ID } from "./battle-dex";
 import { BattleLog } from "./battle-log";
 import { TeamEditor, type TeamEditorState } from "./battle-team-editor";
 import { Net, PSLoginServer } from "./client-connection";
@@ -252,6 +252,64 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 		ev.stopImmediatePropagation();
 	};
 
+	/** CobblemonShowdown : lien de partage de l'équipe, façon pokepast.es (page /equipe/<id>) */
+	share: { packedTeam: string, url?: string, error?: string } | null = null;
+	static shareSets(sets: Dex.PokemonSet[]) {
+		const statLabel = (stat: Dex.StatName) => TL.statShort[stat] || stat;
+		return sets.map(set => {
+			const species = Dex.species.get(set.species);
+			const item = Dex.items.get(set.item);
+			const ability = Dex.abilities.get(set.ability);
+			const nature = set.nature ? Dex.text.get({ effectType: 'Nature', name: set.nature } as any).name : '';
+			const tera = set.teraType ? Dex.text.get(Dex.types.get(set.teraType)).name : '';
+			return {
+				nickname: set.name || '',
+				species: species.exists ? Dex.text.get(species).name : set.species,
+				spriteid: species.exists ? species.spriteid : '',
+				types: species.types,
+				gender: set.gender || '',
+				shiny: !!set.shiny,
+				item: item.exists ? Dex.text.get(item).name : set.item || '',
+				itemnum: item.exists ? item.spritenum : 0,
+				ability: ability.exists ? Dex.text.get(ability).name : set.ability || '',
+				level: set.level || 100,
+				tera,
+				teraType: set.teraType || '',
+				nature,
+				evs: Dex.statNames.filter(stat => set.evs?.[stat])
+					.map(stat => ({ stat, label: statLabel(stat), value: set.evs![stat] })),
+				ivs: Dex.statNames.filter(stat => (set.ivs?.[stat] ?? 31) !== 31)
+					.map(stat => ({ stat, label: statLabel(stat), value: set.ivs![stat] })),
+				moves: set.moves.filter(Boolean).map(name => {
+					const move = Dex.moves.get(name);
+					return { name: move.exists ? Dex.text.get(move).name : name, type: move.exists ? move.type : '' };
+				}),
+			};
+		});
+	}
+	shareTeam = () => {
+		const team = this.props.room.team;
+		const packedTeam = team.packedTeam;
+		const sets = Teams.unpack(packedTeam);
+		this.share = { packedTeam };
+		this.forceUpdate();
+		void PSLoginServer.query('cobblemonsharepaste', {
+			title: team.name,
+			format: team.format.length > 4 ? BattleLog.formatName(team.format) : '',
+			team: Teams.export(sets),
+			data: JSON.stringify(TeamPanel.shareSets(sets)),
+		}).then(data => {
+			if (this.share?.packedTeam !== packedTeam) return;
+			if (data?.id) {
+				this.share.url = `${location.protocol}//${location.host}/equipe/${data.id}`;
+			} else {
+				this.share.error = data?.actionerror ? PSLoginServer.errorText(data.actionerror) :
+					TL`The server can't be reached. Try again in a moment.`;
+			}
+			this.forceUpdate();
+		});
+	};
+
 	changePrivacyPref = (ev: Event) => {
 		PS.prefs.uploadprivacy = !(ev.currentTarget as HTMLInputElement).checked;
 		PS.prefs.save();
@@ -367,9 +425,18 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 				narrow={room.width < 550}
 				editorRef={(editor: TeamEditorState) => { room.editor = editor; }}
 			>
-				{!!(team.packedTeam && team.format.length > 4) && <p>
-					<button data-cmd="/validate" class="button"><i class="fa fa-check"></i> {TL`[Validate]`}</button>
+				{!!team.packedTeam && <p>
+					{team.format.length > 4 && <>
+						<button data-cmd="/validate" class="button"><i class="fa fa-check"></i> {TL`[Validate]`}</button> {}
+					</>}
+					<button class="button" onClick={this.shareTeam}><i class="fa fa-share-alt"></i> {TL`[Share]`}</button>
 				</p>}
+				{this.share?.packedTeam === team.packedTeam && <div class="infobox" style="padding: 5px 8px">
+					{this.share.url ? <>
+						<small>{TL.label(TL`Share link`)}</small> {}
+						<CopyableURLBox url={this.share.url} />
+					</> : this.share.error ? <p class="error">{this.share.error}</p> : TL`Creating the link...`}
+				</div>}
 				{/* CobblemonShowdown : pas de mise en ligne d'équipes (elles sont déjà sur le compte) */}
 				{!!team.uploaded && <p class="infobox" style="padding: 5px 8px">
 					{team.uploadedPackedTeam && !team.uploaded ? <>

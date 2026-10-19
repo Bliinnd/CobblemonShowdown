@@ -1347,6 +1347,9 @@ export const translations: TranslationCatalog = {
 	"Unknown ability: {error.value}": null,
 	"Unknown move: {error.value}": null,
 	"Pick it from the list.": null,
+	"[Share]": null,
+	"Share link": null,
+	"Creating the link...": null,
 
 	// #endregion Teambuilder
 
