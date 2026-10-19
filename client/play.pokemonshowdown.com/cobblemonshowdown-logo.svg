@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="50" height="50">
+	<title>CobblemonShowdown</title>
+	<circle cx="25" cy="25" r="22" fill="#fff" stroke="#1d2a30" stroke-width="3"/>
+	<path d="M3.5 25a21.5 21.5 0 0 1 43 0z" fill="#3cb878"/>
+	<path d="M3 25h44" stroke="#1d2a30" stroke-width="4"/>
+	<circle cx="25" cy="25" r="7" fill="#fff" stroke="#1d2a30" stroke-width="3"/>
+	<circle cx="25" cy="25" r="3" fill="#8fd9b0"/>
+	<path d="M13 15a14 14 0 0 1 8-6" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -369,6 +369,7 @@ class FormatDropdownPanel extends PSRoomPanel {
 	format: string | null = null;
 	search = '';
 	openSections = PS.prefs.openformats || {
+		'Cobblemon': true,
 		'S/V Singles': true, 'S/V Doubles': true, 'Unofficial Metagames': true, 'National Dex': true,
 		'Ladder Spotlight': true, 'Other Metagames': true, 'Random Meta of the Decade': true,
 	};
@@ -429,21 +430,12 @@ class FormatDropdownPanel extends PSRoomPanel {
 				break;
 			}
 		}
-		const curGen = (gen: string) => this.gen === gen ? ' cur' : '';
 		const searchBar = <div>
 			<input
 				type="search" name="search" placeholder={TL`Search formats`} class="textbox autofocus" autocomplete="off"
 				onInput={this.updateSearch} onChange={this.updateSearch}
 			/> {}
-			<button onClick={this.toggleGen} value="gen9" class={`button button-first${curGen('gen9')}`}>{TL`Gen ${9}`}</button>
-			<button onClick={this.toggleGen} value="gen8" class={`button button-middle${curGen('gen8')}`}>8</button>
-			<button onClick={this.toggleGen} value="gen7" class={`button button-middle${curGen('gen7')}`}>7</button>
-			<button onClick={this.toggleGen} value="gen6" class={`button button-middle${curGen('gen6')}`}>6</button>
-			<button onClick={this.toggleGen} value="gen5" class={`button button-middle${curGen('gen5')}`}>5</button>
-			<button onClick={this.toggleGen} value="gen4" class={`button button-middle${curGen('gen4')}`}>4</button>
-			<button onClick={this.toggleGen} value="gen3" class={`button button-middle${curGen('gen3')}`}>3</button>
-			<button onClick={this.toggleGen} value="gen2" class={`button button-middle${curGen('gen2')}`}>2</button>
-			<button onClick={this.toggleGen} value="gen1" class={`button button-last${curGen('gen1')}`}>1</button>
+			{/* CobblemonShowdown : tous les formats sont en génération 9, pas de filtre par génération */}
 		</div>;
 		if (!formatsLoaded) {
 			return <PSPanelWrapper room={room}><div class="pad">

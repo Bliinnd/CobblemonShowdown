@@ -100,13 +100,13 @@ export class Session {
 			this.context.setHeader(
 				"Set-Cookie",
 				`sid=${encodeURIComponent(`,,${this.sidhash}`)}; ` +
-				`Max-Age=0; Domain=${Config.routes.root}; Path=/; Secure; SameSite=None`
+				`Max-Age=0; ${Config.routes.root ? `Domain=${Config.routes.root}; ` : ''}Path=/; Secure; SameSite=None`
 			);
 		} else {
 			this.context.setHeader(
 				"Set-Cookie",
 				`sid=;` +
-				`Max-Age=0; Domain=${Config.routes.root}; Path=/; Secure; SameSite=None`
+				`Max-Age=0; ${Config.routes.root ? `Domain=${Config.routes.root}; ` : ''}Path=/; Secure; SameSite=None`
 			);
 		}
 	}
@@ -119,7 +119,7 @@ export class Session {
 		const rawsid = encodeURIComponent([name, this.session, this.sidhash].join(','));
 		this.context.setHeader(
 			'Set-Cookie',
-			`sid=${rawsid}; Max-Age=31363200; Domain=${Config.routes.root}; Path=/; Secure; SameSite=None`
+			`sid=${rawsid}; Max-Age=31363200; ${Config.routes.root ? `Domain=${Config.routes.root}; ` : ''}Path=/; Secure; SameSite=None`
 		);
 	}
 

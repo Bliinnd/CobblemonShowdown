@@ -63,7 +63,7 @@ export const translations: TranslationCatalog = {
 	// TRANSLATORS: "" as in a form you fill in; "like forme" as in a Pokémon's form/forme
 	"Form": {
 		"": null,
-		"like forme": null, // NOT USED
+		"like forme": null,
 	},
 	"Forme": null, // NOT USED
 	"Dex#": null,
