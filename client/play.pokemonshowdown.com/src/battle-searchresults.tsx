@@ -388,7 +388,8 @@ export class PSSearchResults extends preact.Component<{
 				.replace(/&lt;strong&gt;/g, '<strong>').replace(/&lt;\/strong&gt;/g, '</strong>');
 			return `<li class="result" value="${index}"><p>${sanitizedHTML}</p></li>`;
 		case 'header':
-			return `<li class="result" value="${index}"><h3>${escapeHTML(id)}</h3></li>`;
+			// CobblemonShowdown : les en-têtes des tables du teambuilder ("Popular items"...) sont en anglais
+			return `<li class="result" value="${index}"><h3>${escapeHTML(TL(id))}</h3></li>`;
 		case 'sortpokemon':
 			return this.renderPokemonSortRowHTML(index);
 		case 'sortmove':

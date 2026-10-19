@@ -138,7 +138,15 @@ interface ClientDexText {
 	languages(): Language[];
 	findLanguage(lang: string): Language | null;
 	get(effect: TranslatableEffect, lang?: string): ClientEffectTextEntry;
+	/**
+	 * Finds the key (ID, or English name for natures and types) whose translated
+	 * name is `name`, ignoring accents and case
+	 */
+	lookup(table: TranslatedNameTable, name: string, lang?: string): string | null;
 }
+
+type TranslatedNameTable = 'Pokedex' | 'Moves' | 'Items' | 'Abilities' |
+	'NatureNames' | 'TypeNames' | 'StatNames' | 'StatMediumNames' | 'StatShortNames';
 
 function translate(strings: TemplateStringsArray, ...values: unknown[]): string;
 function translate(text: string | TranslatableEffect, context?: string): string;
@@ -285,6 +293,35 @@ type OtherNameTable =
 
 function getOtherName(table: OtherNameTable, name: string, lang: string): string {
 	return BattleText[lang]?.[table]?.[name] || BattleText.en?.[table]?.[name] || name;
+}
+
+/**
+ * CobblemonShowdown : index inverse nom traduit -> id ("Séisme", "seisme" -> earthquake),
+ * construit une seule fois par langue, pour que les noms français tapés ou importés
+ * retrouvent leur id anglais.
+ */
+const translatedNameIndex: { [lang: string]: { [table: string]: { [name: string]: string } } } = {};
+function toNameKey(name: string) {
+	return toID(name.replace(/♀/g, 'f').replace(/♂/g, 'm').normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+}
+function lookupTranslatedName(table: TranslatedNameTable, name: string, lang: string): string | null {
+	const entries: { [key: string]: string | BattleTextEntry | undefined } | undefined =
+		lang === 'en' || typeof BattleText === 'undefined' ? undefined : BattleText[lang]?.[table];
+	if (!entries) return null;
+	translatedNameIndex[lang] ||= {};
+	let index = translatedNameIndex[lang][table];
+	if (!index) {
+		index = translatedNameIndex[lang][table] = {};
+		for (const key in entries) {
+			const entry = entries[key];
+			const translatedName = typeof entry === 'string' ? entry : entry?.name;
+			// "atk:grammar" and the like are not names
+			if (typeof translatedName !== 'string' || key.includes(':')) continue;
+			const nameKey = toNameKey(translatedName);
+			if (nameKey && !(nameKey in index)) index[nameKey] = key;
+		}
+	}
+	return index[toNameKey(name)] || null;
 }
 
 /**
@@ -627,6 +664,9 @@ export const Dex = new class implements ModdedDex {
 		},
 		get: (effect: TranslatableEffect, lang = Dex.text.getLanguage()) => {
 			return getTextEntry(effect, 'gen9', 9, lang);
+		},
+		lookup: (table: TranslatedNameTable, name: string, lang = Dex.text.getLanguage()) => {
+			return lookupTranslatedName(table, name, lang);
 		},
 	};
 
@@ -1313,6 +1353,7 @@ export class ModdedDex {
 		get: (effect: TranslatableEffect, lang = Dex.text.getLanguage()) => {
 			return getTextEntry(effect, this.modid, this.gen, lang);
 		},
+		lookup: (table, name, lang) => Dex.text.lookup(table, name, lang),
 	};
 	moves = {
 		get: (name: string): Move => {

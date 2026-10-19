@@ -10,6 +10,12 @@ import { PSIcon, PSPanelWrapper, PSRoomPanel } from "./panels";
 import { Dex, TL, toID, type ID } from "./battle-dex";
 import { type FormatData } from "./battle-dex-data";
 import { Teams } from "./battle-teams";
+import { BattleLog } from "./battle-log"; // optional
+
+/** CobblemonShowdown : nom lisible d'un format (« Cobblemon OU ») plutôt que son ID */
+function formatLabel(formatid: string) {
+	return window.BattleLog ? BattleLog.formatName(formatid) : formatid;
+}
 
 export class PSTeambuilder {
 	static exportPackedTeam(team: Team) {
@@ -166,9 +172,8 @@ export function TeamBox(props: {
 		) : (
 			<em>{team.isBox ? TL`(empty box)` : TL`(empty team)`}</em>
 		);
-		let format = team.format as string;
-		if (format.startsWith(Dex.modid)) format = format.slice(4);
-		format = (format ? `[${format}] ` : ``) + (team.folder ? `${team.folder}/` : ``);
+		let format = team.format && team.format !== Dex.modid ? `[${formatLabel(team.format)}] ` : ``;
+		format += team.folder ? `${team.folder}/` : ``;
 		contents = [
 			<strong>{team.isBox && <i class="fa fa-archive"></i>} {format && <span>{format}</span>}{team.name}</strong>,
 			<small>{team.iconCache}</small>,
@@ -296,18 +301,18 @@ class TeamDropdownPanel extends PSRoomPanel {
 					class={'button' + (baseFormat === this.format ? ' disabled' : '')}
 					onClick={this.setFormat} name="format" value={baseFormat}
 				>
-					<i class="fa fa-folder-o" aria-hidden></i> [{baseFormat.slice(0, 4)}] {baseFormat.slice(4)}
+					<i class="fa fa-folder-o" aria-hidden></i> {formatLabel(baseFormat)}
 				</button>
 			)} {}
 			<button
 				class={'button' + (baseGen === this.format ? ' disabled' : '')} onClick={this.setFormat} name="format" value={baseGen}
 			>
-				<i class="fa fa-folder-o" aria-hidden></i> [{baseGen}] <em>{TL`(uncategorized)`}</em>
+				<i class="fa fa-folder-o" aria-hidden></i> {formatLabel(baseGen)} <em>{TL`(uncategorized)`}</em>
 			</button> {}
 			<button
 				class={'button' + (baseGen === this.gen ? ' disabled' : '')} onClick={this.setFormat} name="gen" value={baseGen}
 			>
-				<i class="fa fa-folder-o" aria-hidden></i> [{baseGen}] <em>{TL`(all)`}</em>
+				<i class="fa fa-folder-o" aria-hidden></i> {formatLabel(baseGen)} <em>{TL`(all)`}</em>
 			</button> {}
 			{hasOtherGens && !this.gen && (
 				<button class="button" onClick={this.setFormat} name="gen" value={baseGen}>{TL`[Other gens]`}</button>
@@ -318,7 +323,7 @@ class TeamDropdownPanel extends PSRoomPanel {
 			teamList.push(<h2>{TL`[Other gens]`}</h2>);
 			teamList.push(<p>{genList.sort().map(gen => [
 				<button class={'button' + (gen === this.gen ? ' disabled' : '')} onClick={this.setFormat} name="gen" value={gen}>
-					<i class="fa fa-folder-o" aria-hidden></i> [{gen}] <em>{TL`(all)`}</em>
+					<i class="fa fa-folder-o" aria-hidden></i> {formatLabel(gen)} <em>{TL`(all)`}</em>
 				</button>,
 				" ",
 			])}</p>);
@@ -329,7 +334,7 @@ class TeamDropdownPanel extends PSRoomPanel {
 			if (folder && (this.gen || this.format)) {
 				teamList.push(<h2>
 					<i class="fa fa-folder-open" aria-hidden></i> {folder} + {}
-					<i class="fa fa-folder-open-o" aria-hidden></i> {this.format || this.gen}
+					<i class="fa fa-folder-open-o" aria-hidden></i> {formatLabel(this.format || this.gen)}
 				</h2>);
 			} else if (folder) {
 				teamList.push(<h2>
@@ -337,11 +342,11 @@ class TeamDropdownPanel extends PSRoomPanel {
 				</h2>);
 			} else if (this.gen || this.format) {
 				teamList.push(<h2>
-					<i class="fa fa-folder-open-o" aria-hidden></i> {this.format || this.gen}
+					<i class="fa fa-folder-open-o" aria-hidden></i> {formatLabel(this.format || this.gen)}
 				</h2>);
 			} else {
 				teamList.push(<h2>
-					<i class="fa fa-folder-open-o" aria-hidden></i> Teams not in any folders
+					<i class="fa fa-folder-open-o" aria-hidden></i> {TL`Teams not in any folders`}
 				</h2>);
 			}
 			teamList.push(<ul class="teamdropdown" onClick={this.click}>
@@ -355,6 +360,9 @@ class TeamDropdownPanel extends PSRoomPanel {
 		return <PSPanelWrapper room={room} width={width}><div class="pad">
 			{teamList}
 			{isEmpty && <p><em>{TL`No teams found`}</em></p>}
+			{isEmpty && <p>
+				<a class="button" href="teambuilder"><i class="fa fa-plus" aria-hidden></i> {TL`[Open the Teambuilder]`}</a>
+			</p>}
 		</div></PSPanelWrapper>;
 	}
 }

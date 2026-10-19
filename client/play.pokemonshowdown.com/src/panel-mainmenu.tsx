@@ -982,8 +982,11 @@ export class TeamForm extends preact.Component<{
 		const teamKey = teamElement!.value;
 		const team = teamKey ? PS.teams.byKey[teamKey] : undefined;
 		if (!window.BattleFormats[teambuilderFormat]?.team && !team) {
-			PS.alert(TL`You need to go into the Teambuilder and build a team for this format.`, {
-				parentElem: teamElement!,
+			// CobblemonShowdown : bouton direct vers le Teambuilder au lieu d'un simple « OK »
+			void PS.confirm(TL`You need to go into the Teambuilder and build a team for this format.`, {
+				okButton: TL`[Open the Teambuilder]`, parentElem: teamElement!,
+			}).then(ok => {
+				if (ok) PS.join('teambuilder' as RoomID);
 			});
 			return;
 		}
