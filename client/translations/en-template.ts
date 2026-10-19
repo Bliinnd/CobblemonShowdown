@@ -411,6 +411,10 @@ export const translations: TranslationCatalog = {
 	"[Switch sides]": null,
 	"Turn?": null,
 	"Invalid turn": null,
+	"Filter": null,
+	"No exact match found. The closest matches alphabetically are:": null,
+	"Illegal": null,
+	"[Open the Teambuilder]": null,
 
 	// #endregion Generic UI
 
@@ -922,6 +926,11 @@ export const translations: TranslationCatalog = {
 	"{totalTime} total": null,
 	"Error: Missing BattleChoiceBuilder": null,
 	"[Download replay]": null,
+	"Go to the next game": null,
+	"Ready!": null,
+	"Waiting for your opponent...": null,
+	"I'm ready for the next game!": null,
+	"View the series": null,
 
 	// #endregion Battle
 
@@ -1133,6 +1142,8 @@ export const translations: TranslationCatalog = {
 	},
 	"Best-of-{bestOf} series: the first to {wins} wins takes it": null,
 	"{formatName}, best-of-{bestOf}": null,
+	"{player} has {seconds} seconds left this turn.": null,
+	"{player} has {seconds} seconds left.": null,
 
 	// #endregion Chat
 
@@ -1306,6 +1317,12 @@ export const translations: TranslationCatalog = {
 	"Uploaded to the Teams database publicly. Share with the URL or people can find it by searching.": null,
 	"Copy of {copyFrom.name}": null,
 	"Readable": null,
+	"These lines could not be read:": null,
+	"Unknown Pokémon: {error.value}": null,
+	"Unknown item: {error.value}": null,
+	"Unknown ability: {error.value}": null,
+	"Unknown move: {error.value}": null,
+	"Pick it from the list.": null,
 
 	// #endregion Teambuilder
 

@@ -411,6 +411,10 @@ export const translations: TranslationCatalog = {
 	"[Switch sides]": "Changer de côté",
 	"Turn?": "Tour ?",
 	"Invalid turn": "Tour invalide",
+	"Filter": "Filtrer",
+	"No exact match found. The closest matches alphabetically are:": "Aucun résultat exact. Les plus proches par ordre alphabétique sont :",
+	"Illegal": "Illégal",
+	"[Open the Teambuilder]": "[Ouvrir le Teambuilder]",
 
 	// #endregion Generic UI
 
@@ -922,6 +926,11 @@ export const translations: TranslationCatalog = {
 	"{totalTime} total": "{totalTime} au total",
 	"Error: Missing BattleChoiceBuilder": "Erreur : BattleChoiceBuilder manquant",
 	"[Download replay]": "Télécharger le replay",
+	"Go to the next game": "Aller à la manche suivante",
+	"Ready!": "Prêt !",
+	"Waiting for your opponent...": "En attente de votre adversaire…",
+	"I'm ready for the next game!": "Je suis prêt pour la manche suivante !",
+	"View the series": "Voir la série",
 
 	// #endregion Battle
 
@@ -1133,6 +1142,8 @@ export const translations: TranslationCatalog = {
 	},
 	"Best-of-{bestOf} series: the first to {wins} wins takes it": "Série en BO{bestOf} : le premier à {wins} victoires l'emporte",
 	"{formatName}, best-of-{bestOf}": "{formatName}, en BO{bestOf}",
+	"{player} has {seconds} seconds left this turn.": "Il reste {seconds} secondes à {player} pour ce tour.",
+	"{player} has {seconds} seconds left.": "Il reste {seconds} secondes à {player}.",
 
 	// #endregion Chat
 
@@ -1306,6 +1317,12 @@ export const translations: TranslationCatalog = {
 	"Uploaded to the Teams database publicly. Share with the URL or people can find it by searching.": "Mise en ligne publiquement dans la base de données des équipes. Partagez-la avec l’URL ; les autres peuvent aussi la trouver en faisant une recherche.",
 	"Copy of {copyFrom.name}": "Copie de {copyFrom.name}",
 	"Readable": "Lisible",
+	"These lines could not be read:": "Ces lignes n'ont pas pu être lues :",
+	"Unknown Pokémon: {error.value}": "Pokémon inconnu : {error.value}",
+	"Unknown item: {error.value}": "Objet inconnu : {error.value}",
+	"Unknown ability: {error.value}": "Talent inconnu : {error.value}",
+	"Unknown move: {error.value}": "Capacité inconnue : {error.value}",
+	"Pick it from the list.": "Choisissez-le dans la liste.",
 
 	// #endregion Teambuilder
 
