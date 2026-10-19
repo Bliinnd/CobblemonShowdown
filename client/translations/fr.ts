@@ -411,6 +411,10 @@ export const translations: TranslationCatalog = {
 	"[Switch sides]": "Changer de côté",
 	"Turn?": "Tour ?",
 	"Invalid turn": "Tour invalide",
+	"Filter": "Filtrer",
+	"No exact match found. The closest matches alphabetically are:": "Aucun résultat exact. Les plus proches par ordre alphabétique sont :",
+	"Illegal": "Illégal",
+	"[Open the Teambuilder]": "[Ouvrir le Teambuilder]",
 
 	// #endregion Generic UI
 
@@ -683,6 +687,7 @@ export const translations: TranslationCatalog = {
 	"English only, unless specified otherwise.": "Français uniquement, sauf indication contraire.",
 	"Usernames": "Pseudos",
 	"Your username can be chosen and changed at any time. Keep in mind:": "Vous pouvez choisir et changer de pseudo à tout moment. Gardez à l’esprit les règles suivantes :",
+	"Removed from your friends.": "Retiré de vos amis.",
 
 	// #endregion Popups
 
@@ -735,6 +740,9 @@ export const translations: TranslationCatalog = {
 	"Item Clause": "Clause des objets",
 	"Rules separated by commas or lines": "Règles séparées par des virgules ou des retours à la ligne",
 	"Custom rules guide": "Guide des règles personnalisées",
+	"Number of games": "Nombre de manches",
+	"A single battle.": "Un seul combat.",
+	"Each game opens in a new tab.": "Chaque manche s'ouvre dans un nouvel onglet.",
 
 	// #endregion Main Menu
 
@@ -919,6 +927,11 @@ export const translations: TranslationCatalog = {
 	"{totalTime} total": "{totalTime} au total",
 	"Error: Missing BattleChoiceBuilder": "Erreur : BattleChoiceBuilder manquant",
 	"[Download replay]": "Télécharger le replay",
+	"Go to the next game": "Aller à la manche suivante",
+	"Ready!": "Prêt !",
+	"Waiting for your opponent...": "En attente de votre adversaire…",
+	"I'm ready for the next game!": "Je suis prêt pour la manche suivante !",
+	"View the series": "Voir la série",
 
 	// #endregion Battle
 
@@ -1128,6 +1141,10 @@ export const translations: TranslationCatalog = {
 	"W": {
 		"wins": "V",
 	},
+	"Best-of-{bestOf} series: the first to {wins} wins takes it": "Série en BO{bestOf} : le premier à {wins} victoires l'emporte",
+	"{formatName}, best-of-{bestOf}": "{formatName}, en BO{bestOf}",
+	"{player} has {seconds} seconds left this turn.": "Il reste {seconds} secondes à {player} pour ce tour.",
+	"{player} has {seconds} seconds left.": "Il reste {seconds} secondes à {player}.",
 
 	// #endregion Chat
 
@@ -1301,6 +1318,12 @@ export const translations: TranslationCatalog = {
 	"Uploaded to the Teams database publicly. Share with the URL or people can find it by searching.": "Mise en ligne publiquement dans la base de données des équipes. Partagez-la avec l’URL ; les autres peuvent aussi la trouver en faisant une recherche.",
 	"Copy of {copyFrom.name}": "Copie de {copyFrom.name}",
 	"Readable": "Lisible",
+	"These lines could not be read:": "Ces lignes n'ont pas pu être lues :",
+	"Unknown Pokémon: {error.value}": "Pokémon inconnu : {error.value}",
+	"Unknown item: {error.value}": "Objet inconnu : {error.value}",
+	"Unknown ability: {error.value}": "Talent inconnu : {error.value}",
+	"Unknown move: {error.value}": "Capacité inconnue : {error.value}",
+	"Pick it from the list.": "Choisissez-le dans la liste.",
 
 	// #endregion Teambuilder
 

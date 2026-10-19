@@ -68,6 +68,8 @@ export class TeamEditorState extends PSModel {
 	innerFocus: InnerFocusState | null = null;
 	readonly = false;
 	fetching = false;
+	/** CobblemonShowdown : lignes du dernier texte importé qui n'ont pas pu être lues */
+	importWarnings: string[] = [];
 	handleParentKeyDown?: (ev: KeyboardEvent) => boolean | void;
 	private userSetsCache: Record<ID, { [species: string]: { [setName: string]: Dex.PokemonSet } }> = {};
 	constructor(team: Team) {
@@ -126,26 +128,46 @@ export class TeamEditorState extends PSModel {
 			return '';
 		}
 	}
+	/**
+	 * CobblemonShowdown : texte affiché dans un champ du set. Les sets gardent les noms
+	 * anglais (équipes valides et exportables), les champs montrent les noms traduits.
+	 */
+	getFieldText(focus: FocusState) {
+		return this.translateField(focus.type, this.getField(focus));
+	}
+	translateField(type: InnerFocusType | 'nickname', value: string) {
+		if (!value) return '';
+		let effect: Dex.Species | Dex.Item | Dex.Ability | Dex.Move;
+		switch (type) {
+		case 'pokemon': effect = this.dex.species.get(value); break;
+		case 'item': effect = this.dex.items.get(value); break;
+		case 'ability': effect = this.dex.abilities.get(value); break;
+		case 'move': effect = this.dex.moves.get(value); break;
+		default: return value;
+		}
+		return effect.exists ? this.dex.text.get(effect).name : value;
+	}
 	normalizeField(type: InnerFocusType, value: string): string | null {
 		if (!value.trim()) return '';
 
+		// CobblemonShowdown : le nom traduit (« Séisme », « seisme ») est essayé avant le nom anglais
 		switch (type) {
 		case 'pokemon': {
-			const species = this.dex.species.get(value);
+			const species = this.dex.species.get(this.dex.text.lookup('Pokedex', value) || value);
 			return species.exists ? species.name : null;
 		}
 		case 'item': {
 			if (toID(value) === 'noitem') return '';
-			const item = this.dex.items.get(value);
+			const item = this.dex.items.get(this.dex.text.lookup('Items', value) || value);
 			return item.exists ? item.name : null;
 		}
 		case 'ability': {
 			if (toID(value) === 'noability') return '';
-			const ability = this.dex.abilities.get(value);
+			const ability = this.dex.abilities.get(this.dex.text.lookup('Abilities', value) || value);
 			return ability.exists ? ability.name : null;
 		}
 		case 'move': {
-			const move = this.dex.moves.get(value);
+			const move = this.dex.moves.get(this.dex.text.lookup('Moves', value) || value);
 			return move.exists ? move.name : null;
 		}
 		default:
@@ -590,7 +612,9 @@ export class TeamEditorState extends PSModel {
 		return { minAtk, minSpe };
 	}
 	getNickname(set: Dex.PokemonSet) {
-		return set.name || this.dex.species.get(set.species).baseSpecies || '';
+		if (set.name) return set.name;
+		const species = this.dex.species.get(set.species);
+		return (species.exists ? this.dex.text.get(species).baseSpecies : species.baseSpecies) || '';
 	}
 	canHyperTrain(set: Dex.PokemonSet) {
 		let format: string = this.format.id;
@@ -678,7 +702,8 @@ export class TeamEditorState extends PSModel {
 		return exported;
 	}
 	import(value: string) {
-		this.sets = Teams.import(value);
+		this.importWarnings = [];
+		this.sets = Teams.import(value, this.importWarnings);
 		this.save();
 	}
 	getTypeWeakness(type: Dex.TypeName, attackType: Dex.TypeName): 0 | 0.5 | 1 | 2 {
@@ -1829,6 +1854,10 @@ class TeamTextbox extends preact.Component<{
 					)}
 				</button>
 			</p>
+			{!!editor.importWarnings.length && <div class="message-error import-warnings" role="alert">
+				<p><i class="fa fa-exclamation-triangle" aria-hidden></i> {TL`These lines could not be read:`}</p>
+				<ul>{editor.importWarnings.slice(0, 10).map(line => <li><code>{line}</code></li>)}</ul>
+			</div>}
 			<div class="teameditor-text">
 				<textarea
 					class="textbox teamtextbox" style={`padding-left:${editor.narrow ? '50px' : '100px'}`}
@@ -1850,7 +1879,8 @@ class TeamTextbox extends preact.Component<{
 						const set = editor.sets[i];
 						if (!set) return null;
 						const prevOffset = i === 0 ? 8 : this.setInfo[i - 1].bottomY;
-						const species = editor.dex.species.get(info.species);
+						// set.species is the resolved English name, even when the text uses a French name
+						const species = editor.dex.species.get(set.species || info.species);
 						const num = Dex.getPokemonIconNum(species.id);
 						if (!num) return null;
 
@@ -1932,6 +1962,8 @@ class TeamEditorForm extends preact.Component<{
 	/** where to focus after next render */
 	pendingFocus: TeamEditorState['innerFocus'] = null;
 	pendingFocusValue: string | null = null;
+	/** CobblemonShowdown : dernier nom tapé qui n'a pas été reconnu (message sous le set) */
+	fieldError: { setIndex: number, type: InnerFocusType, value: string } | null = null;
 	pendingFocusSelection: [number | null, number | null, 'forward' | 'backward' | 'none' | undefined] | null = null;
 	/** whether to focus the details/stats button or their panel contents */
 	pendingFocusButton = false;
@@ -2358,7 +2390,7 @@ class TeamEditorForm extends preact.Component<{
 					focus.type !== 'details' && focus.type !== 'stats' &&
 					focus.type !== 'import' && !(focus.type === 'move' && focus.typeIndex === -1)
 				) {
-					input.value = this.pendingFocusValue ?? editor.getField(focus);
+					input.value = this.pendingFocusValue ?? editor.getFieldText(focus);
 					input.classList.remove('incomplete');
 				}
 				PSView.politeFocus(input, this.pendingFocusPolite);
@@ -2377,7 +2409,7 @@ class TeamEditorForm extends preact.Component<{
 		for (const input of this.base!.querySelectorAll<HTMLInputElement>('input.set-field')) {
 			if (input === activeElement) continue;
 			const curFocus = editor.parseFocus(input.getAttribute('data-focus')!);
-			input.value = editor.getField(curFocus);
+			input.value = editor.getFieldText(curFocus);
 		}
 		const searchBox = this.base!.querySelector<HTMLInputElement>('input[name=value]');
 		const filters = this.base!.querySelector('.dexlist-filters');
@@ -2411,19 +2443,23 @@ class TeamEditorForm extends preact.Component<{
 			return true;
 		}
 
-		let canonical = editor.normalizeField(focus.type, target.value);
+		const unchanged = target.value === editor.getFieldText(focus);
+		const canonical = unchanged ? editor.getField(focus) : editor.normalizeField(focus.type, target.value);
+		target.classList.remove('incomplete');
 		if (canonical === null) {
-			target.classList.add('incomplete');
-			canonical = target.value;
-		} else {
-			target.classList.remove('incomplete');
+			// CobblemonShowdown : nom inconnu, on remet la valeur précédente au lieu
+			// d'enregistrer le texte brut (qui casserait le Pokémon), et on le signale
+			this.fieldError = { setIndex: focus.setIndex, type: focus.type, value: target.value.trim() };
+			target.value = editor.getFieldText(focus);
+			this.forceUpdate();
+			return false;
 		}
+		if (this.fieldError) this.fieldError = null;
 
 		if (focus.type === 'pokemon') {
 			if (!canonical) return true;
 			const set = (editor.sets[focus.setIndex] ||= { species: '', moves: [] });
-			editor.changeSpecies(set, canonical);
-			target.value = set.species;
+			if (!unchanged) editor.changeSpecies(set, canonical);
 		} else {
 			const set = editor.sets[focus.setIndex];
 			if (!set) return true;
@@ -2431,21 +2467,19 @@ class TeamEditorForm extends preact.Component<{
 			case 'item':
 				if (canonical) set.item = canonical;
 				else delete set.item;
-				target.value = canonical;
 				break;
 			case 'ability':
 				if (canonical) set.ability = canonical;
 				else delete set.ability;
-				target.value = canonical;
 				break;
 			case 'move':
 				if (focus.typeIndex >= set.moves.length && !canonical) return true;
 				while (set.moves.length <= focus.typeIndex) set.moves.push('');
 				set.moves[focus.typeIndex] = canonical;
-				target.value = canonical;
 				break;
 			}
 		}
+		target.value = editor.getFieldText(focus);
 
 		editor.save();
 		this.props.onChange?.();
@@ -2456,6 +2490,7 @@ class TeamEditorForm extends preact.Component<{
 	inputField = (ev: Event) => {
 		const target = ev.currentTarget as HTMLInputElement;
 		target.classList.remove('incomplete');
+		this.fieldError = null;
 		const type = target.name as InnerFocusType | 'nickname';
 		if (type === 'nickname') {
 			this.commitField(target);
@@ -2498,7 +2533,7 @@ class TeamEditorForm extends preact.Component<{
 		if (!input) return false;
 		const focus = this.props.editor.parseFocus(input.getAttribute('data-focus'));
 		if (!focus) return false;
-		input.value = this.props.editor.getField(focus);
+		input.value = this.props.editor.getFieldText(focus);
 		input.classList.remove('incomplete');
 		input.focus();
 		input.select();
@@ -2578,7 +2613,7 @@ class TeamEditorForm extends preact.Component<{
 				} else {
 					// restore focused input
 					const focus = editor.parseFocus(input.getAttribute('data-focus'));
-					if (focus) input.value = editor.getField(focus);
+					if (focus) input.value = editor.getFieldText(focus);
 					input.classList.remove('incomplete');
 
 					// clear and focus search box
@@ -2768,7 +2803,7 @@ class TeamEditorForm extends preact.Component<{
 			`input.set-field[data-focus="${this.props.editor.stringifyFocus(focus)}"]`
 		);
 		if (!input) return;
-		input.value = name;
+		input.value = this.props.editor.translateField(focus.type, name);
 		this.commitField(input, true, reverse);
 	}
 	setMoveResult(name: string, slot?: string, reverse?: boolean) {
@@ -2854,7 +2889,8 @@ class TeamEditorForm extends preact.Component<{
 		return <input
 			type="text" class="textbox default-placeholder set-field" name={type}
 			data-focus={editor.stringifyFocus({ setIndex, type, typeIndex })}
-			defaultValue={value || ''} placeholder={placeholder} autocomplete="off" readOnly={editor.readonly}
+			defaultValue={value ? editor.getFieldText({ setIndex, type, typeIndex }) : ''}
+			placeholder={placeholder} autocomplete="off" readOnly={editor.readonly}
 			onMouseDown={this.mouseDownField} onFocus={this.setFocusTextbox}
 			onInput={this.inputField} onKeyDown={this.keyDownField}
 			onBlur={this.blurField}
@@ -2871,6 +2907,19 @@ class TeamEditorForm extends preact.Component<{
 			defaultValue={set.name || ''} placeholder={baseSpecies} readOnly={editor.readonly}
 			onInput={this.inputField} onChange={this.inputField} onKeyDown={this.keyDownNickname} autocomplete="off"
 		/>;
+	}
+	renderFieldError(setIndex: number) {
+		const error = this.fieldError;
+		if (error?.setIndex !== setIndex) return null;
+		return <p class="set-field-error" role="alert">
+			<i class="fa fa-exclamation-triangle" aria-hidden></i> {
+				error.type === 'pokemon' ? TL`Unknown Pokémon: ${error.value}` :
+				error.type === 'item' ? TL`Unknown item: ${error.value}` :
+				error.type === 'ability' ? TL`Unknown ability: ${error.value}` :
+				TL`Unknown move: ${error.value}`
+			} {}
+			<small>{TL`Pick it from the list.`}</small>
+		</p>;
 	}
 	renderSet(set: Dex.PokemonSet | undefined, i: number) {
 		const { editor } = this.props;
@@ -2908,6 +2957,7 @@ class TeamEditorForm extends preact.Component<{
 						<td class="set-item"></td>
 					</tr>
 				</table>
+				{this.renderFieldError(i)}
 			</div>;
 		}
 		while (set.moves.length < 4) set.moves.push('');
@@ -3034,6 +3084,7 @@ class TeamEditorForm extends preact.Component<{
 					{this.renderNicknameInput(i)}
 				</label>
 			</div>
+			{this.renderFieldError(i)}
 		</div>;
 	}
 }
@@ -3174,7 +3225,8 @@ class SetImportForm extends preact.Component<{
 		const { editor, setIndex } = this.props;
 		if (editor.readonly || !this.textbox) return;
 		const dirty = this.textbox.value !== this.revertText;
-		const set = Teams.import(this.textbox.value)[0];
+		const warnings: string[] = [];
+		const set = Teams.import(this.textbox.value, warnings)[0];
 		if (!set) {
 			this.revertSetToRevertPoint();
 			if (!this.textbox.value.trim() && !this.revertText) {
@@ -3187,7 +3239,8 @@ class SetImportForm extends preact.Component<{
 		editor.sets[setIndex] = set;
 		editor.save();
 		this.props.onChange();
-		this.setState({ error: '', copied: false, dirty });
+		const error = warnings.length ? `${TL`These lines could not be read:`} ${warnings.join(' ; ')}` : '';
+		this.setState({ error, copied: false, dirty });
 	};
 	override render() {
 		const { editor } = this.props;

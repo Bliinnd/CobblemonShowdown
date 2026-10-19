@@ -1480,7 +1480,7 @@ class ChatPanel extends PSRoomPanel<ChatRoom> {
 		const challengeOpen = room.challengeMenuOpen || room.challenging || room.challenged;
 		return <PSPanelWrapper room={room} focusClick noScroll fullSize>
 			<ChatLog
-				class={`chat-log${!userListWidth ? '' : ' hasuserlist'}${challengeOpen ? ' challenge-open' : ''}`}
+				class={`chat-log${!userListWidth ? ' userlist-minimized' : ' hasuserlist'}${challengeOpen ? ' challenge-open' : ''}`}
 				room={this.props.room} left={userListWidth} top={room.tour?.info.isActive ? 30 : 0}
 			>
 				{this.renderControls()}

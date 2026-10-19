@@ -301,7 +301,7 @@ export class DexSearch {
 
 	filterLabel(filterType: string) {
 		if (this.typedSearch && this.typedSearch.searchType !== filterType) {
-			return 'Filter';
+			return TL`Filter`;
 		}
 		return null;
 	}
@@ -548,7 +548,7 @@ export class DexSearch {
 
 		let topbuf: SearchRow[] = [];
 		if (nearMatch) {
-			topbuf = [['html', `<em>No exact match found. The closest matches alphabetically are:</em>`]];
+			topbuf = [['html', `<em>${TL`No exact match found. The closest matches alphabetically are:`}</em>`]];
 		}
 		if (topbufIndex >= 0) {
 			topbuf = topbuf.concat(bufs[topbufIndex]);
@@ -872,7 +872,7 @@ abstract class BattleTypedSearch<T extends SearchType> {
 			for (const id in this.getTable()) {
 				if (!(id in legalityFilter)) {
 					this.baseIllegalResults.push([this.searchType, id as ID]);
-					this.illegalReasons[id] = 'Illegal';
+					this.illegalReasons[id] = TL`Illegal`;
 				}
 			}
 		}

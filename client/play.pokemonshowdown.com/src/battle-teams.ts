@@ -1,5 +1,7 @@
 import { Dex, toID, type ModdedDex } from "./battle-dex";
-import { BattleNatures, BattleStatNames, BattleStatIDs, type StatNameExceptHP, type ID } from "./battle-dex-data";
+import {
+	BattleNatures, BattleStatNames, BattleStatIDs, type StatName, type StatNameExceptHP, type ID,
+} from "./battle-dex-data";
 
 export declare namespace Teams {
 	/**
@@ -426,15 +428,55 @@ export const Teams = new class {
 		return text;
 	}
 
-	parseExportedTeamLine(line: string, isFirstLine: boolean, set: Dex.PokemonSet) {
+	/**
+	 * CobblemonShowdown : nom anglais d'un Pokémon, objet, talent ou capacité écrit
+	 * en anglais ou dans la langue du site (« Carchacrok », « Restes », « seisme »).
+	 * Un nom inconnu est gardé tel quel et sa ligne est ajoutée à `warnings`.
+	 */
+	resolveName(
+		table: 'Pokedex' | 'Items' | 'Abilities' | 'Moves', name: string, line: string, warnings?: string[]
+	) {
+		const get = (n: string) => (
+			table === 'Pokedex' ? Dex.species.get(n) : table === 'Items' ? Dex.items.get(n) :
+			table === 'Abilities' ? Dex.abilities.get(n) : Dex.moves.get(n)
+		);
+		if (!name || get(name).exists) return table === 'Pokedex' ? Dex.species.get(name).name : name;
+		const key = Dex.text.lookup(table, name);
+		const effect = key ? get(key) : null;
+		if (effect?.exists) return effect.name;
+		if (warnings && !warnings.includes(line)) warnings.push(line);
+		return table === 'Pokedex' ? Dex.species.get(name).name : name;
+	}
+	/** CobblemonShowdown : libellés français acceptés à l'import (« Talent : Peau Dure ») */
+	translatedLineLabels: { [labelid: string]: string } = {
+		talent: 'Ability', objet: 'Item', surnom: 'Nickname', espece: 'Species', niveau: 'Level',
+		chromatique: 'Shiny', bonheur: 'Happiness', pokeball: 'Pokeball', nature: 'Nature',
+		teratype: 'Tera Type', typetera: 'Tera Type', typeteracristal: 'Tera Type',
+		ev: 'EVs', evs: 'EVs', iv: 'IVs', ivs: 'IVs', capacite: 'Move', attaque: 'Move',
+	};
+	parseExportedTeamLine(line: string, isFirstLine: boolean, set: Dex.PokemonSet, warnings?: string[]) {
+		const fullLine = line;
+		const labelMatch = !isFirstLine && /^([^:[\]-][^:]*?)\s*:\s*(.*)$/.exec(line);
+		if (labelMatch) {
+			// "Talent : Peau Dure" -> "Ability: Peau Dure" (French typography puts a space before ":")
+			const label = this.translatedLineLabels[toID(labelMatch[1].normalize('NFD').replace(/[\u0300-\u036f]/g, ''))];
+			let value = labelMatch[2];
+			if (label === 'Shiny' && toID(value) === 'oui') value = 'Yes';
+			if (label === 'Nature') {
+				line = `${value} Nature`;
+			} else if (label === 'Move') {
+				line = `- ${value}`;
+			} else {
+				line = `${label || labelMatch[1]}: ${value}`;
+			}
+		}
 		if (isFirstLine || line.startsWith('[')) {
 			let item;
 			[line, item] = line.split('@');
 			line = line.trim();
 			item = item?.trim();
 			if (item) {
-				set.item = item;
-				if (toID(set.item) === 'noitem') set.item = '';
+				set.item = toID(item) === 'noitem' ? '' : this.resolveName('Items', item, fullLine, warnings);
 			}
 			if (line.endsWith(' (M)')) {
 				set.gender = 'M';
@@ -450,29 +492,33 @@ export const Teams = new class {
 				set.ability = line.slice(1, -1);
 				if (toID(set.ability) === 'selectability') {
 					set.ability = '';
+				} else {
+					set.ability = this.resolveName('Abilities', set.ability, fullLine, warnings);
 				}
 			} else if (line) {
 				const parenIndex = line.lastIndexOf(' (');
 				if (line.endsWith(')') && parenIndex !== -1) {
-					set.species = Dex.species.get(line.slice(parenIndex + 2, -1)).name;
+					set.species = this.resolveName('Pokedex', line.slice(parenIndex + 2, -1), fullLine, warnings);
 					set.name = line.slice(0, parenIndex);
 				} else {
-					set.species = Dex.species.get(line).name;
+					set.species = this.resolveName('Pokedex', line, fullLine, warnings);
 					set.name = '';
 				}
 			}
 		} else if (line.startsWith('Trait: ')) {
-			set.ability = line.slice(7);
+			set.ability = this.resolveName('Abilities', line.slice(7), fullLine, warnings);
 		} else if (line.startsWith('Ability: ')) {
-			set.ability = line.slice(9);
+			set.ability = this.resolveName('Abilities', line.slice(9), fullLine, warnings);
 		} else if (line.startsWith('Item: ')) {
-			set.item = line.slice(6);
+			set.item = this.resolveName('Items', line.slice(6), fullLine, warnings);
 		} else if (line.startsWith('Nickname: ')) {
 			set.name = line.slice(10);
 		} else if (line.startsWith('Species: ')) {
-			set.species = line.slice(9);
+			set.species = this.resolveName('Pokedex', line.slice(9), fullLine, warnings);
 		} else if (line === 'Shiny: Yes' || line === 'Shiny') {
 			set.shiny = true;
+		} else if (line === 'Shiny: No' || line === 'Gigantamax: No') {
+			// nothing to do
 		} else if (line.startsWith('Level: ')) {
 			set.level = +line.slice(7);
 		} else if (line.startsWith('Happiness: ')) {
@@ -487,6 +533,7 @@ export const Teams = new class {
 			set.gigantamax = true;
 		} else if (line.startsWith('Tera Type: ')) {
 			set.teraType = line.slice(11);
+			if (!Dex.types.get(set.teraType).exists) set.teraType = Dex.text.lookup('TypeNames', set.teraType) || set.teraType;
 		} else if (line.startsWith('EVs: ')) {
 			const evLines = line.slice(5).split('(')[0].split('/');
 			set.evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
@@ -495,7 +542,7 @@ export const Teams = new class {
 				evLine = evLine.trim();
 				const spaceIndex = evLine.indexOf(' ');
 				if (spaceIndex === -1) continue;
-				const statid = BattleStatIDs[evLine.slice(spaceIndex + 1)];
+				const statid = this.getStatID(evLine.slice(spaceIndex + 1));
 				if (!statid) continue;
 				if (evLine.charAt(spaceIndex - 1) === '+') plus = statid;
 				if (evLine.charAt(spaceIndex - 1) === '-') minus = statid;
@@ -510,18 +557,27 @@ export const Teams = new class {
 				ivLine = ivLine.trim();
 				const spaceIndex = ivLine.indexOf(' ');
 				if (spaceIndex === -1) continue;
-				const statid = BattleStatIDs[ivLine.slice(spaceIndex + 1)];
+				const statid = this.getStatID(ivLine.slice(spaceIndex + 1));
 				if (!statid) continue;
 				let statval = parseInt(ivLine.slice(0, spaceIndex), 10);
 				if (isNaN(statval)) statval = 31;
 				set.ivs[statid] = statval;
 			}
-		} else if (/^[A-Za-z]+ (N|n)ature/.exec(line)) {
+		} else if (/^\S+ (N|n)ature/.exec(line)) {
 			let natureIndex = line.indexOf(' Nature');
 			if (natureIndex === -1) natureIndex = line.indexOf(' nature');
 			if (natureIndex === -1) return;
 			line = line.slice(0, natureIndex);
-			if (line !== 'undefined') set.nature = line as Dex.NatureName;
+			if (line === 'undefined') return;
+			// CobblemonShowdown : nature en français (« Jovial Nature », « Nature : Jovial »)
+			if (!(line in BattleNatures)) {
+				const nature = Dex.text.lookup('NatureNames', line);
+				if (nature) line = nature;
+				else if (warnings && !warnings.includes(fullLine)) warnings.push(fullLine);
+			}
+			set.nature = line as Dex.NatureName;
+		} else if (/^Nature \S+$/.exec(line)) {
+			this.parseExportedTeamLine(`${line.slice(7)} Nature`, false, set, warnings);
 		} else if (line.startsWith('-') || line.startsWith('~') || line.startsWith('Move:')) {
 			if (line.startsWith('Move:')) line = line.slice(4);
 			line = line.slice(line.charAt(1) === ' ' ? 2 : 1);
@@ -534,8 +590,17 @@ export const Teams = new class {
 			if (line === 'Frustration' && set.happiness === undefined) {
 				set.happiness = 0;
 			}
-			set.moves.push(line);
+			set.moves.push(line.startsWith('Hidden Power') ? line : this.resolveName('Moves', line, fullLine, warnings));
+		} else if (warnings && !warnings.includes(fullLine)) {
+			// CobblemonShowdown : ligne illisible, signalée au lieu d'être ignorée en silence
+			warnings.push(fullLine);
 		}
+	}
+	getStatID(name: string) {
+		return BattleStatIDs[name] || (
+			Dex.text.lookup('StatShortNames', name) || Dex.text.lookup('StatMediumNames', name) ||
+			Dex.text.lookup('StatNames', name)
+		) as StatName | null;
 	}
 	getNatureFromPlusMinus(
 		plus: StatNameExceptHP | '' | null, minus: StatNameExceptHP | '' | null
@@ -548,7 +613,7 @@ export const Teams = new class {
 		}
 		return null;
 	}
-	import(buffer: string): Dex.PokemonSet[] {
+	import(buffer: string, warnings?: string[]): Dex.PokemonSet[] {
 		const lines = buffer.split("\n");
 
 		const sets: Dex.PokemonSet[] = [];
@@ -575,9 +640,9 @@ export const Teams = new class {
 					moves: [],
 				};
 				sets.push(curSet);
-				this.parseExportedTeamLine(line, true, curSet);
+				this.parseExportedTeamLine(line, true, curSet, warnings);
 			} else {
-				this.parseExportedTeamLine(line, false, curSet);
+				this.parseExportedTeamLine(line, false, curSet, warnings);
 			}
 		}
 		return sets;

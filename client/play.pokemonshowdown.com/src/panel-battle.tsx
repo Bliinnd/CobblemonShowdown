@@ -88,7 +88,7 @@ class BattlesPanel extends PSRoomPanel<BattlesRoom> {
 		const players = TL`${battle.p1} vs. ${battle.p2}`;
 		return <div key={battle.id}><a href={`/${battle.id}`} class="blocklink">
 			{minEloMessage && <small style="float:right">({minEloMessage})</small>}
-			<small>[{format}]</small><br />
+			<small>{BattleLog.formatName(format)}</small><br />
 			<em>{players}</em>
 		</a></div>;
 	}
@@ -163,6 +163,13 @@ export class BattleRoom extends ChatRoom {
 		* null = initializing, we don't know yet */
 	rejoining: boolean | null = null;
 	overlayActive: 'move' | 'switch' | null = null;
+	/**
+	 * CobblemonShowdown : manche d’une série (Best of), d’après les lignes que le serveur envoie au salon
+	 * de chaque manche : `|uhtml|bestof|` (lien vers la série), `|uhtml|next|` (manche suivante)
+	 * et le bouton « Je suis prêt ! » (`/uhtml controls,` ; vide quand il n’y a rien à confirmer).
+	 * null si ce combat n’appartient pas à une série.
+	 */
+	bestOf: { roomid: RoomID, nextRoomid: RoomID | null, ready: boolean | null } | null = null;
 
 	private pendingLines: Args[] = [];
 	/** showdex compat */
@@ -210,6 +217,7 @@ export class BattleRoom extends ChatRoom {
 		this.update(null);
 	}
 	override handleLine(args: Args): boolean {
+		this.trackBestOf(args);
 		if (super.handleLine(args)) return true;
 		switch (args[0]) {
 		case 'cantleave':
@@ -220,6 +228,29 @@ export class BattleRoom extends ChatRoom {
 			return true;
 		}
 		return false;
+	}
+	/** Suit l’état de la série (voir `bestOf`) sans consommer la ligne, qui reste affichée */
+	trackBestOf(args: Args) {
+		if ((args[0] === 'uhtml' || args[0] === 'uhtmlchange') && args[1] === 'bestof') {
+			const roomid = /href="\/(game-bestof\d+-[a-z0-9-]+)"/.exec(args[2] || '')?.[1] as RoomID | undefined;
+			if (roomid) this.bestOf = { roomid, nextRoomid: this.bestOf?.nextRoomid || null, ready: this.bestOf?.ready ?? null };
+		} else if ((args[0] === 'uhtml' || args[0] === 'uhtmlchange') && args[1] === 'next' && this.bestOf) {
+			const roomid = /href="\/([a-z0-9-]+)"/.exec(args[2] || '')?.[1] as RoomID | undefined;
+			if (roomid) this.bestOf.nextRoomid = roomid;
+		} else if ((args[0] === 'c' || args[0] === 'c:') && this.bestOf) {
+			const message = args[0] === 'c:' ? args[3] : args[2];
+			if (!message?.startsWith('/uhtml controls,')) return;
+			const html = message.slice(16);
+			// le bouton actif envoie /confirmready ; une fois prêt, il est désactivé
+			this.bestOf.ready = html ? !html.includes('/confirmready') : null;
+		}
+	}
+	/** La série est finie : ni bouton « Je suis prêt ! » ni manche suivante, ou son salon a reçu |win| */
+	isBestOfOver() {
+		if (!this.bestOf) return true;
+		const seriesRoom = PS.rooms[this.bestOf.roomid] as BattleRoom | undefined;
+		if (seriesRoom?.battle?.ended) return true;
+		return this.bestOf.ready === null && !this.bestOf.nextRoomid;
 	}
 	handleLineAfterBattleUpdate(args: Args) {
 		switch (args[0]) {
@@ -637,6 +668,8 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 		} else {
 			room.battle?.scene.$frame!.css('transform', 'none');
 		}
+		// CobblemonShowdown : sur téléphone la scène est réduite vers 0,6 ; battle.css y grossit les textes
+		room.battle?.scene.$frame!.toggleClass('small-scale', battleHeight < 0.8 * 360);
 	}
 	chooseLayout(): {
 		layout: BattlePanelLayout,
@@ -645,7 +678,12 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 		overlayControls: boolean,
 	} {
 		const room = this.props.room;
-		return PS.chooseBattleLayout(room.width, room.height, PS.prefs.battlelayout);
+		const layout = PS.chooseBattleLayout(room.width, room.height, PS.prefs.battlelayout);
+		const overlayVersion = layout.overlayControls && !!room.battle && !!room.side && !!room.request &&
+			!room.battle.ended;
+		if (layout.layout !== 'scrolling' || overlayVersion) return layout;
+		// spectateur ou fin de combat : les boutons sont sous la scène, il faut leur laisser la place
+		return PS.chooseBattleLayout(room.width, room.height, PS.prefs.battlelayout, true);
 	}
 	/** @deprecated ONLY FOR SHOWDEX */
 	private receiveRequest(request: BattleRequest | null) {}
@@ -662,6 +700,8 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 	renderControls(overlayVersion = false, hidePlayerControls = false) {
 		const room = this.props.room;
 		if (!room.battle) return null;
+		// a best-of series room only shows the score: its games are battle rooms of their own
+		if (room.id.startsWith('game-')) return null;
 		if (overlayVersion) {
 			if (!room.side || !room.request || room.battle.ended) return null;
 			return this.renderPlayerControls(room.request, true);
@@ -1391,12 +1431,14 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 					</button>
 				</>}
 			</p>
-			{room.side ? (
+			{room.side && !room.isBestOfOver() ? (
+				this.renderBestOfNextGameControls()
+			) : room.side ? (
 				<p>
 					<button class="button" data-cmd="/close">
 						<strong>{TL`[Main menu]`}</strong><br /><small>{TL`(closes this battle)`}</small>
 					</button> {}
-					<button class="button" data-cmd={`/closeand /challenge ${room.battle.farSide.id},${room.battle.tier}`}>
+					<button class="button" data-cmd={`/closeand /challenge ${room.battle.farSide.id},${this.rematchFormat()}`}>
 						<strong>{TL`[Rematch]`}</strong><br /><small>{TL`(closes this battle)`}</small>
 					</button>
 				</p>
@@ -1411,6 +1453,39 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 				</p>
 			)}
 		</div>;
+	}
+
+	/** Revanche dans le même format ; après une série, avec la même règle Best of */
+	rematchFormat() {
+		const room = this.props.room;
+		const bestOf = room.bestOf && /^game-bestof(\d+)-/.exec(room.bestOf.roomid)?.[1];
+		return bestOf ? `${room.battle.tier}@@@Best of = ${bestOf}` : room.battle.tier;
+	}
+	/**
+	 * CobblemonShowdown : entre deux manches d’une série, « Revanche » et « Menu principal » feraient
+	 * quitter la série : on propose plutôt de confirmer la manche suivante (ou d’y aller) et la série.
+	 */
+	renderBestOfNextGameControls() {
+		const bestOf = this.props.room.bestOf!;
+		return <p>
+			{bestOf.nextRoomid ? (
+				<a class="button notifying" href={`/${bestOf.nextRoomid}`}>
+					<strong>{TL`Go to the next game`}</strong>
+				</a>
+			) : bestOf.ready ? (
+				<button class="button disabled" aria-disabled>
+					<i class="fa fa-check" aria-hidden></i> <strong>{TL`Ready!`}</strong><br />
+					<small>{TL`Waiting for your opponent...`}</small>
+				</button>
+			) : (
+				<button class="button notifying" data-cmd={`/msgroom ${bestOf.roomid},/confirmready`}>
+					<strong>{TL`I'm ready for the next game!`}</strong>
+				</button>
+			)} {}
+			<a class="button" href={`/${bestOf.roomid}`}>
+				<i class="fa fa-trophy" aria-hidden></i> {TL`View the series`}
+			</a>
+		</p>;
 	}
 
 	handleDownloadReplay = (e: MouseEvent) => {
@@ -1484,8 +1559,9 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 				>
 					{this.renderControls(true)}
 				</div>}
+				{/* CobblemonShowdown : le journal commence sous la bande (30 px) de la liste des utilisateurs et du chrono */}
 				<ChatLog
-					class="battle-log hasuserlist" room={room} top={battleHeight} noSubscription hasPreempt
+					class="battle-log hasuserlist" room={room} top={battleHeight + 30} noSubscription hasPreempt
 				>
 					<div
 						class={`battle-controls${room.width > 660 ? ' wide-controls' : ''}`}

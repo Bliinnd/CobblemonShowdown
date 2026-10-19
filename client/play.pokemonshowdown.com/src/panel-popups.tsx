@@ -390,6 +390,7 @@ class UserOptionsPanel extends PSRoomPanel {
 	static readonly routes = ['useroptions-*'];
 	static readonly location = 'popup';
 	static readonly noURL = true;
+	declare state: { friendSent?: 'remove' };
 	getTargets() {
 		const [, targetUser, targetRoomid] = PSUtils.splitFirst(this.props.room.id, '-', 2);
 		let targetRoom = (targetRoomid ? PS.rooms[targetRoomid] : null) as ChatRoom | null || null;
@@ -400,6 +401,22 @@ class UserOptionsPanel extends PSRoomPanel {
 		return { targetUser: targetUser as ID, targetRoomid: targetRoomid as RoomID, targetRoom };
 	}
 
+	/**
+	 * CobblemonShowdown : la réponse du serveur arrivait dans un onglet caché sur téléphone.
+	 * Une demande d'ami répond maintenant par une fenêtre (succès ou erreur).
+	 */
+	handleFriend = (ev: Event) => {
+		ev.preventDefault();
+		ev.stopImmediatePropagation();
+		const { targetUser } = this.getTargets();
+		if (PS.mainmenu.userdetailsCache[targetUser]?.friended) {
+			PS.send(`/friend remove ${targetUser}`);
+			this.setState({ friendSent: 'remove' });
+		} else {
+			PS.send(`/friend addfrompage ${targetUser}`);
+			this.close();
+		}
+	};
 	handleCommand = (ev: Event) => {
 		ev.preventDefault();
 		ev.stopImmediatePropagation();
@@ -457,12 +474,14 @@ class UserOptionsPanel extends PSRoomPanel {
 
 		return <PSPanelWrapper room={room} width={280}><div class="pad buttonmenu">
 			<p>
-				{PS.mainmenu.userdetailsCache[targetUser]?.friended ? (
-					<button data-cmd={`/dm ${targetUser}, /friend remove ${targetUser}`} class="button">
+				{this.state.friendSent ? (
+					<em>{TL`Removed from your friends.`}</em>
+				) : PS.mainmenu.userdetailsCache[targetUser]?.friended ? (
+					<button onClick={this.handleFriend} class="button">
 						{TL`[Remove friend]`}
 					</button>
 				) : (
-					<button data-cmd={`/dm ${targetUser}, /friend add ${targetUser}`} class="button">
+					<button onClick={this.handleFriend} class="button">
 						{TL`[Add friend]`}
 					</button>
 				)}
@@ -1750,6 +1769,11 @@ class BattleOptionsPanel extends PSRoomPanel {
 		return battleRoom?.battle ? battleRoom : null;
 	}
 
+	confirmForfeit = () => {
+		const battleRoom = this.getBattleRoom();
+		this.close();
+		if (battleRoom) PS.join('forfeitbattle' as RoomID, { parentRoomid: battleRoom.id });
+	};
 	override render() {
 		const room = this.props.room;
 		const battleRoom = this.getBattleRoom();
@@ -1764,7 +1788,7 @@ class BattleOptionsPanel extends PSRoomPanel {
 			{battleRoom && <>
 				<p><strong>{TL`In this battle`}</strong></p>
 				<p class="buttonbar">
-					<button data-cmd="/closeand /inopener /forfeit" class="button" disabled={!isPlaying}>
+					<button onClick={this.confirmForfeit} class="button" disabled={!isPlaying}>
 						{TL`[Forfeit]`}
 					</button> {}
 					<button data-cmd="/closeand /inopener /offertie" class="button" disabled={!canOfferTie}>

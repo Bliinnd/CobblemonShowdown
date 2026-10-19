@@ -974,7 +974,8 @@ class TeambuilderPanel extends PSRoomPanel<TeambuilderRoom> {
 							{!clipboardTeams && <button
 								data-cmd={`/copyteam ${team.key}`} class="option" aria-label={TL`[Copy/Move]`} title={TL`[Copy/Move]`}
 							>
-								<i class="fa fa-copy" aria-hidden></i>
+								{/* CobblemonShowdown : sans survol au doigt, le libellé est écrit sur petit écran */}
+								<i class="fa fa-copy" aria-hidden></i>{narrow && <> {TL`[Copy/Move]`}</>}
 							</button>} {}
 							{team.uploaded?.private ? (
 								<i class="fa fa-cloud gray" title={TL`Uploaded`}></i>

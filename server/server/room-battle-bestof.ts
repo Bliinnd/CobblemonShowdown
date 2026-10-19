@@ -204,7 +204,7 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 		this.nextBattleTimerEnd = null;
 		this.nextBattleTimer = null;
 	}
-	getOptions(): RoomBattleOptions | null {
+	getOptions(): (RoomBattleOptions & Partial<RoomSettings>) | null {
 		const players = this.players.map(player => ({
 			...player.options,
 			user: player.getUser()!,
@@ -223,6 +223,12 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 		this.clearWaiting();
 
 		const options = this.getOptions();
+		if (options) {
+			// "Game 2: Sacha vs. Ondine", so the tab of each game says which game it is
+			const gameNum = this.games.length + 1;
+			const [p1name, p2name] = this.players.map(p => p.name);
+			options.title = this.room.TL`Game ${gameNum}: ${p1name} vs. ${p2name}`;
+		}
 		if (!options) {
 			for (const p of this.players) {
 				if (!p.getUser()) {
@@ -419,11 +425,14 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 				if (p.dcAutoloseTime && now > p.dcAutoloseTime) {
 					return this.forfeit(p.name, ' lost the series due to inactivity.');
 				}
-				const timeLeft = Chat.toDurationString((p.dcAutoloseTime || this.nextBattleTimerEnd) - now);
-				const message = (room: Room) => (p.dcAutoloseTime ?
-					`|inactive|${room.TL`${p.name} has ${timeLeft} to reconnect!`}` :
-					`|inactive|${room.TL`${p.name} has ${timeLeft} to confirm battle start!`}`
-				);
+				const seconds = Math.max(0, Math.round(((p.dcAutoloseTime || this.nextBattleTimerEnd) - now) / 1000));
+				const message = (room: Room) => {
+					const minutes = Math.ceil(seconds / 60);
+					const timeLeft = seconds >= 60 ? room.TL`${minutes} minutes` : room.TL`${seconds} seconds`;
+					return p.dcAutoloseTime ?
+						`|inactive|${room.TL`${p.name} has ${timeLeft} to reconnect!`}` :
+						`|inactive|${room.TL`${p.name} has ${timeLeft} to confirm battle start!`}`;
+				};
 				this.waitingBattle?.add(message(this.waitingBattle));
 				this.room.add(message(this.room));
 			}

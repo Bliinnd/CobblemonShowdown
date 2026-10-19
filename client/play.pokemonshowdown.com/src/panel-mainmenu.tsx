@@ -836,7 +836,11 @@ export class FormatDropdown extends preact.Component<{
 		this.format = this.props.format || this.format || this.props.defaultFormat || '';
 		let [formatName, customRules] = this.format.split('@@@');
 		customRules = customRules?.replace(/,/g, ', ');
-		if (window.BattleLog) formatName = BattleLog.formatName(formatName);
+		let bestOf = 1;
+		if (window.BattleLog) {
+			formatName = BattleLog.formatName(formatName);
+			if (customRules) ({ bestOf, otherRules: customRules } = BattleLog.parseBestOf(customRules));
+		}
 		if (this.props.format && !this.props.onChange) {
 			// There's intentionally no `disabled` prop. If this is out of sync
 			// with the `format` and `onChange` props, that's a bug.
@@ -844,6 +848,9 @@ export class FormatDropdown extends preact.Component<{
 				name="format" value={this.format} class="select formatselect preselected" disabled
 			>
 				{formatName}
+				{bestOf > 1 && [<br />, <small><strong class="bestof-badge">BO{bestOf}</strong> {
+					BattleLog.bestOfDescription(bestOf)
+				}</small>]}
 				{!!customRules && [<br />, <small>{TL.label(TL`Custom rules`, customRules)}</small>]}
 			</button>;
 		}
@@ -913,8 +920,8 @@ export class TeamForm extends preact.Component<{
 }> {
 	format = '';
 	teraPreview = false;
-	bestOf = false;
-	bestOfValue = '3';
+	/** number of games of a challenge: '1' (a single battle), '3' or '5' */
+	bestOfValue = '1';
 	customRules = false;
 	customRuleText = '';
 	itemClause = false;
@@ -927,8 +934,7 @@ export class TeamForm extends preact.Component<{
 		this.loadCustomRules(customRules);
 	};
 	loadCustomRules(customRules: string) {
-		this.bestOf = false;
-		this.bestOfValue = '3';
+		this.bestOfValue = '1';
 		this.teraPreview = false;
 		this.itemClause = false;
 		if (!customRules) {
@@ -937,14 +943,12 @@ export class TeamForm extends preact.Component<{
 			return;
 		}
 
-		this.customRules = true;
 		const unknownRules: string[] = [];
 		for (const rule of customRules.split(',')) {
 			const trimmedRule = rule.trim();
 			if (!trimmedRule) continue;
 			const bestOfMatch = /^best[-\s]*of\s*=\s*(\d+)$/i.exec(trimmedRule);
 			if (bestOfMatch) {
-				this.bestOf = true;
 				this.bestOfValue = bestOfMatch[1];
 			} else if (/^tera\s+type\s+preview$/i.test(trimmedRule)) {
 				this.teraPreview = true;
@@ -955,9 +959,11 @@ export class TeamForm extends preact.Component<{
 			}
 		}
 		this.customRuleText = unknownRules.join('\n');
+		this.customRules = !!(unknownRules.length || this.teraPreview || this.itemClause);
 	};
 	changeBestOfValue = (ev: Event) => {
 		this.bestOfValue = (ev.target as HTMLInputElement).value;
+		this.forceUpdate();
 	};
 	changeCustomRules = (ev: Event) => {
 		this.customRuleText = (ev.target as HTMLTextAreaElement).value;
@@ -976,16 +982,19 @@ export class TeamForm extends preact.Component<{
 		const teamKey = teamElement!.value;
 		const team = teamKey ? PS.teams.byKey[teamKey] : undefined;
 		if (!window.BattleFormats[teambuilderFormat]?.team && !team) {
-			PS.alert(TL`You need to go into the Teambuilder and build a team for this format.`, {
-				parentElem: teamElement!,
+			// CobblemonShowdown : bouton direct vers le Teambuilder au lieu d'un simple « OK »
+			void PS.confirm(TL`You need to go into the Teambuilder and build a team for this format.`, {
+				okButton: TL`[Open the Teambuilder]`, parentElem: teamElement!,
+			}).then(ok => {
+				if (ok) PS.join('teambuilder' as RoomID);
 			});
 			return;
 		}
 		const customRules: string[] = [];
+		if (this.showBestOf() && this.bestOfValue !== '1') {
+			customRules.push(`Best of = ${this.bestOfValue}`);
+		}
 		if (this.customRules) {
-			if (this.bestOf) {
-				customRules.push(`Best of = ${this.bestOfValue || '3'}`);
-			}
 			if (this.teraPreview) customRules.push('Tera Type Preview');
 			customRules.push(...this.customRuleText.split('\n').map(rule => rule.trim()).filter(Boolean));
 		}
@@ -1001,17 +1010,40 @@ export class TeamForm extends preact.Component<{
 		const checked = (ev.target as HTMLInputElement)?.checked;
 		const rule = (ev.target as HTMLInputElement)?.name;
 		if (rule === 'terapreview') this.teraPreview = checked;
-		if (rule === 'bestof') this.bestOf = checked;
 		if (rule === 'customrules') {
 			this.customRules = checked;
 			if (!checked) {
-				this.bestOf = false;
 				this.teraPreview = false;
 			}
 			this.forceUpdate();
 		}
 		if (rule === 'itemclause') this.itemClause = checked;
 	};
+	/** challenges in formats that allow it can be a best-of-3 or best-of-5 series */
+	showBestOf() {
+		if (this.props.selectType !== 'challenge' || this.props.format) return false;
+		const formatId = toID(this.format.split('@@@')[0]);
+		return !!window.BattleFormats?.[formatId]?.bestOfDefault || this.bestOfValue !== '1';
+	}
+	renderBestOf() {
+		const value = this.bestOfValue;
+		return <div class="bestof-picker">
+			<span class="label">{TL.label(TL`Number of games`)}</span>
+			<div class="bestof-buttons" role="radiogroup">
+				{['1', '3', '5'].map(n => <label class={`button${value === n ? ' cur' : ''}`}>
+					<input
+						type="radio" name="bestofvalue" value={n} checked={value === n}
+						onChange={this.changeBestOfValue}
+					/> BO{n}
+				</label>)}
+			</div>
+			<small class="bestof-hint">
+				{value === '1' ? TL`A single battle.` : <>
+					{BattleLog.bestOfDescription(Number(value))}<br />{TL`Each game opens in a new tab.`}
+				</>}
+			</small>
+		</div>;
+	}
 	handleClick = (ev: Event) => {
 		let target = ev.target as HTMLButtonElement | null;
 		while (target && target !== this.base) {
@@ -1069,6 +1101,7 @@ export class TeamForm extends preact.Component<{
 					<TeamDropdown format={this.props.teamFormat || this.format} />
 				</label>
 			</p>
+			{this.showBestOf() && this.renderBestOf()}
 			{showCustomRules && (!this.customRules ? <p>
 				<label class="checkbox"><input
 					type="checkbox" name="customrules" checked={this.customRules} onChange={this.toggleCustomRule}
@@ -1077,19 +1110,6 @@ export class TeamForm extends preact.Component<{
 				<legend><label class="checkbox"><input
 					type="checkbox" name="customrules" checked={this.customRules} onChange={this.toggleCustomRule}
 				/> {TL`Custom rules`}</label></legend>
-				{(format?.bestOfDefault || this.bestOf) && <p>
-					<label class="checkbox">
-						<input
-							type="checkbox" name="bestof" checked={this.bestOf} onChange={this.toggleCustomRule}
-						/>
-						<abbr title={TL`Start a team-locked best-of-n series`}>{TL.parts(TL`Best-of-{NUMBER}`, {
-							NUMBER: <input
-								name="bestofvalue" type="number" min="3" max="9" step="2" value={this.bestOfValue}
-								onInput={this.changeBestOfValue}
-								style="width: 28px; vertical-align: initial;"
-							/>,
-						})}</abbr></label>
-				</p>}
 				{(format?.teraPreviewDefault || this.teraPreview) && <p>
 					<label class="checkbox"><input
 						type="checkbox" name="terapreview" checked={this.teraPreview} onChange={this.toggleCustomRule}

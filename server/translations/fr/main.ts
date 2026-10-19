@@ -3193,5 +3193,10 @@ export const translations: TranslationCatalog = {
 	"BST": "Total",
 	"Power": "Puissance",
 	"Accuracy": "Précision",
+	"Game {gameNum}: {p1name} vs. {p2name}": "Manche {gameNum} : {p1name} vs. {p2name}",
+	"Please log in before accessing this page (don't worry, it will load automatically once you do so).": "Connectez-vous pour voir cette page (elle s'affichera toute seule une fois connecté).",
+	"Log in": "Se connecter",
+	"{minutes} minutes": "{minutes} minutes",
+	"{seconds} seconds": "{seconds} secondes",
 
 };

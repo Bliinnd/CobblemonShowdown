@@ -90,6 +90,10 @@ export class BattleLog {
 	onClick = (ev: Event) => {
 		let target = ev.target as HTMLElement | null;
 		while (target && target !== this.elem) {
+			// CobblemonShowdown : la valeur exacte (ex. PV perdus) n'est qu'au survol : un appui l'affiche (battle.css)
+			if (target.tagName === 'ABBR' && target.title) {
+				target.classList.toggle('abbr-shown');
+			}
 			if (target.tagName === 'SUMMARY') {
 				if (window.getSelection?.()?.type === 'Range') {
 					// by default, selecting text will also expand/collapse details, which
@@ -262,10 +266,19 @@ export class BattleLog {
 			this.changeUhtml(args[1], args[2], args[0] === 'uhtml');
 			return ['', ''];
 
-		case 'error': case 'inactive': case 'inactiveoff':
+		case 'error': case 'inactive': case 'inactiveoff': {
 			divClass = 'chat message-error';
-			divHTML = BattleLog.escapeHTML(args[1]);
+			let text = args[1];
+			// CobblemonShowdown : le minuteur du serveur écrit en anglais (et battle.ts lit ce texte) :
+			// on le traduit seulement à l'affichage
+			const timeLeft = args[0] === 'inactive' && /^(.+) has (\d+) seconds left( this turn)?\.$/.exec(text);
+			if (timeLeft) {
+				const [, player, seconds, thisTurn] = timeLeft;
+				text = thisTurn ? TL`${player} has ${seconds} seconds left this turn.` : TL`${player} has ${seconds} seconds left.`;
+			}
+			divHTML = BattleLog.escapeHTML(text);
 			break;
+		}
 
 		case 'bigerror':
 			this.message('<div class="broadcast-red">' + BattleLog.escapeHTML(args[1]).replace(/\|/g, '<br />') + '</div>');
@@ -1206,14 +1219,34 @@ export class BattleLog {
 		}
 		return desc;
 	}
+	/**
+	 * Splits "Best of = 3" out of a format's custom rules:
+	 * `parseBestOf("Best of = 3, Item Clause = 1")` is `{ bestOf: 3, otherRules: "Item Clause = 1" }`
+	 */
+	static parseBestOf(customRules: string) {
+		let bestOf = 1;
+		const otherRules = customRules.split(',').map(rule => rule.trim()).filter(rule => {
+			const match = /^best[-\s]*of\s*=\s*(\d+)$/i.exec(rule);
+			if (match) bestOf = Number(match[1]);
+			return rule && !match;
+		}).join(', ');
+		return { bestOf, otherRules };
+	}
 	static escapeFormat(formatid = '', fixGen6?: boolean): string {
 		let atIndex = formatid.indexOf('@@@');
 		if (atIndex >= 0) {
-			const customRules = this.escapeHTML(formatid.slice(atIndex + 3));
-			return this.escapeHTML(this.formatName(formatid.slice(0, atIndex), fixGen6)) +
-				'<br />' + TL.label(TL('Custom rules'), customRules);
+			const { bestOf, otherRules } = this.parseBestOf(formatid.slice(atIndex + 3));
+			let buf = this.escapeHTML(this.formatName(formatid.slice(0, atIndex), fixGen6));
+			if (bestOf > 1) buf += '<br />' + this.escapeHTML(this.bestOfDescription(bestOf));
+			if (otherRules) buf += '<br />' + TL.label(TL('Custom rules'), this.escapeHTML(otherRules));
+			return buf;
 		}
 		return this.escapeHTML(this.formatName(formatid, fixGen6));
+	}
+	/** "Best-of-3 series: first to 2 wins" */
+	static bestOfDescription(bestOf: number) {
+		const wins = Math.floor(bestOf / 2) + 1;
+		return TL`Best-of-${bestOf} series: the first to ${wins} wins takes it`;
 	}
 	static formatId(format: string): ID {
 		const atIndex = format.indexOf('@@@');
@@ -1235,8 +1268,11 @@ export class BattleLog {
 
 		let atIndex = formatid.indexOf('@@@');
 		if (atIndex >= 0) {
-			const formatName = this.formatName(formatid.slice(0, atIndex), fixGen6);
-			const customRules = this.escapeHTML(formatid.slice(atIndex + 3));
+			let formatName = this.formatName(formatid.slice(0, atIndex), fixGen6);
+			const { bestOf, otherRules } = this.parseBestOf(formatid.slice(atIndex + 3));
+			if (bestOf > 1) formatName = TL`${formatName}, best-of-${bestOf}`;
+			if (!otherRules) return formatName;
+			const customRules = this.escapeHTML(otherRules);
 			return TL`${formatName} (Custom rules: ${customRules})`;
 		}
 		if (fixGen6 && !formatid.startsWith('gen')) {
@@ -1249,6 +1285,9 @@ export class BattleLog {
 		if (window.NonBattleGames && NonBattleGames[formatid]) {
 			name = NonBattleGames[formatid];
 		}
+		// translated here: the list of games is built before the language is known
+		const bestOf = /^bestof(\d+)$/.exec(formatid);
+		if (bestOf) name = TL`Best-of-{NUMBER}`.replace('{NUMBER}', bestOf[1]);
 		if (name.startsWith('gen')) {
 			name = name.replace(/^gen([0-9])/, '[Gen $1] ');
 		}

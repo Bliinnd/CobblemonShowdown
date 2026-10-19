@@ -184,6 +184,9 @@ export class BattleTooltips {
 	static parentElem: HTMLElement | null = null;
 	static isLocked = false;
 	static isPressed = false;
+	/** Où le doigt s’est posé : un glissement de plus de TOUCH_MOVE_SLOP px fait défiler au lieu de cliquer */
+	static touchStart: { x: number, y: number } | null = null;
+	static TOUCH_MOVE_SLOP = 10; // px
 	static outsideClickListenerAdded = false;
 	static allowsTouchScroll(elem: HTMLElement | null) {
 		return elem && (elem.tagName === 'DIV' || elem.tagName === 'SPAN');
@@ -205,6 +208,18 @@ export class BattleTooltips {
 			BattleTooltips.longTapTimeout = null;
 		}
 		$('#tooltipwrapper').removeClass('tooltip-locking-click tooltip-locking-tap');
+	}
+
+	static touchMoved(touch: Touch) {
+		const start = BattleTooltips.touchStart;
+		return !!start && Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > BattleTooltips.TOUCH_MOVE_SLOP;
+	}
+
+	/** Le doigt a glissé : c’est un défilement, pas un appui (ni clic, ni infobulle verrouillée) */
+	static cancelTouchPress() {
+		BattleTooltips.touchStart = null;
+		BattleTooltips.cancelLongTap();
+		BattleTooltips.unshowTooltip();
 	}
 
 	static dismissOnOutsideClick(e: MouseEvent) {
@@ -249,7 +264,10 @@ export class BattleTooltips {
 		$elem.on('mouseup.battleTooltips', '.has-tooltip', BattleTooltips.unshowTooltip);
 
 		$elem.on('touchstart.battleTooltips', '.has-tooltip', e => {
-			if (!BattleTooltips.allowsTouchScroll(e.currentTarget)) e.preventDefault();
+			// pas de preventDefault ici : un glissement qui commence sur un bouton doit pouvoir faire défiler
+			// (l’appui long et la sélection de texte sont bloqués en CSS, le clic natif dans touchend)
+			const touch = (e.originalEvent as TouchEvent | undefined)?.touches[0];
+			BattleTooltips.touchStart = touch ? { x: touch.clientX, y: touch.clientY } : null;
 			this.holdLockTooltipEvent(e);
 			if (!BattleTooltips.parentElem) {
 				// should never happen, but in case there's a bug in the tooltip handler
@@ -258,9 +276,16 @@ export class BattleTooltips {
 			$(BattleTooltips.parentElem!).addClass('pressed');
 			BattleTooltips.isPressed = true;
 		});
+		$elem.on('touchmove.battleTooltips', '.has-tooltip', e => {
+			const touch = (e.originalEvent as TouchEvent | undefined)?.touches[0];
+			if (touch && BattleTooltips.touchMoved(touch)) BattleTooltips.cancelTouchPress();
+		});
 		$elem.on('touchend.battleTooltips', '.has-tooltip', e => {
 			const allowScroll = BattleTooltips.allowsTouchScroll(e.currentTarget);
-			if (!allowScroll) e.preventDefault();
+			const touch = (e.originalEvent as TouchEvent | undefined)?.changedTouches[0];
+			if (touch && BattleTooltips.touchMoved(touch)) BattleTooltips.cancelTouchPress();
+			// après un défilement, touchend n’est plus annulable (et aucun clic natif ne suit)
+			if (!allowScroll && e.cancelable) e.preventDefault();
 			if (!allowScroll && e.currentTarget === BattleTooltips.parentElem && BattleTooltips.isPressed) {
 				BattleTooltips.parentElem!.click();
 			}

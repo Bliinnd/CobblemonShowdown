@@ -98,7 +98,7 @@ export const Friends = new class {
 		}
 	}
 	addFriendForm(TL: Translator) {
-		let buf = `<form data-submitsend="/friend add {username}">${TL`Add friend:`} <input class="textbox" name="username" /><br />`;
+		let buf = `<form data-submitsend="/friend addfrompage {username}">${TL`Add friend:`} <input class="textbox" name="username" /><br />`;
 		buf += `<button class="button" type="submit">${TL`Add`} <i class="fa fa-paper-plane"></i></button></form>`;
 		return buf;
 	}
@@ -332,6 +332,26 @@ export const commands: Chat.ChatCommands = {
 			if (toID(this.pmTargetName) !== target) {
 				this.sendReply(this.TL`You sent a friend request to ${target}!`);
 			}
+		},
+		/**
+		 * CobblemonShowdown : demande d'ami envoyée depuis la page Amis ou la fiche d'un joueur.
+		 * La réponse s'affiche en fenêtre au lieu d'un onglet caché sur téléphone.
+		 */
+		async addfrompage(target, room, user) {
+			target = toID(target);
+			if (!target) return;
+			try {
+				Friends.checkCanUse(this);
+				if (target.length > 18) {
+					throw new Chat.ErrorMessage(this.TL`That name is too long - choose a valid name.`);
+				}
+				await Friends.request(user, target as ID);
+			} catch (e) {
+				if (e instanceof Chat.ErrorMessage) return this.popupReply(e.message);
+				throw e;
+			}
+			this.refreshPage('friends-sent');
+			this.popupReply(this.TL`You sent a friend request to ${target}!`);
 		},
 		unfriend: 'remove',
 		async remove(target, room, user) {

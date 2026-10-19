@@ -505,8 +505,10 @@ export class PageContext extends MessageContext {
 			res = undefined;
 		}
 		if (res === Rooms.RETRY_AFTER_LOGIN) {
+			const message = this.TL`Please log in before accessing this page (don't worry, it will load automatically once you do so).`;
 			this.setHTML(
-				`Please log in before accessing this page (don't worry, it will load automatically once you do so).`
+				`<div class="pad"><p>${message}</p>` +
+				`<p><button class="button" name="send" value="/nick">${this.TL`Log in`}</button></p></div>`
 			);
 		}
 		return res;

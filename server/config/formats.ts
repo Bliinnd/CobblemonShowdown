@@ -6213,11 +6213,16 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 // CobblemonShowdown : seuls les formats des sections Cobblemon ("Sans egg moves / ..."
 // et "Avec egg moves / ...") sont proposés aux joueurs. Les formats officiels de Showdown
 // restent définis (outils et tests de Showdown) mais n'apparaissent plus dans les listes.
+// Les défis Cobblemon proposent de jouer en BO1, BO3 ou BO5 (bestOfDefault).
 {
 	let section = '';
 	for (const format of Formats as AnyObject[]) {
 		if (format.section) section = format.section;
-		if (!format.name || /^(Sans|Avec) egg moves \/ /.test(section)) continue;
+		if (!format.name) continue;
+		if (/^(Sans|Avec) egg moves \/ /.test(section)) {
+			format.bestOfDefault = true;
+			continue;
+		}
 		Object.assign(format, { searchShow: false, challengeShow: false, tournamentShow: false });
 	}
 }

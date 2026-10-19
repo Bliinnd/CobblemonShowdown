@@ -3194,5 +3194,10 @@ export const translations: TranslationCatalog = {
 	"BST": null, // NEEDS TRANSLATION
 	"Power": null, // NEEDS TRANSLATION
 	"Accuracy": null, // NEEDS TRANSLATION
+	"Game {gameNum}: {p1name} vs. {p2name}": null, // NEEDS TRANSLATION
+	"Please log in before accessing this page (don't worry, it will load automatically once you do so).": null, // NEEDS TRANSLATION
+	"Log in": null, // NEEDS TRANSLATION
+	"{minutes} minutes": null, // NEEDS TRANSLATION
+	"{seconds} seconds": null, // NEEDS TRANSLATION
 
 };

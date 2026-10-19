@@ -411,6 +411,10 @@ export const translations: TranslationCatalog = {
 	"[Switch sides]": null,
 	"Turn?": null,
 	"Invalid turn": null,
+	"Filter": null,
+	"No exact match found. The closest matches alphabetically are:": null,
+	"Illegal": null,
+	"[Open the Teambuilder]": null,
 
 	// #endregion Generic UI
 
@@ -683,6 +687,7 @@ export const translations: TranslationCatalog = {
 	"English only, unless specified otherwise.": null,
 	"Usernames": null,
 	"Your username can be chosen and changed at any time. Keep in mind:": null,
+	"Removed from your friends.": null,
 
 	// #endregion Popups
 
@@ -730,11 +735,14 @@ export const translations: TranslationCatalog = {
 	"Pokémon Showdown is offline due to technical difficulties!": null,
 	"Bear with us as we freak out.": null,
 	"(We'll be back up in a few hours.)": null,
-	"Start a team-locked best-of-n series": null,
+	"Start a team-locked best-of-n series": null, // NOT USED
 	"Tera Type Preview": null,
 	"Item Clause": null,
 	"Rules separated by commas or lines": null,
 	"Custom rules guide": null,
+	"Number of games": null,
+	"A single battle.": null,
+	"Each game opens in a new tab.": null,
 
 	// #endregion Main Menu
 
@@ -919,6 +927,11 @@ export const translations: TranslationCatalog = {
 	"{totalTime} total": null,
 	"Error: Missing BattleChoiceBuilder": null,
 	"[Download replay]": null,
+	"Go to the next game": null,
+	"Ready!": null,
+	"Waiting for your opponent...": null,
+	"I'm ready for the next game!": null,
+	"View the series": null,
 
 	// #endregion Battle
 
@@ -1128,6 +1141,10 @@ export const translations: TranslationCatalog = {
 	"W": {
 		"wins": null,
 	},
+	"Best-of-{bestOf} series: the first to {wins} wins takes it": null,
+	"{formatName}, best-of-{bestOf}": null,
+	"{player} has {seconds} seconds left this turn.": null,
+	"{player} has {seconds} seconds left.": null,
 
 	// #endregion Chat
 
@@ -1301,6 +1318,12 @@ export const translations: TranslationCatalog = {
 	"Uploaded to the Teams database publicly. Share with the URL or people can find it by searching.": null,
 	"Copy of {copyFrom.name}": null,
 	"Readable": null,
+	"These lines could not be read:": null,
+	"Unknown Pokémon: {error.value}": null,
+	"Unknown item: {error.value}": null,
+	"Unknown ability: {error.value}": null,
+	"Unknown move: {error.value}": null,
+	"Pick it from the list.": null,
 
 	// #endregion Teambuilder
 
