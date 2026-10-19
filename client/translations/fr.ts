@@ -1347,6 +1347,9 @@ export const translations: TranslationCatalog = {
 	"Unknown ability: {error.value}": "Talent inconnu : {error.value}",
 	"Unknown move: {error.value}": "Capacité inconnue : {error.value}",
 	"Pick it from the list.": "Choisissez-le dans la liste.",
+	"[Share]": "Partager",
+	"Share link": "Lien de partage",
+	"Creating the link...": "Création du lien...",
 
 	// #endregion Teambuilder
 
