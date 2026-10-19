@@ -2588,3 +2588,61 @@ pre.textbox.textbox-empty[placeholder]:before {
 	color: #FFFFFF;
 	background: #4466AA;
 }
+
+/* CobblemonShowdown : le bouton « N utilisateurs » ne cache plus la première ligne du chat */
+.chat-log.userlist-minimized {
+	padding-top: 26px;
+}
+.tournament-box {
+	background-color: rgb(242, 247, 250);
+}
+
+/* CobblemonShowdown : tailles adaptées au doigt sur téléphone et tablette */
+@media (pointer: coarse) {
+	.ps-popup .button,
+	.buttonmenu .button,
+	.mainmenu .button,
+	.battle-controls .button,
+	.pad .button,
+	.challenge .button {
+		min-height: 36px;
+		padding-top: 6px;
+		padding-bottom: 6px;
+	}
+	.buttonmenu p {
+		margin: 8px 0;
+	}
+	.ps-popup .textbox,
+	.pad .textbox,
+	.chat-log-add textarea,
+	.teambuilder-pokemon-import .textbox {
+		font-size: 16px;
+	}
+	.ps-popup .textbox,
+	.pad input.textbox {
+		min-height: 36px;
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+	.ps-popup .label {
+		width: auto;
+	}
+	.options-column .option,
+	.ps-popup .option {
+		min-height: 36px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 11pt;
+	}
+	.options-column .star,
+	.option .star {
+		padding: 0 4px 0 12px;
+	}
+	.userlist li button {
+		height: 32px;
+	}
+	.tabbar .closebutton {
+		width: 28px;
+		margin-left: -28px;
+	}
+}

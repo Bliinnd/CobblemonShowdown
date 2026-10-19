@@ -133,12 +133,12 @@
 }
 .dexlist .labelcol {
 	text-align: center;
-	width: 30px;
+	width: 44px; /* CobblemonShowdown : 30px, trop étroit pour « Puissance » */
 	margin-left: -2px;
 }
 .dexlist .widelabelcol {
 	text-align: center;
-	width: 50px;
+	width: 54px; /* CobblemonShowdown : 50px, trop étroit pour « Précision » */
 }
 .dexlist .pplabelcol {
 	text-align: center;

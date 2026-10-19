@@ -687,6 +687,7 @@ export const translations: TranslationCatalog = {
 	"English only, unless specified otherwise.": null,
 	"Usernames": null,
 	"Your username can be chosen and changed at any time. Keep in mind:": null,
+	"Removed from your friends.": null,
 
 	// #endregion Popups
 

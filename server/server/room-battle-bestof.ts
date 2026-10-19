@@ -425,11 +425,14 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 				if (p.dcAutoloseTime && now > p.dcAutoloseTime) {
 					return this.forfeit(p.name, ' lost the series due to inactivity.');
 				}
-				const timeLeft = Chat.toDurationString((p.dcAutoloseTime || this.nextBattleTimerEnd) - now);
-				const message = (room: Room) => (p.dcAutoloseTime ?
-					`|inactive|${room.TL`${p.name} has ${timeLeft} to reconnect!`}` :
-					`|inactive|${room.TL`${p.name} has ${timeLeft} to confirm battle start!`}`
-				);
+				const seconds = Math.max(0, Math.round(((p.dcAutoloseTime || this.nextBattleTimerEnd) - now) / 1000));
+				const message = (room: Room) => {
+					const minutes = Math.ceil(seconds / 60);
+					const timeLeft = seconds >= 60 ? room.TL`${minutes} minutes` : room.TL`${seconds} seconds`;
+					return p.dcAutoloseTime ?
+						`|inactive|${room.TL`${p.name} has ${timeLeft} to reconnect!`}` :
+						`|inactive|${room.TL`${p.name} has ${timeLeft} to confirm battle start!`}`;
+				};
 				this.waitingBattle?.add(message(this.waitingBattle));
 				this.room.add(message(this.room));
 			}

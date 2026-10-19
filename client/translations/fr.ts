@@ -687,6 +687,7 @@ export const translations: TranslationCatalog = {
 	"English only, unless specified otherwise.": "Français uniquement, sauf indication contraire.",
 	"Usernames": "Pseudos",
 	"Your username can be chosen and changed at any time. Keep in mind:": "Vous pouvez choisir et changer de pseudo à tout moment. Gardez à l’esprit les règles suivantes :",
+	"Removed from your friends.": "Retiré de vos amis.",
 
 	// #endregion Popups
 

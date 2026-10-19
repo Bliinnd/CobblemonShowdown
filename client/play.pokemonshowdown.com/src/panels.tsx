@@ -429,6 +429,8 @@ export class PSView extends preact.Component {
 			document.documentElement.style.height = '100%';
 		}
 		PSView.updateScrollSnap();
+		// on phones, open on the current room instead of the tab list
+		if (PSView.narrowMode) PSView.jumpToRoom();
 	}
 	override componentWillUnmount() {
 		PSView.scrollFrame?.removeEventListener('scroll', PSView.handleFrameScroll);
@@ -856,6 +858,8 @@ export class PSView extends preact.Component {
 	}
 	static focusPreview(room: PSRoom) {
 		if (room !== PS.room) return '';
+		// keyboard shortcuts mean nothing on a touch screen
+		if (window.matchMedia?.('(pointer: coarse)').matches) return '';
 
 		const verticalBuf = this.verticalFocusPreview();
 		if (verticalBuf) return verticalBuf;
