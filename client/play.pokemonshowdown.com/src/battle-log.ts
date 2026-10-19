@@ -252,6 +252,10 @@ export class BattleLog {
 
 		case 'chatmsg-raw': case 'raw': case 'html':
 			divHTML = BattleLog.sanitizeHTML(args[1]);
+			// CobblemonShowdown : le serveur écrit le message d'arrivée dans un salon en anglais.
+			if (divHTML.startsWith('<div class="infobox"> You joined ')) {
+				divHTML = `<div class="infobox"> ${TL`You joined`} ${divHTML.slice(33)}`;
+			}
 			break;
 
 		case 'uhtml': case 'uhtmlchange':
@@ -1682,7 +1686,9 @@ export class BattleLog {
 		let formattedTime;
 		// Try using Intl API if it exists
 		if ((window as any).Intl?.DateTimeFormat) {
-			formattedTime = new Intl.DateTimeFormat(undefined, {
+			// CobblemonShowdown : dates dans la langue du site plutôt que celle du navigateur.
+			// (« en-afd », le mode poisson d'avril, n'est pas une vraie langue pour Intl)
+			formattedTime = new Intl.DateTimeFormat(Dex.text.getLanguage().replace(/-afd$/, ''), {
 				month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric',
 			}).format(parsedTime);
 		} else {

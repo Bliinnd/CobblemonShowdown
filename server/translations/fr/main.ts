@@ -197,26 +197,26 @@ export const translations: TranslationCatalog = {
 	"Pokémon Showdown privacy policy": null, // NEEDS TRANSLATION
 	"{TARGETUSER}'s status \"{STATUS}\" was cleared by {USER}{REASON}.": null, // NEEDS TRANSLATION
 	"To use the friends feature you must be autoconfirmed, which means being registered for at least one week and winning one rated game.": null, // NEEDS TRANSLATION
-	"That name is too long - choose a valid name.": null, // NEEDS TRANSLATION
-	"You are currently blocking friend requests, and so cannot accept your own.": null, // NEEDS TRANSLATION
-	"You already are allowing friend requests.": null, // NEEDS TRANSLATION
-	"You are now allowing friend requests.": null, // NEEDS TRANSLATION
-	"You already are blocking incoming friend requests.": null, // NEEDS TRANSLATION
-	"You are now blocking incoming friend requests.": null, // NEEDS TRANSLATION
-	"Unrecognized setting.": null, // NEEDS TRANSLATION
-	"You are already not receiving friend notifications.": null, // NEEDS TRANSLATION
-	"You will not receive friend notifications.": null, // NEEDS TRANSLATION
-	"You are already hiding your logins from friends.": null, // NEEDS TRANSLATION
-	"You are already allowing friends to see your login times.": null, // NEEDS TRANSLATION
-	"You are already allowing other people to view your friends list.": null, // NEEDS TRANSLATION
-	"You are now allowing other people to view your friends list.": null, // NEEDS TRANSLATION
-	"You are already hiding your friends list.": null, // NEEDS TRANSLATION
-	"You are now hiding your friends list.": null, // NEEDS TRANSLATION
-	"You are already sharing your battles with friends.": null, // NEEDS TRANSLATION
-	"You are already not sharing your battles with friends.": null, // NEEDS TRANSLATION
-	"Undo": null, // NEEDS TRANSLATION
-	"Accept": null, // NEEDS TRANSLATION
-	"Deny": null, // NEEDS TRANSLATION
+	"That name is too long - choose a valid name.": "Ce pseudo est trop long, choisis un pseudo valide.",
+	"You are currently blocking friend requests, and so cannot accept your own.": "Tu bloques actuellement les demandes d'ami, tu ne peux donc pas accepter celles que tu as reçues.",
+	"You already are allowing friend requests.": "Tu acceptes déjà les demandes d'ami.",
+	"You are now allowing friend requests.": "Tu acceptes maintenant les demandes d'ami.",
+	"You already are blocking incoming friend requests.": "Tu bloques déjà les demandes d'ami.",
+	"You are now blocking incoming friend requests.": "Tu bloques maintenant les demandes d'ami.",
+	"Unrecognized setting.": "Réglage non reconnu.",
+	"You are already not receiving friend notifications.": "Les notifications de connexion de tes amis sont déjà désactivées.",
+	"You will not receive friend notifications.": "Tu ne recevras plus les notifications de connexion de tes amis.",
+	"You are already hiding your logins from friends.": "Tu caches déjà tes heures de connexion à tes amis.",
+	"You are already allowing friends to see your login times.": "Tes amis peuvent déjà voir tes heures de connexion.",
+	"You are already allowing other people to view your friends list.": "Ta liste d'amis est déjà visible par les autres.",
+	"You are now allowing other people to view your friends list.": "Ta liste d'amis est maintenant visible par les autres.",
+	"You are already hiding your friends list.": "Ta liste d'amis est déjà cachée.",
+	"You are now hiding your friends list.": "Ta liste d'amis est maintenant cachée.",
+	"You are already sharing your battles with friends.": "Tu partages déjà tes combats avec tes amis.",
+	"You are already not sharing your battles with friends.": "Tes combats sont déjà cachés à tes amis.",
+	"Undo": "Annuler",
+	"Accept": "Accepter",
+	"Deny": "Refuser",
 	"You are locked due to your proxy / VPN and can't talk in chat.": null, // NEEDS TRANSLATION
 	"|html|<div class=\"message-error\">You must be registered to chat in temporary rooms (like battles).</div>": null, // NEEDS TRANSLATION
 	"You may register in the <button name=\"openOptions\"><i class=\"fa fa-cog\"></i> Options</button> menu.": null, // NEEDS TRANSLATION
@@ -225,15 +225,123 @@ export const translations: TranslationCatalog = {
 	"|html|<div class=\"message-error\">You must be registered to send private messages.</div>": null, // NEEDS TRANSLATION
 	"That user is unregistered and cannot be PMed.": null, // NEEDS TRANSLATION
 	"You are locked due to your proxy / VPN and can only private message members of the global moderation team.": null, // NEEDS TRANSLATION
-	"All Friends": null, // NEEDS TRANSLATION
-	"Spectate": null, // NEEDS TRANSLATION
-	"Sent": null, // NEEDS TRANSLATION
-	"Received": null, // NEEDS TRANSLATION
-	"Help": null, // NEEDS TRANSLATION
-	"Settings": null, // NEEDS TRANSLATION
-	"You are currently blocking friend requests.": null, // NEEDS TRANSLATION
-	"You are not blocking friend requests.": null, // NEEDS TRANSLATION
-	"You are currently allowing friend notifications.": null, // NEEDS TRANSLATION
-	"Your friend notifications are disabled.": null, // NEEDS TRANSLATION
+	"All Friends": "Tous mes amis",
+	"Spectate": "Regarder",
+	"Sent": "Envoyées",
+	"Received": "Reçues",
+	"Help": "Aide",
+	"Settings": "Paramètres",
+	"You are currently blocking friend requests.": "Tu bloques actuellement les demandes d'ami.",
+	"You are not blocking friend requests.": "Tu ne bloques pas les demandes d'ami.",
+	"You are currently allowing friend notifications.": "Tu reçois actuellement les notifications de connexion de tes amis.",
+	"Your friend notifications are disabled.": "Les notifications de connexion de tes amis sont désactivées.",
+	"Online": "En ligne",
+	"Idle": "Absent",
+	"Busy": "Occupé",
+	"Offline": "Hors ligne",
+	"<code>/friend list</code> - View current friends.": "<code>/friend list</code> - Affiche ta liste d'amis.",
+	"<code>/friend add [name]</code> OR <code>/friend [name]</code> - Send a friend request to [name], if you don't have them added.": "<code>/friend add [pseudo]</code> OU <code>/friend [pseudo]</code> - Envoie une demande d'ami à [pseudo], s'il ne fait pas déjà partie de tes amis.",
+	"<code>/friend remove [username]</code> OR <code>/unfriend [username]</code>  - Unfriend the user.": "<code>/friend remove [pseudo]</code> OU <code>/unfriend [pseudo]</code> - Retire [pseudo] de tes amis.",
+	"<code>/friend accept [username]</code> - Accepts the friend request from [username], if it exists.": "<code>/friend accept [pseudo]</code> - Accepte la demande d'ami de [pseudo], s'il t'en a envoyé une.",
+	"<code>/friend reject [username]</code> - Rejects the friend request from [username], if it exists.": "<code>/friend reject [pseudo]</code> - Refuse la demande d'ami de [pseudo], s'il t'en a envoyé une.",
+	"<code>/friend toggle [off/on]</code> - Enable or disable receiving of friend requests.": "<code>/friend toggle [off/on]</code> - Active ou désactive la réception des demandes d'ami.",
+	"<code>/friend hidenotifications</code> OR <code>hidenotifs</code> - Opts out of receiving friend notifications.": "<code>/friend hidenotifications</code> OU <code>hidenotifs</code> - Désactive les notifications de connexion de tes amis.",
+	"<code>/friend viewnotifications</code> OR <code>viewnotifs</code> - Opts into view friend notifications.": "<code>/friend viewnotifications</code> OU <code>viewnotifs</code> - Active les notifications de connexion de tes amis.",
+	"<code>/friend listdisplay [on/off]</code> - Opts [in/out] of letting others view your friends list.": "<code>/friend listdisplay [on/off]</code> - Rend ta liste d'amis visible [on] ou non [off] par les autres.",
+	"<code>/friend viewlist [user]</code> - View the given [user]'s friend list, if they're allowing others to see.": "<code>/friend viewlist [pseudo]</code> - Affiche la liste d'amis de [pseudo], s'il la rend visible.",
+	"<code>/friends sharebattles [on|off]</code> - Allow or disallow your friends from seeing your ongoing battles.": "<code>/friends sharebattles [on|off]</code> - Permet [on] ou non [off] à tes amis de voir tes combats en cours.",
+	"You have {COUNT} friend requests pending!": "Tu as {COUNT} demandes d'ami en attente !",
+	"View requests": "Voir les demandes",
+	"Your friend {FRIEND} has just connected!": "Ton ami {FRIEND} vient de se connecter !",
+	"Add friend:": "Ajouter un ami :",
+	"Add": "Ajouter",
+	"Your friends:": "Tes amis :",
+	"You currently have no friends added.": "Tu n'as encore ajouté aucun ami.",
+	"To add a friend, use <code>/friend add [username]</code>.": "Pour ajouter un ami, utilise <code>/friend add [pseudo]</code>.",
+	"{USER}'s friends:": "Amis de {USER} :",
+	"This user has no friends added.": "Cet utilisateur n'a encore ajouté aucun ami.",
+	"Status: {STATUS}": "Statut : {STATUS}",
+	"On an alternate account": "Sur un autre compte",
+	"Last seen: {TIME} ({AGO})": "Vu pour la dernière fois : {TIME} ({AGO})",
+	"The friends list feature is currently disabled.": "La liste d'amis est désactivée pour le moment.",
+	"To use the friends list, you must be logged in to a registered account.": "Pour utiliser la liste d'amis, tu dois être connecté à un compte enregistré.",
+	"You are locked, and so cannot use the friends feature.": "Tu es locked et ne peux donc pas utiliser la liste d'amis.",
+	"You are currently unable to use the friends feature.": "Tu ne peux pas utiliser la liste d'amis pour le moment.",
+	"Specify a user.": "Indique un pseudo.",
+	"You sent a friend request to {USER}!": "Tu as envoyé une demande d'ami à {USER} !",
+	"Removed friend {TARGET}.": "{TARGET} a été retiré de tes amis.",
+	"You accepted a friend request from {TARGET}.": "Tu as accepté la demande d'ami de {TARGET}.",
+	"{USER} accepted your friend request!": "{USER} a accepté ta demande d'ami !",
+	"You have no friend request pending from {TARGET}.": "Tu n'as aucune demande d'ami en attente de la part de {TARGET}.",
+	"You denied a friend request from {TARGET}.": "Tu as refusé la demande d'ami de {TARGET}.",
+	"You have no pending friend request to {TARGET}.": "Tu n'as aucune demande d'ami en attente pour {TARGET}.",
+	"You removed your friend request to {TARGET}.": "Tu as annulé ta demande d'ami à {TARGET}.",
+	"You are already allowing friend notifications.": "Les notifications de connexion de tes amis sont déjà activées.",
+	"You will now receive friend notifications.": "Tu recevras maintenant les notifications de connexion de tes amis.",
+	"Invalid setting.": "Réglage invalide.",
+	"You are now hiding your login times from your friends.": "Tu caches maintenant tes heures de connexion à tes amis.",
+	"You are now allowing your friends to see your login times.": "Tes amis peuvent maintenant voir tes heures de connexion.",
+	"You are currently displaying your friends list.": "Ta liste d'amis est actuellement visible par les autres.",
+	"You are currently hiding your friends list.": "Ta liste d'amis est actuellement cachée.",
+	"You invalidated each entry in the friends database cache.": "Tu as vidé le cache de la liste d'amis de tous les utilisateurs.",
+	"You are now allowing your friends to see your ongoing battles.": "Tes amis peuvent maintenant voir tes combats en cours.",
+	"You are now hiding your ongoing battles from your friends.": "Tes combats en cours sont maintenant cachés à tes amis.",
+	"Invalid setting '{TARGET}'. Provide 'on' or 'off'.": "Réglage « {TARGET} » invalide. Indique 'on' ou 'off'.",
+	"/friends sharebattles [on|off] - Allow or disallow your friends from seeing your ongoing battles.": "/friends sharebattles [on|off] - Permet [on] ou non [off] à tes amis de voir tes combats en cours.",
+	"More commands...": "Plus de commandes...",
+	"[Friends] Sent": "[Amis] Envoyées",
+	"You have no outgoing friend requests pending.": "Tu n'as aucune demande d'ami envoyée en attente.",
+	"You have 1 outgoing friend request pending.": "Tu as 1 demande d'ami envoyée en attente.",
+	"You have {COUNT} outgoing friend requests pending.": "Tu as {COUNT} demandes d'ami envoyées en attente.",
+	"(maximum reached)": "(maximum atteint)",
+	"[Friends] Received": "[Amis] Reçues",
+	"You have no pending friend requests.": "Tu n'as aucune demande d'ami en attente.",
+	"You have 1 incoming friend request pending.": "Tu as 1 demande d'ami reçue en attente.",
+	"You have {COUNT} incoming friend requests pending.": "Tu as {COUNT} demandes d'ami reçues en attente.",
+	"Use /friends list to view your own list.": "Utilise /friends list pour voir ta propre liste.",
+	"{TARGET}'s friends list is not public or they do not have one.": "La liste d'amis de {TARGET} n'est pas visible ou n'existe pas.",
+	"[Friends List] {TARGET}": "[Liste d'amis] {TARGET}",
+	"[Friends] Help": "[Amis] Aide",
+	"/friend OR /friends OR /friendslist:": "/friend OU /friends OU /friendslist :",
+	"[Friends] Settings": "[Amis] Paramètres",
+	"Friends Settings:": "Paramètres des amis :",
+	"Enable": "Activer",
+	"Disable": "Désactiver",
+	"Notify me when my friends come online:": "Me prévenir quand mes amis se connectent :",
+	"Receive friend requests:": "Recevoir des demandes d'ami :",
+	"Allow others to see your list:": "Rendre ma liste d'amis visible par les autres :",
+	"Hide": "Cacher",
+	"Allow": "Autoriser",
+	"Allow friends to see my login times:": "Permettre à mes amis de voir mes heures de connexion :",
+	"Allow friends to see my hidden battles on the spectator list:": "Permettre à mes amis de voir mes combats cachés dans l'onglet « Regarder » :",
+	"Block PMs except from friends (and staff):": "Bloquer les messages privés, sauf ceux de mes amis (et du staff) :",
+	"Block challenges except from friends (and staff):": "Bloquer les défis, sauf ceux de mes amis (et du staff) :",
+	"[Friends] Spectating": "[Amis] Regarder",
+	"Spectate your friends:": "Regarder les combats de tes amis :",
+	"Use the <a roomid=\"view-friends-settings\">settings page</a> to disallow your friends from seeing your hidden battles on this page.": "Utilise la <a roomid=\"view-friends-settings\">page des paramètres</a> pour empêcher tes amis de voir tes combats cachés sur cette page.",
+	"Use the <a roomid=\"view-friends-settings\">settings page</a> to allow your friends to see your hidden battles on this page.": "Utilise la <a roomid=\"view-friends-settings\">page des paramètres</a> pour permettre à tes amis de voir tes combats cachés sur cette page.",
+	"You have no friends to spectate.": "Tu n'as aucun ami dont regarder les combats.",
+	"None of your friends are currently around to spectate.": "Aucun de tes amis n'est connecté pour le moment.",
+	"None of your friends are currently in a battle.": "Aucun de tes amis n'est en combat pour le moment.",
+	"Rated: {RATING}": "Classé : {RATING}",
+	"(with {FRIEND})": "(avec {FRIEND})",
+	"[Friends] All Friends": "[Amis] Tous mes amis",
+	"Sorry! The database process crashed. We've been notified and will fix this.": "Désolé ! La base de données des amis a planté. Nous avons été prévenus et allons corriger le problème.",
+	"You are at the maximum number of friends.": "Tu as atteint le nombre maximum d'amis.",
+	"You are already friends with {USER}.": "Tu es déjà ami avec {USER}.",
+	"You have already sent a friend request to {USER}.": "Tu as déjà envoyé une demande d'ami à {USER}.",
+	"{USER} has already sent you a friend request. Use \"/friends view received\" to accept it.": "{USER} t'a déjà envoyé une demande d'ami. Utilise « /friends view received » pour l'accepter.",
+	"You already have {MAX} pending friend requests. Use \"/friends view sent\" to see your outgoing requests and \"/friends view received\" to see your incoming requests.": "Tu as déjà {MAX} demandes d'ami en attente. Utilise « /friends view sent » pour voir celles que tu as envoyées et « /friends view received » pour voir celles que tu as reçues.",
+	"Note: If this request is accepted, your friend will be notified when you come online, and you will be notified when they do, unless you opt out of receiving them.": "Remarque : si cette demande est acceptée, ton ami sera prévenu quand tu te connectes, et tu seras prévenu quand il se connecte, sauf si tu désactives ces notifications.",
+	"{USER} sent you a friend request!": "{USER} t'a envoyé une demande d'ami !",
+	"(You can also stop this user from sending you friend requests with <code>/ignore</code>)": "(Tu peux aussi empêcher cet utilisateur de t'envoyer des demandes d'ami avec <code>/ignore</code>)",
+	"You can't friend yourself.": "Tu ne peux pas t'ajouter toi-même en ami.",
+	"{USER} is not a registered account, and cannot be friended.": "{USER} n'est pas un compte enregistré et ne peut pas être ajouté en ami.",
+	"{USER} is blocking friend requests.": "{USER} bloque les demandes d'ami.",
+	"This user is blocking PMs, and cannot be friended right now.": "Cet utilisateur bloque les messages privés : tu ne peux pas l'ajouter en ami pour le moment.",
+	"Invalid sender username.": "Pseudo de l'expéditeur invalide.",
+	"Invalid receiver username.": "Pseudo du destinataire invalide.",
+	"Invalid usernames supplied.": "Pseudos invalides.",
+	"You do not have {USER} friended.": "{USER} ne fait pas partie de tes amis.",
 
 };

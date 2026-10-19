@@ -27,6 +27,16 @@ Cobblemon OU, Monotype, LC et National Dex, avec les règles décrites dans
 format existe aussi en version « + Egg Moves » qui les autorise. Le bouton
 « Vérifier » du teambuilder contrôle l'équipe selon le format choisi.
 
+## Chat, amis et profils
+
+Comme sur Showdown : tous les visiteurs rejoignent le salon officiel
+**Discussion** ; les rangs (Administrateur ~, modérateurs, propriétaires de
+salon...) se gèrent avec les commandes habituelles ; les pseudos de `ADMINS`
+deviennent Administrateurs une fois inscrits (voir `app/admins.js`). La liste
+d'amis (menu « Amis », `/friend`) utilise la base SQLite intégrée à Node.js.
+Chaque compte a une page publique `/users/pseudo` (date d'inscription, rang,
+classements).
+
 ## Installer le site
 
 Voir [docs/installation-plesk.md](docs/installation-plesk.md).

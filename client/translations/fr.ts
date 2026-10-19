@@ -92,6 +92,7 @@ export const translations: TranslationCatalog = {
 	" ({PARENTHETICAL})": " ({PARENTHETICAL})",
 	"The login server did not respond.": "Le serveur d’authentification n’a pas répondu.",
 	"Your teams could not be saved to your account: {error}": "Vos équipes n’ont pas pu être enregistrées sur votre compte : {error}",
+	"(use arrow keys)": "(flèches du clavier)",
 
 	// #endregion Generic UI
 
@@ -251,6 +252,38 @@ export const translations: TranslationCatalog = {
 	"Password (confirm)": "Mot de passe (confirmation)",
 	"An Electric-type mouse that is the mascot of the Pokémon franchise.": "Une souris de type Électrik qui est la mascotte de la franchise Pokémon.",
 	"What is this Pokémon?": "Quel est ce Pokémon ?",
+	"(Busy)": "(Occupé)",
+	"(Idle)": "(Absent)",
+	"Administrator": "Administrateur",
+	"Room Owner": "Propriétaire du salon",
+	"Host": "Hôte",
+	"Moderator": "Modérateur",
+	"Driver": "Driver",
+	"Bot": "Bot",
+	"Player": "Joueur",
+	"Voice": "Voice",
+	"Prize Winner": "Lauréat",
+	"Whitelist": "Liste blanche",
+	"Locked": "Verrouillé",
+	"Muted": "Muet",
+	"Mute": "Rendre muet",
+	"7 minutes": "7 minutes",
+	"Hourmute": "Rendre muet",
+	"1 hour": "1 heure",
+	"Ban": "Bannir",
+	"2 days": "2 jours",
+	"Weekban": "Bannir",
+	"1 week": "1 semaine",
+	"Lock": "Verrouiller",
+	"Weeklock": "Verrouiller",
+	"Namelock": "Bloquer le pseudo",
+	" in {ROOM}": " dans {ROOM}",
+	"{PUNISHMENT} {USER}{SCOPE} for {DURATION}?": "{PUNISHMENT} {USER}{SCOPE} pendant {DURATION} ?",
+	"Reason (optional)": "Raison (facultatif)",
+	"[Remove friend]": "Retirer des amis",
+	"Moderate in {ROOM}": "Modérer dans {ROOM}",
+	"Global moderation": "Modération globale",
+	"Choose an avatar or": "Choisissez un avatar ou",
 
 	// #endregion Popups
 
@@ -290,6 +323,7 @@ export const translations: TranslationCatalog = {
 	"You're already searching for a {FORMAT} battle...": "Vous recherchez déjà un combat {FORMAT}...",
 	"You need to go into the Teambuilder and build a team for this format.": "Vous devez aller dans le Teambuilder pour créer une équipe pour ce format.",
 	"Source code": "Code source",
+	"Discussion": "Discussion",
 
 	// #endregion Main Menu
 
@@ -538,6 +572,12 @@ export const translations: TranslationCatalog = {
 	"You are not a player in this battle": "Vous n’êtes pas un joueur de ce combat",
 	"Can only be used in a DM.": "Utilisable uniquement en MP.",
 	"Please wait 5 seconds before challenging again.": "Veuillez attendre 5 secondes avant de lancer un nouveau défi.",
+	"You joined": "Vous avez rejoint",
+	"You reconnected to": "Vous êtes reconnecté à",
+	"{NAMES} and {COUNT} others": "{NAMES} et {COUNT} autres",
+	"You reconnected.": "Vous êtes reconnecté.",
+	"Note: Scrollback doesn't go all the way back to when you disconnected.": "Remarque : l'historique ne remonte pas jusqu'au moment de votre déconnexion.",
+	"You disconnected.": "Vous avez été déconnecté.",
 
 	// #endregion Chat
 

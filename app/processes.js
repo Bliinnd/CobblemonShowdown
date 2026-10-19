@@ -7,6 +7,8 @@ const childProcess = require('child_process');
 const fs = require('fs');
 const net = require('net');
 const path = require('path');
+const { ensureChatRooms } = require('./rooms');
+const { seedAdmins } = require('./admins');
 
 function isPortInUse(port) {
 	return new Promise(resolve => {
@@ -52,6 +54,14 @@ async function startProcesses(settings) {
 	if (await isPortInUse(settings.simPort)) {
 		console.log(`Serveur de combat déjà actif sur le port ${settings.simPort}`);
 	} else {
+		// Le serveur de combat lit ces fichiers au démarrage puis les réécrit lui-même :
+		// on ne les prépare que lorsqu'il n'est pas encore lancé.
+		ensureChatRooms(settings);
+		try {
+			await seedAdmins(settings);
+		} catch (err) {
+			console.error('Administrateurs : impossible de lire les comptes dans la base de données.', err);
+		}
 		supervise('Serveur de combat', [
 			'pokemon-showdown', 'start', '--skip-build', String(settings.simPort),
 		], path.join(settings.root, 'server'), path.join(logs, 'server.log'));

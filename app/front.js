@@ -4,6 +4,9 @@
  * redirige vers les deux serveurs internes :
  * - /showdown/...            -> serveur de combat (connexion temps réel)
  * - /action.php, /api/...    -> serveur de comptes
+ *
+ * Il sert aussi les pages des joueurs (/users/<pseudo>, voir app/profiles.js)
+ * et les avatars personnalisés du serveur de combat (/avatars/<fichier>).
  */
 const fs = require('fs');
 const http = require('http');
@@ -13,6 +16,7 @@ const path = require('path');
 const childProcess = require('child_process');
 const zlib = require('zlib');
 const { clientConfig } = require('./configs');
+const { createProfiles } = require('./profiles');
 
 const TYPES = {
 	'.html': 'text/html; charset=utf-8',
@@ -24,6 +28,8 @@ const TYPES = {
 	'.png': 'image/png',
 	'.gif': 'image/gif',
 	'.jpg': 'image/jpeg',
+	'.jpeg': 'image/jpeg',
+	'.webp': 'image/webp',
 	'.svg': 'image/svg+xml',
 	'.ico': 'image/x-icon',
 	'.woff': 'font/woff',
@@ -60,15 +66,22 @@ function readGzipped(file, stat, callback) {
 const EXTERNAL_RESOURCES = /^\/((sprites|audio)\/|data\/pokedex-mini(-bw)?\.js$)/;
 const EXTERNAL_HOST = 'https://play.pokemonshowdown.com';
 
+/** Avatars personnalisés (/addavatar, /personalavatar) : fichiers de server/config/avatars/. */
+const AVATAR_FILE = /^(?!.*\.\.)[a-z0-9-][a-z0-9.-]*\.(png|gif|jpe?g|webp)$/;
+
 function forwardedHeaders(req) {
-	const ip = req.socket.remoteAddress || '';
-	const previous = req.headers['x-forwarded-for'];
-	return {
+	// Une adresse IPv4 reçue sur une socket IPv6 (« ::ffff:1.2.3.4 ») est transmise sous sa forme IPv4.
+	const ip = (req.socket.remoteAddress || '').replace(/^::ffff:(?=\d+\.\d+\.\d+\.\d+$)/i, '');
+	// Sans adresse, on n'ajoute rien : une entrée vide deviendrait l'IP du joueur pour le serveur de combat.
+	const forwardedFor = [req.headers['x-forwarded-for'], ip].filter(Boolean).join(', ');
+	const headers = {
 		...req.headers,
-		'x-forwarded-for': previous ? `${previous}, ${ip}` : ip,
+		'x-forwarded-for': forwardedFor,
 		'x-forwarded-host': req.headers['x-forwarded-host'] || req.headers.host || '',
 		'x-forwarded-proto': req.headers['x-forwarded-proto'] || (req.socket.encrypted ? 'https' : 'http'),
 	};
+	if (!forwardedFor) delete headers['x-forwarded-for'];
+	return headers;
 }
 
 function proxyRequest(req, res, port, pathOverride) {
@@ -136,6 +149,8 @@ function sendFile(res, file, req) {
 function createHandler(settings) {
 	const publicDir = path.join(settings.root, 'client/play.pokemonshowdown.com');
 	const indexPage = path.join(publicDir, 'caches/index-new.html');
+	const avatarsDir = path.join(settings.root, 'server/config/avatars');
+	const profiles = createProfiles(settings);
 	let configJs = null;
 
 	return (req, res) => {
@@ -161,6 +176,8 @@ function createHandler(settings) {
 			res.writeHead(405);
 			return res.end();
 		}
+		// Pages des joueurs, comme pokemonshowdown.com/users/<pseudo> (/users seul reste une page de l'application).
+		if (pathname.startsWith('/users/')) return profiles(req, res, pathname);
 		if (pathname === '/config/config.js') {
 			configJs ||= clientConfig(settings);
 			res.writeHead(200, { 'Content-Type': TYPES['.js'], 'Cache-Control': 'no-cache' });
@@ -170,6 +187,14 @@ function createHandler(settings) {
 		if (pathname === '/config/colors.json') {
 			res.writeHead(200, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-cache' });
 			return res.end('{}');
+		}
+		if (pathname.startsWith('/avatars/')) {
+			const name = pathname.slice('/avatars/'.length);
+			if (!AVATAR_FILE.test(name)) {
+				res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+				return res.end('Introuvable');
+			}
+			return sendFile(res, path.join(avatarsDir, name), req);
 		}
 		if (EXTERNAL_RESOURCES.test(pathname) && !fs.existsSync(path.join(publicDir, pathname))) {
 			res.writeHead(302, { Location: EXTERNAL_HOST + req.url });
