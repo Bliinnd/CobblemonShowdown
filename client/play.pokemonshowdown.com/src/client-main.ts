@@ -2188,18 +2188,27 @@ export const PS = new class extends PSModel {
 				(newWidth < 500)) {
 				return true;
 			}
-			const oldLayoutState = this.chooseBattleLayout(oldWidth, oldHeight, this.prefs.battlelayout);
-			const newLayoutState = this.chooseBattleLayout(newWidth, newHeight, this.prefs.battlelayout);
-			if (oldLayoutState.layout !== newLayoutState.layout ||
-				oldLayoutState.battleHeight !== newLayoutState.battleHeight ||
-				oldLayoutState.battleWidth !== newLayoutState.battleWidth ||
-				oldLayoutState.overlayControls !== newLayoutState.overlayControls) {
-				return true;
+			for (const reserveControls of [false, true]) {
+				const oldLayoutState = this.chooseBattleLayout(oldWidth, oldHeight, this.prefs.battlelayout, reserveControls);
+				const newLayoutState = this.chooseBattleLayout(newWidth, newHeight, this.prefs.battlelayout, reserveControls);
+				if (oldLayoutState.layout !== newLayoutState.layout ||
+					oldLayoutState.battleHeight !== newLayoutState.battleHeight ||
+					oldLayoutState.battleWidth !== newLayoutState.battleWidth ||
+					oldLayoutState.overlayControls !== newLayoutState.overlayControls) {
+					return true;
+				}
 			}
 		}
 		return false;
 	}
-	chooseBattleLayout(width: number, height: number, preference?: BattleLayoutPreference | null) {
+	/**
+	 * @param reserveControls CobblemonShowdown : les commandes sont sous la scène (pas superposées) :
+	 * en disposition « scrolling » (téléphone à l'horizontale), la scène rétrécit pour qu'elles tiennent
+	 * avec elle à l'écran
+	 */
+	chooseBattleLayout(
+		width: number, height: number, preference?: BattleLayoutPreference | null, reserveControls = false
+	) {
 		let scale = Math.min(1, width / 640, height / 360);
 		const uncappedBattleHeight = Math.round(360 * scale);
 		let layout: BattlePanelLayout = width > 780 ? 'side-by-side' :
@@ -2213,6 +2222,9 @@ export const PS = new class extends PSModel {
 			scale = Math.min(scale, Math.max(0, width - 180) / 640);
 		} else if (layout === 'top-and-bottom') {
 			scale = Math.min(scale, Math.max(0, height - 180) / 360);
+		} else if (layout === 'scrolling' && reserveControls) {
+			// ~110 px : les deux rangées de boutons du spectateur ou de fin de combat
+			scale = Math.min(scale, Math.max(0, height - 110) / 360);
 		}
 
 		const battleHeight = Math.round(360 * scale);
@@ -2243,7 +2255,8 @@ export const PS = new class extends PSModel {
 	/** Tracks whether or not to display the "Use arrow keys" hint */
 	arrowKeysUsed = false;
 
-	newsHTML = document.querySelector('#room-news .readable-bg')?.innerHTML || '';
+	// trim : sans actualités, le build laisse un bloc vide (seulement des espaces) qu'il ne faut pas afficher
+	newsHTML = document.querySelector('#room-news .readable-bg')?.innerHTML.trim() || '';
 	/** @see PS.prefs.newsid */
 	newsId = document.getElementById('room-news')?.getAttribute('data-newsid') || null;
 

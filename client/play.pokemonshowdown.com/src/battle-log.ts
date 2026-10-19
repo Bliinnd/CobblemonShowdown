@@ -90,6 +90,10 @@ export class BattleLog {
 	onClick = (ev: Event) => {
 		let target = ev.target as HTMLElement | null;
 		while (target && target !== this.elem) {
+			// CobblemonShowdown : la valeur exacte (ex. PV perdus) n'est qu'au survol : un appui l'affiche (battle.css)
+			if (target.tagName === 'ABBR' && target.title) {
+				target.classList.toggle('abbr-shown');
+			}
 			if (target.tagName === 'SUMMARY') {
 				if (window.getSelection?.()?.type === 'Range') {
 					// by default, selecting text will also expand/collapse details, which
@@ -262,10 +266,19 @@ export class BattleLog {
 			this.changeUhtml(args[1], args[2], args[0] === 'uhtml');
 			return ['', ''];
 
-		case 'error': case 'inactive': case 'inactiveoff':
+		case 'error': case 'inactive': case 'inactiveoff': {
 			divClass = 'chat message-error';
-			divHTML = BattleLog.escapeHTML(args[1]);
+			let text = args[1];
+			// CobblemonShowdown : le minuteur du serveur écrit en anglais (et battle.ts lit ce texte) :
+			// on le traduit seulement à l'affichage
+			const timeLeft = args[0] === 'inactive' && /^(.+) has (\d+) seconds left( this turn)?\.$/.exec(text);
+			if (timeLeft) {
+				const [, player, seconds, thisTurn] = timeLeft;
+				text = thisTurn ? TL`${player} has ${seconds} seconds left this turn.` : TL`${player} has ${seconds} seconds left.`;
+			}
+			divHTML = BattleLog.escapeHTML(text);
 			break;
+		}
 
 		case 'bigerror':
 			this.message('<div class="broadcast-red">' + BattleLog.escapeHTML(args[1]).replace(/\|/g, '<br />') + '</div>');

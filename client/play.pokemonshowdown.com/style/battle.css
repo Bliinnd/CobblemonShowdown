@@ -901,3 +901,44 @@ License: GPLv2
 		border-bottom: 2px solid #444444;
 	}
 }
+
+/*********************************************************
+ * CobblemonShowdown : scène réduite (téléphones)
+ *
+ * En portrait la scène 640x360 est réduite vers 0,6 (transform: scale) :
+ * panel-battle.tsx ajoute .small-scale sous 0,8 et on grossit ici les
+ * textes (noms, PV en %, statuts et boosts, dresseurs) pour qu'ils
+ * restent lisibles, sans toucher à la disposition de la scène.
+ *********************************************************/
+
+.small-scale .statbar strong {
+	font-size: 17px;
+	white-space: nowrap;
+}
+.small-scale .statbar .hpbar .hptext {
+	font-size: 10px;
+	transform: scale(1.8);
+	z-index: 1;
+}
+.small-scale .rstatbar .hpbar .hptext {
+	transform-origin: left center;
+}
+.small-scale .lstatbar .hpbar .hptext {
+	transform-origin: right center;
+}
+.small-scale .statbar .status {
+	font-size: 15px;
+	line-height: 1.3;
+}
+.small-scale .trainer strong {
+	font-size: 15px;
+}
+/* |fieldhtml| qui remplace la scène, ex. la progression d'une série (Best of) */
+.battle.small-scale > center {
+	font-size: 20px;
+}
+
+/* CobblemonShowdown : valeur exacte d'un <abbr> du journal, affichée par un appui (battle-log.ts) */
+.battle-log abbr.abbr-shown::after {
+	content: " (" attr(title) ")";
+}
