@@ -2657,3 +2657,22 @@ pre.textbox.textbox-empty[placeholder]:before {
 .avatarlist-images button img {
 	display: block;
 }
+
+/* CobblemonShowdown : liste des replays */
+.replays-panel {
+	max-width: 640px;
+}
+.replays-panel .replay-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 4px 0;
+}
+.replays-panel .replay-row .blocklink {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
+}
+.replays-panel .replay-row .button {
+	flex: none;
+}

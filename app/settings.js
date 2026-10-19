@@ -50,6 +50,11 @@ function loadSettings() {
 		},
 		/** Pseudos (séparés par des virgules) qui reçoivent le rang Administrateur (~) une fois inscrits. */
 		adminNames,
+		/**
+		 * Classement (ladder) visible sur le site : bouton de l'accueil et classements des pages joueurs.
+		 * Le classement fonctionne et se remplit même caché.
+		 */
+		showLadder: env.CLASSEMENT_VISIBLE === '1',
 		/** Développement uniquement : sert le site en HTTPS avec un certificat auto-signé. */
 		devHttps: env.DEV_HTTPS === '1',
 	};

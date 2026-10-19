@@ -1,7 +1,8 @@
 'use strict';
 /**
  * Clés RSA qui permettent au serveur de comptes de signer les connexions,
- * et au serveur de combat de les vérifier. Créées au premier démarrage dans
+ * et au serveur de combat de les vérifier, et jeton qui identifie le serveur
+ * de combat auprès du serveur de comptes. Créés au premier démarrage dans
  * `data/keys/`.
  */
 const crypto = require('crypto');
@@ -23,9 +24,15 @@ function ensureKeys(settings) {
 		fs.writeFileSync(publicPath, publicKey);
 		console.log(`Clés de connexion créées dans ${dir}`);
 	}
+	// Jeton du serveur de combat auprès du serveur de comptes (envoi des replays).
+	const tokenPath = path.join(dir, 'server-token.txt');
+	if (!fs.existsSync(tokenPath)) {
+		fs.writeFileSync(tokenPath, crypto.randomBytes(24).toString('hex'), { mode: 0o600 });
+	}
 	return {
 		privateKey: fs.readFileSync(privatePath, 'utf8'),
 		publicKey: fs.readFileSync(publicPath, 'utf8'),
+		serverToken: fs.readFileSync(tokenPath, 'utf8').trim(),
 	};
 }
 

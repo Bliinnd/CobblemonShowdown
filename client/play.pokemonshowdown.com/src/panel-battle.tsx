@@ -21,7 +21,7 @@ import {
 } from "./battle-choices";
 import { BattleTextParser, type Args } from "./battle-text-parser";
 import { ModifiableValue } from "./battle-tooltips";
-import { Net } from "./client-connection";
+import { Net, PSLoginServer } from "./client-connection";
 import { BattleLog } from "./battle-log";
 
 type BattleDesc = {
@@ -371,7 +371,8 @@ export class BattleRoom extends ChatRoom {
 
 	loadReplay() {
 		const replayid = this.id.slice(7);
-		Net(`https://replay.pokemonshowdown.com/${replayid}.json`).get().catch(() => '').then(data => {
+		// CobblemonShowdown : replays enregistrés sur le site (voir app/front.js)
+		Net(`/replays/${replayid}.json`).get().catch(() => '').then(data => {
 			try {
 				const replay = JSON.parse(data);
 				const [player1, player2] = replay.players;
@@ -1659,4 +1660,133 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 	}
 }
 
-PS.addRoomType(BattlePanel, BattlesPanel);
+type ReplayDesc = {
+	id: string, format: string, players: string[], uploadtime: number,
+	rating?: number | null, private?: number, password?: string | null,
+};
+
+/**
+ * CobblemonShowdown : replays sauvegardés (bouton « Mettre en ligne et partager
+ * le replay » en fin de combat). Chaque replay se regarde dans le client, à
+ * l'adresse /battle-<id>, que l'on peut copier pour la partager.
+ */
+class ReplaysPanel extends PSRoomPanel {
+	// pas « replays » : Showdown en fait un lien vers son propre site de replays
+	static readonly id = 'replaylist';
+	static readonly routes = ['replaylist'];
+	static readonly location = 'right';
+	static readonly icon = <i class="fa fa-film" aria-hidden></i>;
+	static readonly title = 'Replays';
+	static getTitle() {
+		return TL`Replays`;
+	}
+	declare state: {
+		tab?: 'mine' | 'recent' | 'search', search?: string,
+		results?: ReplayDesc[] | null, error?: string | null, copied?: string,
+	};
+	override componentDidMount() {
+		super.componentDidMount();
+		this.load(PS.user.registered ? 'mine' : 'recent');
+	}
+	load(tab: 'mine' | 'recent' | 'search', search = '') {
+		this.setState({ tab, search, results: null, error: null });
+		const userid = PS.user.registered?.userid;
+		let requests: Promise<{ [k: string]: any } | null>[];
+		if (tab === 'mine' && userid) {
+			requests = [
+				PSLoginServer.query('replays/search', { username: userid }),
+				PSLoginServer.query('replays/searchprivate', { username: userid }),
+			];
+		} else if (tab === 'search') {
+			if (!toID(search)) return;
+			requests = [PSLoginServer.query('replays/search', { username: toID(search) })];
+		} else {
+			requests = [PSLoginServer.query('replays/recent')];
+		}
+		void Promise.all(requests).then(responses => {
+			if (this.state.tab !== tab || this.state.search !== search) return;
+			const results: ReplayDesc[] = [];
+			for (const response of responses) {
+				if (Array.isArray(response)) results.push(...response);
+			}
+			if (responses.every(response => !Array.isArray(response))) {
+				const error = (responses[0] as any)?.actionerror;
+				const message = error ? PSLoginServer.errorText(error) : TL`The server can't be reached. Try again in a moment.`;
+				this.setState({ error: message });
+				return;
+			}
+			results.sort((a, b) => b.uploadtime - a.uploadtime);
+			this.setState({ results: results.slice(0, 50) });
+		});
+	}
+	showMine = () => this.load('mine');
+	showRecent = () => this.load('recent');
+	submitSearch = (ev: Event) => {
+		ev.preventDefault();
+		const input = this.base?.querySelector<HTMLInputElement>('input[name=replaysearch]');
+		this.load('search', input?.value || '');
+	};
+	replayURL(replay: ReplayDesc) {
+		return `battle-${replay.id}${replay.password ? `-${replay.password}pw` : ''}`;
+	}
+	copyLink = (ev: Event) => {
+		ev.preventDefault();
+		ev.stopImmediatePropagation();
+		const path = (ev.currentTarget as HTMLButtonElement).value;
+		const url = `${document.location.protocol}//${document.location.host}/${path}`;
+		void navigator.clipboard?.writeText(url).then(() => this.setState({ copied: path }));
+	};
+	renderReplay(replay: ReplayDesc) {
+		const path = this.replayURL(replay);
+		const date = new Date(replay.uploadtime * 1000).toLocaleDateString(Dex.text.getLanguage(), {
+			day: 'numeric', month: 'short', year: 'numeric',
+		});
+		return <div key={replay.id} class="replay-row">
+			<a href={`/${path}`} class="blocklink">
+				<small style="float:right">{date}{replay.password ? ` · ${TL`private`}` : ''}</small>
+				<small>{replay.format}</small><br />
+				<em>{replay.players.join(' vs. ')}</em>
+			</a>
+			<button class="button" value={path} onClick={this.copyLink}>
+				<i class="fa fa-link" aria-hidden></i> {this.state.copied === path ? TL`Link copied!` : TL`Copy link`}
+			</button>
+		</div>;
+	}
+	renderResults() {
+		if (this.state.error) return <p class="error">{this.state.error}</p>;
+		const results = this.state.results;
+		if (!results) return <p><em>{TL`Loading...`}</em></p>;
+		if (!results.length) {
+			return <p>{this.state.tab === 'mine' ?
+				TL`You haven't saved any replay yet. At the end of a battle, click "Upload and share replay".` :
+				TL`No replay found.`}</p>;
+		}
+		return <div>{results.map(replay => this.renderReplay(replay))}</div>;
+	}
+	override render() {
+		const room = this.props.room;
+		const tab = this.state.tab;
+		return <PSPanelWrapper room={room}><div class="pad replays-panel">
+			<button class="button" style="float:right;font-size:10pt;margin-top:3px" name="closeRoom">
+				<i class="fa fa-times" aria-hidden></i> {TL`[Close]`}
+			</button>
+			<h2>{TL`Replays`}</h2>
+			<p>
+				{PS.user.registered && <><button class={`button${tab === 'mine' ? ' cur' : ''}`} onClick={this.showMine}>
+					{TL`My replays`}
+				</button> </>}
+				<button class={`button${tab === 'recent' ? ' cur' : ''}`} onClick={this.showRecent}>
+					{TL`Recent replays`}
+				</button>
+			</p>
+			<form onSubmit={this.submitSearch}>
+				<input type="search" name="replaysearch" class="textbox" placeholder={TL`Player name`} /> {}
+				<button type="submit" class="button">{TL`Search`}</button>
+			</form>
+			{!PS.user.registered && <p class="small">{TL`Log in to an account to see your own replays.`}</p>}
+			{this.renderResults()}
+		</div></PSPanelWrapper>;
+	}
+}
+
+PS.addRoomType(BattlePanel, BattlesPanel, ReplaysPanel);

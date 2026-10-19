@@ -59,6 +59,8 @@ export interface PSConfig {
 	translationCachebuster?: string;
 	/** CobblemonShowdown : fonds d'écran Cobblemon (dossier fonds/ du site), tirés au hasard. */
 	cobblemonBackgrounds?: { url: string, title?: string, artist?: string, link?: string }[];
+	/** CobblemonShowdown : classement affiché sur le site (réglage CLASSEMENT_VISIBLE) */
+	showLadder?: boolean;
 	whitelist?: string[];
 	testclient?: boolean;
 }

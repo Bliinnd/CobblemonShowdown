@@ -290,7 +290,7 @@ ${rows.join('\n')}
 </table></div>`;
 }
 
-function profileBody(profile, formats) {
+function profileBody(profile, formats, showLadder) {
 	const { account, rank, ratings } = profile;
 	const joined = account?.registertime ?
 		`<p class="info muted">Inscrit le ${escapeHTML(formatDate(account.registertime))}</p>` : '';
@@ -307,9 +307,9 @@ function profileBody(profile, formats) {
 	}
 	return `<a class="back" href="/users/">&lsaquo; Trouver un joueur</a>
 <h1>${escapeHTML(profile.username)}</h1>
-${status}
+${status}` + (showLadder ? `
 <h2>Classements</h2>
-${ratingsTable(ratings, formats)}`;
+${ratingsTable(ratings, formats)}` : '');
 }
 
 function profileJSON(profile) {
@@ -420,7 +420,7 @@ function createProfiles(settings) {
 		}
 		const { username } = profile;
 		sendPage(req, res, 200, `${username} - CobblemonShowdown`, `Profil de ${username} sur CobblemonShowdown`,
-			profileBody(profile, getFormats()));
+			profileBody(profile, getFormats(), settings.showLadder));
 	}
 
 	/** Répond aux adresses /users/... (pathname déjà décodé). */

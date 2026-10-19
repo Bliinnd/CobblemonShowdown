@@ -71,6 +71,12 @@ exports.routes = {
 exports.mainserver = 'showdown';
 /** @type {string} */
 exports.serverlist = '/var/www/html/play.pokemonshowdown.com/config/servers.inc.php';
+/**
+ * CobblemonShowdown : md5 du jeton du serveur de combat principal (Config.servertoken côté serveur).
+ * Remplace la liste `serverlist` quand il est défini.
+ * @type {string | null}
+ */
+exports.mainservertoken = null;
 /** @type {string | null} */
 exports.colorpath = null;
 /** @type {string | null} */

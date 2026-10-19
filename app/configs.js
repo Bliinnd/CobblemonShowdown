@@ -4,6 +4,7 @@
  * serveur de comptes (loginserver/) à partir des réglages. Ces fichiers sont
  * régénérés à chaque démarrage : ne pas les modifier à la main.
  */
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -28,6 +29,8 @@ function writeServerConfig(settings, keys) {
 		`exports.loginserverkeyalgo = 'RSA-SHA1';`,
 		`exports.loginserverpublickeyid = ${LOGIN_KEY_ID};`,
 		`exports.loginserverpublickey = ${js(keys.publicKey)};`,
+		// Identifie le serveur de combat auprès du serveur de comptes (envoi des replays).
+		`exports.servertoken = ${js(keys.serverToken)};`,
 		`exports.routes = ${js({
 			root: settings.siteHost,
 			client: settings.siteHost,
@@ -66,7 +69,10 @@ function writeLoginServerConfig(settings, keys) {
 	fs.mkdirSync(path.join(settings.dataDir, 'customcss'), { recursive: true });
 	fs.writeFileSync(file, HEADER + [
 		`exports.logindb = ${js(dbConfig)};`,
-		`exports.replaysdb = null;`,
+		// Replays dans la même base MySQL, tables sans préfixe (replays, replayplayers).
+		`exports.replaysdb = ${js({ ...dbConfig, prefix: '' })};`,
+		// Le serveur de combat, reconnu grâce à son jeton (voir app/keys.js).
+		`exports.mainservertoken = ${js(crypto.createHash('md5').update(keys.serverToken).digest('hex'))};`,
 		`exports.ladderdb = null;`,
 		`exports.friendsdb = null;`,
 		`exports.routes = ${js({ root: settings.cookieDomain })};`,
@@ -108,6 +114,8 @@ function clientConfig(settings) {
 			teams: settings.siteHost,
 		})};`,
 		`Config.customcolors = {};`,
+		// Classement caché tant que CLASSEMENT_VISIBLE n'est pas à 1.
+		`Config.showLadder = ${js(settings.showLadder)};`,
 		'',
 	].join('\n');
 }
