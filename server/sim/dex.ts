@@ -97,6 +97,30 @@ interface TextTableData extends Record<OtherNameTable, DexTable<string>> {
 
 export const toID = Data.toID;
 
+type SearchTable = 'Pokedex' | 'Moves' | 'Abilities' | 'Items' | 'Natures' | 'TypeChart';
+/** French names are matched without accents: "Electhor" finds Électhor (Zapdos). */
+const toLocalizedID = (name: string) => toID(name.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+let localizedNames: Map<string, [SearchTable, string][]> | null = null;
+/** French name -> English entries, so commands like /data Carchacrok find Garchomp. */
+function getLocalizedNames() {
+	if (localizedNames) return localizedNames;
+	localizedNames = new Map();
+	const text = DexText.loadRawTextData('fr');
+	const add = (table: SearchTable, id: string, name: string | null | undefined) => {
+		if (!name) return;
+		const key = toLocalizedID(name);
+		const entries = localizedNames!.get(key) || [];
+		if (!entries.some(([t, i]) => t === table && i === id)) entries.push([table, id]);
+		localizedNames!.set(key, entries);
+	};
+	for (const table of ['Pokedex', 'Moves', 'Abilities', 'Items'] as const) {
+		for (const id in text[table]) add(table, id, text[table][id]?.name);
+	}
+	for (const id in text.NatureNames) add('Natures', id, text.NatureNames[id]);
+	for (const id in text.TypeNames) add('TypeChart', id, text.TypeNames[id]);
+	return localizedNames;
+}
+
 export class ModdedDex {
 	readonly Data = Data;
 	readonly Condition = Condition;
@@ -410,6 +434,19 @@ export class ModdedDex {
 						});
 					}
 				}
+			}
+		}
+		if (searchResults.length) return searchResults;
+
+		for (const [table, id] of getLocalizedNames().get(toLocalizedID(target)) || []) {
+			if (!searchIn.includes(table)) continue;
+			const res = this[searchObjects[table]].get(id);
+			if (res.exists && res.gen <= this.gen) {
+				searchResults.push({
+					isInexact,
+					searchType: searchTypes[table],
+					name: res.name,
+				});
 			}
 		}
 		if (searchResults.length) return searchResults;

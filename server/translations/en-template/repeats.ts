@@ -24,4 +24,14 @@ export const translations: TranslationCatalog = {
 	"There are no repeated phrases in this room.": null,
 	"{USER} removed all repeated phrases.": null,
 	"You must specify a room when using this command in PMs.": null,
+	"[Repeats]": null,
+	"Personal rooms do not support repeated messages.": null,
+	"<code>/repeat [minutes], [id], [phrase]</code>: repeats a given phrase every [minutes] minutes. Requires: % @ # ~": null,
+	"<code>/repeathtml [minutes], [id], [phrase]</code>: repeats a given phrase containing HTML every [minutes] minutes. Requires: # ~": null,
+	"<code>/repeatfaq [minutes], [FAQ name/alias]</code>: repeats a given Room FAQ every [minutes] minutes. Requires: % @ # ~": null,
+	"<code>/removerepeat [id]</code>: removes a repeated phrase. Requires: % @ # ~": null,
+	"<code>/viewrepeats [optional room]</code>: Displays all repeated phrases in a room. Requires: % @ # ~": null,
+	"You can append <code>bymessages</code> to a <code>/repeat</code> command to repeat a phrase based on how many messages have been sent in chat. For example, <code>/repeatfaqbymessages ...</code>": null,
+	"Phrases for <code>/repeat</code> can include normal chat formatting, but not commands.": null,
+
 };

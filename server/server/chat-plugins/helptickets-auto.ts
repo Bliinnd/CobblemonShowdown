@@ -6,6 +6,7 @@ import {
 	tickets,
 } from './helptickets';
 import * as Artemis from '../artemis';
+import { TLkey, type Translator } from '../../sim/dex-text';
 
 const ORDERED_PUNISHMENTS = ['WARN', 'FORCERENAME', 'LOCK', 'NAMELOCK', 'WEEKLOCK', 'WEEKNAMELOCK'];
 const PMLOG_IGNORE_TIME = 24 * 60 * 60 * 1000;
@@ -55,19 +56,44 @@ function saveSettings() {
 	return FS('config/chat-plugins/ht-auto.json').writeUpdate(() => JSON.stringify(settings));
 }
 
-function visualizePunishment(punishment: AutoPunishment) {
-	const buf = [`punishment: ${punishment.punishment?.toUpperCase()}`];
-	buf.push(`ticket type: ${punishment.ticketType}`);
+/** The translator defaults to English, which modlog notes must stay in. */
+function visualizePunishment(punishment: AutoPunishment, TL: Translator = Chat.getTranslator()) {
+	const punishmentName = punishment.punishment?.toUpperCase();
+	const buf = [TL`punishment: ${punishmentName}`];
+	buf.push(TL`ticket type: ${punishment.ticketType}`);
 	if (punishment.severity) {
-		buf.push(`severity: ${punishment.severity.certainty} (for ${punishment.severity.type.join(', ')})`);
+		const certainty = punishment.severity.certainty;
+		const types = punishment.severity.type.join(', ');
+		buf.push(TL`severity: ${certainty} (for ${types})`);
 	}
 	if (punishment.modlogCount) {
-		buf.push(`required modlog: ${punishment.modlogCount}`);
+		buf.push(TL`required modlog: ${punishment.modlogCount}`);
 	}
 	if (punishment.isSingleMessage) {
-		buf.push(`for single messages only`);
+		buf.push(TL`for single messages only`);
 	}
 	return buf.join(', ');
+}
+
+/**
+ * Mod actions are shown to the room the command was used in (and copied to the staff room),
+ * so they use that room's language; in PMs, only the user sees them.
+ */
+function modActionTL(context: Chat.CommandContext) {
+	return { TL: context.room ? inRoom(context.room.roomid).TL : context.TL };
+}
+
+/** Messages shown in the given room use its language (the default one if none): inRoom('staff').TL */
+function inRoom(roomid: string) {
+	return { TL: Chat.getTranslator(Rooms.get(roomid)?.settings.language || null) };
+}
+
+/**
+ * The ticket results Artemis writes are addressed to the reporter, so they use the reporter's
+ * language (they are stored with the ticket, like the replies written by staff): forReporter(ticket).TL
+ */
+function forReporter(ticket: TicketState) {
+	return { TL: Chat.getTranslator(Users.get(ticket.userid)?.language || null) };
 }
 
 function checkAccess(context: Chat.CommandContext | Chat.PageContext) {
@@ -144,16 +170,15 @@ function closeTicket(ticket: TicketState, msg?: string) {
 	if (!ticket.open) return;
 	ticket.open = false;
 	ticket.active = false;
+	const TL = forReporter(ticket).TL;
+	const threadLink = `https://www.smogon.com/forums/threads/3570628/#post-9056769`;
 	ticket.resolved = {
 		time: Date.now(),
-		by: 'the Artemis AI', // we want it to be clear to end users that it was not a human
+		by: TL`the Artemis AI`, // we want it to be clear to end users that it was not a human
 		seen: false,
 		staffReason: '',
 		result: msg || '',
-		note: (
-			`Want to learn more about the AI? ` +
-			`<a href="https://www.smogon.com/forums/threads/3570628/#post-9056769">Visit the information thread</a>.`
-		),
+		note: TL`Want to learn more about the AI? <a href="${threadLink}">Visit the information thread</a>.`,
 	};
 	writeTickets();
 	notifyStaff();
@@ -173,32 +198,44 @@ async function lock(
 	isName?: boolean
 ) {
 	const id = toID(user);
-	let desc, type;
 	const expireTime = isWeek ? Date.now() + 7 * 24 * 60 * 60 * 1000 : null;
 	if (isName) {
 		if (typeof user === 'object') user.resetName();
-		desc = 'locked your username and prevented you from changing names';
-		type = `locked from talking${isWeek ? ` for a week` : ""}`;
 		await Punishments.namelock(id, expireTime, null, false, result.reason || "Automatically locked due to a user report");
 	} else {
-		type = isWeek ? 'weeknamelocked' : 'namelocked';
-		desc = 'locked you from talking in chats, battles, and PMing regular users';
 		await Punishments.lock(id, expireTime, null, false, result.reason || "Automatically locked due to a user report");
 	}
 	if (typeof user !== 'string') {
-		let message = `|popup||html|${user.name} has ${desc} for ${isWeek ? '7' : '2'} days.`;
-		if (result.reason) message += `\n\nReason: ${result.reason}`;
+		const TL = user.TL;
+		const days = isWeek ? '7' : '2';
+		const lockMessage = isName ?
+			TL`${user.name} has locked your username and prevented you from changing names for ${days} days.` :
+			TL`${user.name} has locked you from talking in chats, battles, and PMing regular users for ${days} days.`;
+		let message = `|popup||html|${lockMessage}`;
+		if (result.reason) message += `\n\n${TL`Reason: ${result.reason}`}`;
 		let appeal = '';
 		if (Chat.pages.help) {
-			appeal += `<a href="view-help-request--appeal"><button class="button"><strong>Appeal your punishment</strong></button></a>`;
+			appeal += `<a href="view-help-request--appeal"><button class="button"><strong>${TL`Appeal your punishment`}</strong></button></a>`;
 		} else if (Config.appealurl) {
-			appeal += `appeal: <a href="${Config.appealurl}">${Config.appealurl}</a>`;
+			appeal += `${TL`appeal:`} <a href="${Config.appealurl}">${Config.appealurl}</a>`;
 		}
-		if (appeal) message += `\n\nIf you feel that your lock was unjustified, you can ${appeal}.`;
-		message += `\n\nYour lock will expire in a few days.`;
+		if (appeal) message += `\n\n${TL`If you feel that your lock was unjustified, you can ${appeal}.`}`;
+		message += `\n\n${TL`Your lock will expire in a few days.`}`;
 		user.send(message);
 	}
-	addModAction(`${id} was ${type} by Artemis. (${result.reason || `report from ${ticket.creator}`})`);
+	const TL = inRoom('staff').TL;
+	const reason = result.reason || TL`report from ${ticket.creator}`;
+	let modAction;
+	if (isName) {
+		modAction = isWeek ?
+			TL`${id} was locked from talking for a week by Artemis. (${reason})` :
+			TL`${id} was locked from talking by Artemis. (${reason})`;
+	} else {
+		modAction = isWeek ?
+			TL`${id} was weeknamelocked by Artemis. (${reason})` :
+			TL`${id} was namelocked by Artemis. (${reason})`;
+	}
+	addModAction(modAction);
 	globalModlog(
 		`${isWeek ? 'WEEK' : ""}${isName ? "NAME" : ""}LOCK`, id,
 		(result.reason || `report from ${ticket.creator}`) + (result.proof ? ` PROOF: ${result.proof}` : "")
@@ -214,35 +251,39 @@ export const actionHandlers: {
 		user.resetName();
 		user.trackRename = id;
 		Monitor.forceRenames.set(id, true);
+		const reasonText = result.reason ? `${user.TL`Reason: ${result.reason}.`} ` : "";
 		user.send(
-			'|nametaken|Your name was detected to be breaking our name rules. ' +
-			`${result.reason ? `Reason: ${result.reason}. ` : ""}` +
-			'Please change it, or submit a help ticket by typing /ht in chat to appeal this action.'
+			`|nametaken|${user.TL`Your name was detected to be breaking our name rules.`} ` +
+			reasonText +
+			user.TL`Please change it, or submit a help ticket by typing /ht in chat to appeal this action.`
 		);
-		Rooms.get('staff')?.add(
-			`|html|<span class="username">${id}</span> ` +
-			`was automatically forced to choose a new name by Artemis (report from ${ticket.userid}).`
-		).update();
+		const staffRoom = Rooms.get('staff');
+		if (staffRoom) {
+			const username = `<span class="username">${id}</span>`;
+			staffRoom.add(
+				`|html|${staffRoom.TL`${username} was automatically forced to choose a new name by Artemis (report from ${ticket.userid}).`}`
+			).update();
+		}
 		globalModlog(
 			'FORCERENAME', id, `username determined to be inappropriate due to a report by ${ticket.creator}`, result.roomid
 		);
-		return `${id} was automatically forcerenamed. Thank you for reporting.`;
+		return forReporter(ticket).TL`${id} was automatically forcerenamed. Thank you for reporting.`;
 	},
 	async namelock(user, result, ticket) {
 		await lock(user, result, ticket, false, true);
-		return `${toID(user)} was automatically namelocked. Thank you for reporting.`;
+		return forReporter(ticket).TL`${toID(user)} was automatically namelocked. Thank you for reporting.`;
 	},
 	async weeknamelock(user, result, ticket) {
 		await lock(user, result, ticket, true, true);
-		return `${toID(user)} was automatically weeknamelocked. Thank you for reporting.`;
+		return forReporter(ticket).TL`${toID(user)} was automatically weeknamelocked. Thank you for reporting.`;
 	},
 	async lock(user, result, ticket) {
 		await lock(user, result, ticket);
-		return `${toID(user)} was automatically locked. Thank you for reporting.`;
+		return forReporter(ticket).TL`${toID(user)} was automatically locked. Thank you for reporting.`;
 	},
 	async weeklock(user, result, ticket) {
 		await lock(user, result, ticket, true);
-		return `${toID(user)} was automatically weeklocked. Thank you for reporting.`;
+		return forReporter(ticket).TL`${toID(user)} was automatically weeklocked. Thank you for reporting.`;
 	},
 	warn(user, result, ticket) {
 		user = toID(user);
@@ -252,14 +293,17 @@ export const actionHandlers: {
 		} else {
 			Punishments.offlineWarns.set(user, result.reason);
 		}
+		const staffRoom = inRoom('staff');
+		const reason = result.reason || staffRoom.TL`report from ${ticket.creator}`;
 		addModAction(
-			`${user} was warned by Artemis. ${typeof user === 'string' ? 'while offline ' : ""}` +
-			`(${result.reason || `report from ${ticket.creator}`})`
+			typeof user === 'string' ?
+				staffRoom.TL`${user} was warned by Artemis. while offline (${reason})` :
+				staffRoom.TL`${user} was warned by Artemis. (${reason})`
 		);
 		globalModlog(
 			'WARN', user, result.reason || `report from ${ticket.creator}`
 		);
-		return `${user} was automatically warned. Thank you for reporting.`;
+		return forReporter(ticket).TL`${user} was automatically warned. Thank you for reporting.`;
 	},
 };
 
@@ -416,9 +460,10 @@ export const checkers: {
 		// ensure reasons are clear
 		const creatorWasPunished = actions.get(ticket.userid);
 		if (creatorWasPunished) {
-			let displayReason = 'You were punished for your behavior.';
+			const { TL } = forReporter(ticket);
+			let displayReason = TL`You were punished for your behavior.`;
 			if (actions.size !== 1) { // more than 1 was punished
-				displayReason += ` ${actions.size - 1} other(s) were also punished.`;
+				displayReason += ` ${TL`${actions.size - 1} other(s) were also punished.`}`;
 			}
 			creatorWasPunished.displayReason = displayReason;
 		}
@@ -478,9 +523,10 @@ export const checkers: {
 
 		const creatorWasPunished = actions.get(ticket.userid);
 		if (creatorWasPunished) {
-			let displayReason = `You were punished for your behavior. `;
+			const { TL } = forReporter(ticket);
+			let displayReason = `${TL`You were punished for your behavior.`} `;
 			if (actions.has(targetId) && targetId !== ticket.userid) {
-				displayReason += ` The person you reported was also punished.`;
+				displayReason += ` ${TL`The person you reported was also punished.`}`;
 			}
 			creatorWasPunished.displayReason = displayReason;
 		}
@@ -517,9 +563,10 @@ export async function runPunishments(ticket: TicketState & { text: [string, stri
 		} else {
 			// eslint-disable-next-line require-atomic-updates
 			ticket.recommended = [];
+			const abuseLog = Rooms.get('abuselog');
 			for (const res of result.values()) {
-				Rooms.get('abuselog')?.add(
-					`|c|~|/log [${ticket.type} Monitor] Recommended: ${res.action}: for ${res.user} (${res.reason})`
+				abuseLog?.add(
+					`|c|~|/log ${abuseLog.TL`[${ticket.type} Monitor] Recommended: ${res.action}: for ${res.user} (${res.reason})`}`
 				).update();
 				ticket.recommended.push(`${res.action}: for ${res.user} (${res.reason})`);
 			}
@@ -537,8 +584,9 @@ export const commands: Chat.ChatCommands = {
 			checkAccess(this);
 			target = target.trim();
 			const response = await classifier.classify(target) || {};
-			let buf = Utils.html`<strong>Results for "${target}":</strong><br />`;
-			buf += `<strong>Score breakdown:</strong><br />`;
+			const escapedTarget = Utils.escapeHTML(target);
+			let buf = `<strong>${this.TL`Results for "${escapedTarget}":`}</strong><br />`;
+			buf += `<strong>${this.TL`Score breakdown:`}</strong><br />`;
 			for (const k in response) {
 				buf += `&bull; ${k}: ${response[k]}<br />`;
 			}
@@ -553,17 +601,15 @@ export const commands: Chat.ChatCommands = {
 			const args = Chat.parseArguments(target);
 			const punishment: Partial<AutoPunishment> = {};
 			for (const [k, list] of Object.entries(args)) {
-				if (k !== 'type' && list.length > 1) throw new Chat.ErrorMessage(`More than one ${k} param provided.`);
+				if (k !== 'type' && list.length > 1) throw new Chat.ErrorMessage(this.TL`More than one ${k} param provided.`);
 				const val = list[0]; // if key exists, val must exist too
 				switch (k) {
 				case 'type': case 't':
 					const types = list.map(f => f.toLowerCase().replace(/\s/g, '_'));
 					for (const type of types) {
 						if (!Artemis.LocalClassifier.ATTRIBUTES[type]) {
-							throw new Chat.ErrorMessage(
-								`Invalid classifier type '${type}'. Valid types are ` +
-								Object.keys(Artemis.LocalClassifier.ATTRIBUTES).join(', ')
-							);
+							const validTypes = Object.keys(Artemis.LocalClassifier.ATTRIBUTES).join(', ');
+							throw new Chat.ErrorMessage(this.TL`Invalid classifier type '${type}'. Valid types are ${validTypes}`);
 						}
 					}
 					if (!punishment.severity) {
@@ -574,7 +620,7 @@ export const commands: Chat.ChatCommands = {
 				case 'certainty': case 'c':
 					const num = parseFloat(val);
 					if (isNaN(num) || num < 0 || num > 1) {
-						throw new Chat.ErrorMessage(`Certainty must be a number below 1 and above 0.`);
+						throw new Chat.ErrorMessage(this.TL`Certainty must be a number below 1 and above 0.`);
 					}
 					if (!punishment.severity) {
 						punishment.severity = { certainty: 0, type: [] };
@@ -584,16 +630,17 @@ export const commands: Chat.ChatCommands = {
 				case 'modlog': case 'm':
 					const count = parseInt(val);
 					if (isNaN(count) || count < 0) {
-						throw new Chat.ErrorMessage(`Modlog count must be a number above 0.`);
+						throw new Chat.ErrorMessage(this.TL`Modlog count must be a number above 0.`);
 					}
 					punishment.modlogCount = count;
 					break;
 				case 'ticket': case 'tt': case 'tickettype':
 					const type = toID(val);
 					if (!(type in checkers)) {
+						const supportedTypes = Object.keys(checkers).join(', ');
 						throw new Chat.ErrorMessage(
-							`The ticket type '${type}' does not exist or is not supported. ` +
-							`Supported types are ${Object.keys(checkers).join(', ')}.`
+							this.TL`The ticket type '${type}' does not exist or is not supported.` + ' ' +
+							this.TL`Supported types are ${supportedTypes}.`
 						);
 					}
 					punishment.ticketType = type;
@@ -601,9 +648,10 @@ export const commands: Chat.ChatCommands = {
 				case 'p': case 'punishment':
 					const name = toID(val).toUpperCase();
 					if (!ORDERED_PUNISHMENTS.includes(name)) {
+						const supportedPunishments = ORDERED_PUNISHMENTS.join(', ');
 						throw new Chat.ErrorMessage(
-							`Punishment '${name}' not supported. ` +
-							`Supported punishments: ${ORDERED_PUNISHMENTS.join(', ')}`
+							this.TL`Punishment '${name}' not supported.` + ' ' +
+							this.TL`Supported punishments: ${supportedPunishments}`
 						);
 					}
 					punishment.punishment = name;
@@ -611,8 +659,8 @@ export const commands: Chat.ChatCommands = {
 				case 'single': case 's':
 					if (!this.meansYes(toID(val))) {
 						throw new Chat.ErrorMessage(
-							`The 'single' value must always be 'on'. ` +
-							`If you don't want it enabled, just do not use this argument type.`
+							this.TL`The 'single' value must always be 'on'.` + ' ' +
+							this.TL`If you don't want it enabled, just do not use this argument type.`
 						);
 					}
 					punishment.isSingleMessage = true;
@@ -620,13 +668,13 @@ export const commands: Chat.ChatCommands = {
 				}
 			}
 			if (!punishment.ticketType) {
-				throw new Chat.ErrorMessage(`Must specify a ticket type to handle.`);
+				throw new Chat.ErrorMessage(this.TL`Must specify a ticket type to handle.`);
 			}
 			if (!punishment.punishment) {
-				throw new Chat.ErrorMessage(`Must specify a punishment to apply.`);
+				throw new Chat.ErrorMessage(this.TL`Must specify a punishment to apply.`);
 			}
 			if (!(punishment.severity?.certainty && punishment.severity?.type.length)) {
-				throw new Chat.ErrorMessage(`A severity to monitor for must be specified (certainty).`);
+				throw new Chat.ErrorMessage(this.TL`A severity to monitor for must be specified (certainty).`);
 			}
 			for (const curP of settings.punishments) {
 				let matches = 0;
@@ -636,13 +684,14 @@ export const commands: Chat.ChatCommands = {
 					}
 				}
 				if (matches === Object.keys(punishment).length) {
-					throw new Chat.ErrorMessage(`That punishment is already added.`);
+					throw new Chat.ErrorMessage(this.TL`That punishment is already added.`);
 				}
 			}
 			settings.punishments.push(punishment as AutoPunishment);
 			saveSettings();
+			const modTL = modActionTL(this);
 			this.privateGlobalModAction(
-				`${user.name} added a ${punishment.punishment} punishment to the Artemis helpticket handler.`
+				modTL.TL`${user.name} added a ${punishment.punishment} punishment to the Artemis helpticket handler.`
 			);
 			this.globalModlog(`AUTOHELPTICKET ADDPUNISHMENT`, null, visualizePunishment(punishment as AutoPunishment));
 		},
@@ -653,10 +702,11 @@ export const commands: Chat.ChatCommands = {
 			const num = parseInt(target) - 1;
 			if (isNaN(num)) return this.parse(`/h autohelpticket`);
 			const punishment = settings.punishments[num];
-			if (!punishment) throw new Chat.ErrorMessage(`There is no punishment at index ${num + 1}.`);
+			if (!punishment) throw new Chat.ErrorMessage(this.TL`There is no punishment at index ${num + 1}.`);
 			settings.punishments.splice(num, 1);
+			const modTL = modActionTL(this);
 			this.privateGlobalModAction(
-				`${user.name} removed the Artemis helpticket ${punishment.punishment} punishment indexed at ${num + 1}`
+				modTL.TL`${user.name} removed the Artemis helpticket ${punishment.punishment} punishment indexed at ${num + 1}`
 			);
 			this.globalModlog(`AUTOHELPTICKET REMOVE`, null, visualizePunishment(punishment));
 		},
@@ -664,33 +714,34 @@ export const commands: Chat.ChatCommands = {
 		view: 'viewpunishments',
 		viewpunishments() {
 			checkAccess(this);
-			let buf = `<strong>Artemis helpticket punishments</strong><hr />`;
+			let buf = `<strong>${this.TL`Artemis helpticket punishments`}</strong><hr />`;
 			if (!settings.punishments.length) {
-				buf += `None.`;
+				buf += this.TL`None.`;
 				return this.sendReplyBox(buf);
 			}
 			buf += settings.punishments.map(
-				(curP, i) => `<strong>${i + 1}:</strong> ${visualizePunishment(curP)}`
+				(curP, i) => `<strong>${i + 1}:</strong> ${visualizePunishment(curP, this.TL)}`
 			).join('<br />');
 			return this.sendReplyBox(buf);
 		},
 		togglepunishments(target, room, user) {
 			checkAccess(this);
 			let message;
+			const modTL = modActionTL(this);
 			if (this.meansYes(target)) {
 				if (settings.applyPunishments) {
-					throw new Chat.ErrorMessage(`Automatic punishments are already enabled.`);
+					throw new Chat.ErrorMessage(this.TL`Automatic punishments are already enabled.`);
 				}
 				settings.applyPunishments = true;
-				message = `${user.name} enabled automatic punishments for the Artemis ticket handler`;
+				message = modTL.TL`${user.name} enabled automatic punishments for the Artemis ticket handler`;
 			} else if (this.meansNo(target)) {
 				if (!settings.applyPunishments) {
-					throw new Chat.ErrorMessage(`Automatic punishments are already disabled.`);
+					throw new Chat.ErrorMessage(this.TL`Automatic punishments are already disabled.`);
 				}
 				settings.applyPunishments = false;
-				message = `${user.name} disabled automatic punishments for the Artemis ticket handler`;
+				message = modTL.TL`${user.name} disabled automatic punishments for the Artemis ticket handler`;
 			} else {
-				throw new Chat.ErrorMessage(`Invalid setting. Must be 'on' or 'off'.`);
+				throw new Chat.ErrorMessage(this.TL`Invalid setting. Must be 'on' or 'off'.`);
 			}
 			this.privateGlobalModAction(message);
 			this.globalModlog(`AUTOHELPTICKET TOGGLE`, null, settings.applyPunishments ? 'on' : 'off');
@@ -709,10 +760,10 @@ export const commands: Chat.ChatCommands = {
 			const [ticketId, result] = Utils.splitFirst(target, ',').map(toID);
 			const ticket = tickets[ticketId];
 			if (!ticket?.open) {
-				return this.popupReply(`The user '${ticketId}' does not have a ticket open at present.`);
+				return this.popupReply(this.TL`The user '${ticketId}' does not have a ticket open at present.`);
 			}
 			if (!['success', 'failure'].includes(result)) {
-				return this.popupReply(`The result must be 'success' or 'failure'.`);
+				return this.popupReply(this.TL`The result must be 'success' or 'failure'.`);
 			}
 			(ticket.state ||= {}).recommendResult = result;
 			writeTickets();
@@ -720,11 +771,11 @@ export const commands: Chat.ChatCommands = {
 		},
 	},
 	autohelptickethelp: [
-		`/aht addpunishment [args] - Adds a punishment with the given [args]. Requires: whitelist ~`,
-		`/aht deletepunishment [index] - Deletes the automatic helpticket punishment at [index]. Requires: whitelist ~`,
-		`/aht viewpunishments - View automatic helpticket punishments. Requires: whitelist ~`,
-		`/aht togglepunishments [on | off] - Turn [on | off] automatic helpticket punishments. Requires: whitelist ~`,
-		`/aht stats - View success rates of the Artemis ticket handler. Requires: whitelist ~`,
+		TLkey`/aht addpunishment [args] - Adds a punishment with the given [args]. Requires: whitelist ~`,
+		TLkey`/aht deletepunishment [index] - Deletes the automatic helpticket punishment at [index]. Requires: whitelist ~`,
+		TLkey`/aht viewpunishments - View automatic helpticket punishments. Requires: whitelist ~`,
+		TLkey`/aht togglepunishments [on | off] - Turn [on | off] automatic helpticket punishments. Requires: whitelist ~`,
+		TLkey`/aht stats - View success rates of the Artemis ticket handler. Requires: whitelist ~`,
 	],
 };
 
@@ -739,19 +790,19 @@ export const pages: Chat.PageTable = {
 				month = Chat.toTimestamp(new Date()).split(' ')[0].slice(0, -3);
 			}
 			if (!month) {
-				throw new Chat.ErrorMessage(`Invalid month. Must be in YYYY-MM format.`);
+				throw new Chat.ErrorMessage(this.TL`Invalid month. Must be in YYYY-MM format.`);
 			}
 
-			this.title = `[Artemis Ticket Stats] ${month}`;
-			this.setHTML(`<div class="pad"><h3>Artemis ticket stats</h3><hr />Searching...`);
+			this.title = `[${this.TL`Artemis Ticket Stats`}] ${month}`;
+			this.setHTML(`<div class="pad"><h3>${this.TL`Artemis ticket stats`}</h3><hr />${this.TL`Searching...`}`);
 
-			const found = await HelpTicket.getTextLogs(['recommendResult'], month);
+			const found = await HelpTicket.getTextLogs(['recommendResult'], month, this.TL);
 			const percent = (numerator: number, denom: number) => Math.floor((numerator / denom) * 100);
 
 			let buf = `<div class="pad">`;
 			buf += `<button style="float:right;" class="button" name="send" value="/join ${this.pageid}">`;
-			buf += `<i class="fa fa-refresh"></i> Refresh</button>`;
-			buf += `<h3>Artemis ticket stats</h3><hr />`;
+			buf += `<i class="fa fa-refresh"></i> ${this.TL`Refresh`}</button>`;
+			buf += `<h3>${this.TL`Artemis ticket stats`}</h3><hr />`;
 			const dayStats: Record<string, { successes: number, failures: number, total: number }> = {};
 			const total = { successes: 0, failures: 0, total: 0 };
 			const failed = [];
@@ -772,10 +823,10 @@ export const pages: Chat.PageTable = {
 					break;
 				}
 			}
-			buf += `<strong>Total:</strong> ${total.total}<br />`;
-			buf += `<strong>Success rate:</strong> ${percent(total.successes, total.total)}% (${total.successes})<br />`;
-			buf += `<strong>Failure rate:</strong> ${percent(total.failures, total.total)}% (${total.failures})<br />`;
-			buf += `<strong>Day stats:</strong><br />`;
+			buf += `<strong>${this.TL`Total:`}</strong> ${total.total}<br />`;
+			buf += `<strong>${this.TL`Success rate:`}</strong> ${percent(total.successes, total.total)}% (${total.successes})<br />`;
+			buf += `<strong>${this.TL`Failure rate:`}</strong> ${percent(total.failures, total.total)}% (${total.failures})<br />`;
+			buf += `<strong>${this.TL`Day stats:`}</strong><br />`;
 			buf += `<div class="ladder pad"><table>`;
 			let header = '';
 			let data = '';
@@ -804,7 +855,7 @@ export const pages: Chat.PageTable = {
 			buf += `</div></table>`;
 			buf += `<br />`;
 			if (failed.length) {
-				buf += `<details class="readmore"><summary>Marked as inaccurate</summary>`;
+				buf += `<details class="readmore"><summary>${this.TL`Marked as inaccurate`}</summary>`;
 				buf += failed.map(([userid, type]) => (
 					`<a href="/view-help-text-${userid}">${userid}</a> (${type})`
 				)).join('<br />');
@@ -821,14 +872,14 @@ export const pages: Chat.PageTable = {
 				month = Chat.toTimestamp(new Date()).split(' ')[0].slice(0, -3);
 			}
 			if (!month) {
-				throw new Chat.ErrorMessage(`Invalid month. Must be in YYYY-MM format.`);
+				throw new Chat.ErrorMessage(this.TL`Invalid month. Must be in YYYY-MM format.`);
 			}
-			this.title = `[Artemis Ticket Logs]`;
-			let buf = `<div class="pad"><h3>Artemis ticket logs</h3><hr />`;
-			const allHits = await HelpTicket.getTextLogs(['recommended'], month);
+			this.title = `[${this.TL`Artemis Ticket Logs`}]`;
+			let buf = `<div class="pad"><h3>${this.TL`Artemis ticket logs`}</h3><hr />`;
+			const allHits = await HelpTicket.getTextLogs(['recommended'], month, this.TL);
 			Utils.sortBy(allHits, h => -h.created);
 			if (allHits.length) {
-				buf += `<strong>All hits:</strong><hr />`;
+				buf += `<strong>${this.TL`All hits:`}</strong><hr />`;
 				for (const hit of allHits) {
 					if (!hit.recommended) continue; // ???
 					buf += `<a href="/view-help-text-${hit.userid}">${hit.userid}</a> (${hit.type}) `;
@@ -836,7 +887,7 @@ export const pages: Chat.PageTable = {
 					buf += Utils.html`&bull; <code><small>${hit.recommended.join(', ')}</small></code><hr />`;
 				}
 			} else {
-				buf += `<div class="message-error">No hits found.</div>`;
+				buf += `<div class="message-error">${this.TL`No hits found.`}</div>`;
 			}
 			return buf;
 		},

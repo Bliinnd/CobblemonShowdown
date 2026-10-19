@@ -13,7 +13,8 @@
  */
 
 import type { Battle, ServerPokemon } from "./battle";
-import { Dex, toID, type ID } from "./battle-dex";
+import { Dex, TL, toID, type ID } from "./battle-dex";
+import { BattleTextParser } from "./battle-text-parser";
 
 export interface BattleRequestSideInfo {
 	name: string;
@@ -246,7 +247,7 @@ export class BattleChoiceBuilder {
 	}
 
 	addChoice(choiceString: string) {
-		if (this.isDone()) return `You've already chosen for this turn; cancel to change your choice`;
+		if (this.isDone()) return TL`You've already chosen for this turn; cancel to change your choice`;
 		if (choiceString === 'auto' || choiceString === 'default') {
 			const currentChoice = this.toString();
 			this.serializedChoice = currentChoice ? `${currentChoice}, default` : 'default';
@@ -259,7 +260,7 @@ export class BattleChoiceBuilder {
 			return (err as Error).message;
 		}
 		if (!choice) {
-			return "You do not need to manually choose to pass; the client handles it for you automatically";
+			return TL`You do not need to manually choose to pass; the client handles it for you automatically`;
 		}
 		/** only the last choice can be uncancelable */
 		const isLastChoice = this.choices.length + 1 >= this.requestLength();
@@ -293,11 +294,11 @@ export class BattleChoiceBuilder {
 			};
 		} else if (choice.choiceType === 'switch' || choice.choiceType === 'team') {
 			if (this.currentMoveRequest()?.trapped) {
-				return "You are trapped and cannot switch out";
+				return TL`You are trapped and cannot switch out`;
 			}
 			if (this.alreadySwitchingIn.includes(choice.targetPokemon)) {
 				if (choice.choiceType === 'switch') {
-					return "You've already chosen to switch that Pokémon in";
+					return TL`You've already chosen to switch that Pokémon in`;
 				}
 				// remove choice instead
 				for (let i = 0; i < this.alreadySwitchingIn.length; i++) {
@@ -307,7 +308,7 @@ export class BattleChoiceBuilder {
 						return null;
 					}
 				}
-				return "Unexpected bug, please report this";
+				return TL`Unexpected bug, please report this`;
 			}
 			if (this.currentMoveRequest()?.maybeTrapped && isLastChoice) {
 				this.noCancel = true;
@@ -319,7 +320,7 @@ export class BattleChoiceBuilder {
 			}
 		} else if (choice.choiceType === 'shift') {
 			if (this.index() === 1) {
-				return "Only Pokémon not already in the center can shift to the center";
+				return TL`Only Pokémon not already in the center can shift to the center`;
 			}
 		}
 		this.choices.push(this.stringChoice(choice));
@@ -399,22 +400,36 @@ export class BattleChoiceBuilder {
 		return moveRequest.moves;
 	}
 	/**
+	 * CobblemonShowdown : nom affiché d'un Pokémon dans les messages d'erreur
+	 * (espèce traduite s'il n'a pas de vrai surnom). BattleTextParser n'est pas
+	 * chargé partout (tests Node), d'où le repli sur le nom brut.
+	 */
+	static pokemonDisplayName(pokemon: ServerPokemon) {
+		if (typeof BattleTextParser === 'undefined') return pokemon.name;
+		return BattleTextParser.pokemonDisplayName(pokemon.name, pokemon.speciesForme);
+	}
+	/** CobblemonShowdown : nom traduit d'une attaque (nom exact uniquement). */
+	static moveDisplayName(name: string) {
+		const move = Dex.moves.get(name);
+		return move.exists && move.name === name ? TL(move) : name;
+	}
+	/**
 	 * Parses a choice from string form to BattleChoice form
 	 */
 	parseChoice(choice: string, index = this.choices.length): BattleChoice | null {
 		const request = this.request;
-		if (request.requestType === 'wait') throw new Error(`It's not your turn to choose anything`);
+		if (request.requestType === 'wait') throw new Error(TL`It's not your turn to choose anything`);
 
 		if (choice === 'shift' || choice === 'testfight') {
 			if (request.requestType !== 'move') {
-				throw new Error(`You must switch in a Pokémon, not move.`);
+				throw new Error(TL`You must switch in a Pokémon, not move.`);
 			}
 			return { choiceType: choice };
 		}
 
 		if (choice.startsWith('move ')) {
 			if (request.requestType !== 'move') {
-				throw new Error(`You must switch in a Pokémon, not move.`);
+				throw new Error(TL`You must switch in a Pokémon, not move.`);
 			}
 			const moveRequest = request.active[index]!;
 			choice = choice.slice(5);
@@ -436,7 +451,7 @@ export class BattleChoiceBuilder {
 				// confused with 'Conversion' erroneously sent with the target
 				// '2' (since Conversion targets 'self', targetLoc can't be 2).
 				if (/\s(?:-|\+)?[1-3]$/.test(choice) && toID(choice) !== 'conversion2') {
-					if (current.targetLoc) throw new Error(`Move choice has multiple targets`);
+					if (current.targetLoc) throw new Error(TL`Move choice has multiple targets`);
 					current.targetLoc = parseInt(choice.slice(-2), 10);
 					choice = choice.slice(0, -2).trim();
 				} else if (choice.endsWith(' mega')) {
@@ -484,7 +499,8 @@ export class BattleChoiceBuilder {
 					if (moveid === moveRequest.moves[i].id) {
 						current.move = i + 1;
 						if (moveRequest.moves[i].disabled) {
-							throw new Error(`Move "${moveRequest.moves[i].name}" is disabled`);
+							const moveName = BattleChoiceBuilder.moveDisplayName(moveRequest.moves[i].name);
+							throw new Error(TL`Move "${moveName}" is disabled`);
 						}
 						break;
 					}
@@ -503,7 +519,8 @@ export class BattleChoiceBuilder {
 					for (let i = 0; i < moveRequest.maxMoves.length; i++) {
 						if (moveid === moveRequest.maxMoves[i].id) {
 							if (moveRequest.maxMoves[i].disabled) {
-								throw new Error(`Move "${moveRequest.maxMoves[i].name}" is disabled`);
+								const moveName = BattleChoiceBuilder.moveDisplayName(moveRequest.maxMoves[i].name);
+								throw new Error(TL`Move "${moveName}" is disabled`);
 							}
 							current.move = i + 1;
 							current.max = true;
@@ -515,7 +532,8 @@ export class BattleChoiceBuilder {
 			if (current.max && !moveRequest.canDynamax) current.max = false;
 			const move = this.currentMove(current, index);
 			if (!move || move.disabled) {
-				throw new Error(`Move ${move?.name ?? current.move} is disabled`);
+				const moveName = move ? BattleChoiceBuilder.moveDisplayName(move.name) : `${current.move}`;
+				throw new Error(TL`Move ${moveName} is disabled`);
 			}
 			return current;
 		}
@@ -527,7 +545,7 @@ export class BattleChoiceBuilder {
 				choiceType: isTeamPreview ? 'team' : 'switch',
 				targetPokemon: 0,
 			};
-			if (choice === 'notMine') throw new Error(`You cannot decide for your partner!`);
+			if (choice === 'notMine') throw new Error(TL`You cannot decide for your partner!`);
 			if (/^[0-9]+$/.test(choice)) {
 				// Parse a one-based move index.
 				current.targetPokemon = parseInt(choice, 10);
@@ -557,31 +575,33 @@ export class BattleChoiceBuilder {
 					}
 				}
 				if (!match) {
-					throw new Error(`Couldn't find Pokémon "${choice}" to switch to`);
+					throw new Error(TL`Couldn't find Pokémon "${choice}" to switch to`);
 				}
 				current.targetPokemon = match;
 			}
 			const target = request.side.pokemon[current.targetPokemon - 1];
 			const isReviving = this.isReviving(index);
 			if (!target) {
-				throw new Error(`Couldn't find Pokémon "${choice}" to switch to!`);
+				throw new Error(TL`Couldn't find Pokémon "${choice}" to switch to!`);
 			}
 			if (!isTeamPreview && !isReviving && current.targetPokemon - 1 < this.requestLength()) {
-				throw new Error(`That Pokémon is already in battle!`);
+				throw new Error(TL`That Pokémon is already in battle!`);
 			}
 			if (isReviving && target.fainted) return current;
 			if (isReviving && !target.fainted) {
-				throw new Error(`${target.name} still has energy to battle!`);
+				const targetName = BattleChoiceBuilder.pokemonDisplayName(target);
+				throw new Error(TL`${targetName} still has energy to battle!`);
 			}
 			if (target.fainted) {
-				throw new Error(`${target.name} is fainted and cannot battle!`);
+				const targetName = BattleChoiceBuilder.pokemonDisplayName(target);
+				throw new Error(TL`${targetName} is fainted and cannot battle!`);
 			}
 			return current;
 		}
 
 		if (choice === 'pass') return null;
 
-		throw new Error(`Unrecognized choice "${choice}"`);
+		throw new Error(TL`Unrecognized choice "${choice}"`);
 	}
 
 	/**

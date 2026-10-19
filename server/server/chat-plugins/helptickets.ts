@@ -4,7 +4,7 @@ import * as ConfigLoader from '../config-loader';
 import type { Punishment } from '../punishments';
 import type { PartialModlogEntry, ModlogID } from '../modlog';
 import { runPunishments } from './helptickets-auto';
-import { TLkey } from '../../sim/dex-text';
+import { TLkey, type Translator } from '../../sim/dex-text';
 
 const TICKET_FILE = 'config/tickets.json';
 const SETTINGS_FILE = 'config/chat-plugins/ticket-settings.json';
@@ -24,7 +24,7 @@ const REPORT_NAMECOLORS: { [k: string]: string } = {
 
 Punishments.addPunishmentType({
 	type: 'TICKETBAN',
-	desc: 'banned from creating help tickets',
+	desc: TLkey`banned from creating help tickets`, // shown by the user info commands, which can translate it with TL(desc)
 });
 
 interface TicketSettings {
@@ -148,6 +148,24 @@ try {
 	if (e.code !== 'ENOENT') throw e;
 }
 
+/**
+ * Messages shown in the staff room use the room's language (the default language if it has none),
+ * via inStaffRoom.TL (the translation build only finds templates tagged exactly TL, hence the property).
+ */
+const inStaffRoom = {
+	get TL() {
+		return Chat.getTranslator(Rooms.get('staff')?.settings.language || null);
+	},
+};
+
+/**
+ * Translator for text shown to everyone in `room` (mod actions): the room's language.
+ * Without a room (PMs), only the user sees it, so `fallback` is used.
+ */
+function roomTL(room: Room | null | undefined, fallback: Translator) {
+	return room ? Chat.getTranslator(room.settings.language || null) : fallback;
+}
+
 export function writeTickets() {
 	FS(TICKET_FILE).writeUpdate(
 		() => JSON.stringify(tickets), { throttle: 5000 }
@@ -198,7 +216,8 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 		super(room);
 		this.room = room;
 		this.room.settings.language = Users.get(ticket.creator)?.language || 'english' as ID;
-		this.title = `Help Ticket - ${ticket.type}`;
+		const ticketType = this.room.TL(ticket.type);
+		this.title = this.room.TL`Help Ticket - ${ticketType}`;
 		this.ticket = ticket;
 		this.claimQueue = [];
 
@@ -238,7 +257,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 			tickets[this.ticket.userid] = this.ticket;
 			writeTickets();
 			this.room.modlog({ action: 'TICKETCLAIM', isGlobal: false, loggedBy: user.id });
-			this.addText(`${user.name} claimed this ticket.`, user);
+			this.addText(this.room.TL`${user.name} claimed this ticket.`, user);
 			notifyStaff();
 		} else {
 			this.claimQueue.push(user.name);
@@ -259,13 +278,13 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 			if (this.claimQueue.length) {
 				this.ticket.claimed = this.claimQueue.shift() || null;
 				this.room.modlog({ action: 'TICKETCLAIM', isGlobal: false, loggedBy: toID(this.ticket.claimed) });
-				this.addText(`This ticket is now claimed by ${this.ticket.claimed}.`, user);
+				this.addText(this.room.TL`This ticket is now claimed by ${this.ticket.claimed}.`, user);
 			} else {
 				const oldClaimed = this.ticket.claimed;
 				this.ticket.claimed = null;
 				this.lastUnclaimedStart = Date.now();
 				this.room.modlog({ action: 'TICKETUNCLAIM', isGlobal: false, loggedBy: toID(oldClaimed) });
-				this.addText(`This ticket is no longer claimed.`, user);
+				this.addText(this.room.TL`This ticket is no longer claimed.`, user);
 				notifyStaff();
 			}
 			tickets[this.ticket.userid] = this.ticket;
@@ -302,8 +321,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 			switch (this.ticket.type) {
 			case 'PM Harassment':
 				this.room.add(
-					`|c|~Staff|Global staff might take more than a few minutes to handle your report. ` +
-					`If you are being disturbed by another user, you can type \`\`/ignore [username]\`\` in any chat to ignore their messages immediately`
+					`|c|~Staff|${this.room.TL`Global staff might take more than a few minutes to handle your report. If you are being disturbed by another user, you can type \`\`/ignore [username]\`\` in any chat to ignore their messages immediately`}`
 				).update();
 				break;
 			}
@@ -316,7 +334,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 		this.removePlayer(this.playerTable[user.id]);
 		if (!this.ticket.open) return;
 		this.room.modlog({ action: 'TICKETABANDON', isGlobal: false, loggedBy: user.id });
-		this.addText(`${user.name} is no longer interested in this ticket.`, user);
+		this.addText(this.room.TL`${user.name} is no longer interested in this ticket.`, user);
 		if (this.playerCount - 1 > 0) return; // There are still users in the ticket room, dont close the ticket
 		this.close(!!(this.firstClaimTime), user);
 		return true;
@@ -331,7 +349,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 		this.room.update();
 	}
 
-	getButton() {
+	getButton(TL: Translator) {
 		const color = this.ticket.claimed ? `` : this.ticket.offline ? `alt-notifying` : `notifying`;
 		const creator = (
 			this.ticket.claimed ? Utils.html`${this.ticket.creator}` : Utils.html`<strong>${this.ticket.creator}</strong>`
@@ -352,19 +370,23 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 				details += ` [${punishment.rest.join(', ')}]`;
 			}
 		}
+		const ticketType = TL(this.ticket.type);
 		return (
 			`<a class="button ${color}" href="/help-${this.ticket.userid}"` +
-			` ${this.getPreview()}>Help ${creator}${details}: ${this.ticket.type}</a> `
+			` ${this.getPreview(TL)}>${TL`Help ${creator}${details}: ${ticketType}`}</a> `
 		);
 	}
 
-	getPreview() {
-		if (!this.ticket.active) return `title="The ticket creator has not spoken yet."`;
+	getPreview(TL: Translator) {
+		if (!this.ticket.active) return `title="${TL`The ticket creator has not spoken yet.`}"`;
 		const hoverText = [];
 		const noteBuf = Object.entries(this.ticket.notes || {})
-			.map(([userid, note]) => Utils.html`${note} (by ${userid})`)
+			.map(([userid, note]) => {
+				const noteText = Utils.escapeHTML(note);
+				return TL`${noteText} (by ${userid})`;
+			})
 			.join('&#10;');
-		const notes = this.ticket.notes ? `&#10;Staff notes:&#10;${noteBuf}` : '';
+		const notes = this.ticket.notes ? `&#10;${TL`Staff notes:`}&#10;${noteBuf}` : '';
 		for (let i = this.room.log.log.length - 1; i >= 0; i--) {
 			// Don't show anything after the first linebreak for multiline messages
 			const entry = this.room.log.log[i].split('\n')[0].split('|');
@@ -378,7 +400,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 			hoverText.push(Utils.html`${message}`);
 			if (hoverText.length >= 3) break;
 		}
-		if (!hoverText.length) return `title="The ticket creator has not spoken yet.${notes}"`;
+		if (!hoverText.length) return `title="${TL`The ticket creator has not spoken yet.`}${notes}"`;
 		return `title="${hoverText.reverse().join(`&#10;`)}${notes}"`;
 	}
 
@@ -387,7 +409,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 		tickets[this.ticket.userid] = this.ticket;
 		writeTickets();
 		this.room.modlog({ action: 'TICKETCLOSE', isGlobal: false, loggedBy: staff?.id || 'unknown' as ID });
-		this.addText(staff ? `${staff.name} closed this ticket.` : `This ticket was closed.`, staff);
+		this.addText(staff ? this.room.TL`${staff.name} closed this ticket.` : this.room.TL`This ticket was closed.`, staff);
 		notifyStaff();
 		this.room.pokeExpireTimer();
 		for (const ticketGameUser of Object.values(this.playerTable)) {
@@ -452,7 +474,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 	deleteTicket(staff: User) {
 		this.close('deleted', staff);
 		this.room.modlog({ action: 'TICKETDELETE', isGlobal: false, loggedBy: staff.id });
-		this.addText(`${staff.name} deleted this ticket.`, staff);
+		this.addText(this.room.TL`${staff.name} deleted this ticket.`, staff);
 		delete tickets[this.ticket.userid];
 		writeTickets();
 		notifyStaff();
@@ -516,9 +538,9 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 	 * returns tickets where the userid property === mia)
 	 * If the [value] is omitted (index 1), searches just for tickets with the given property.
 	 */
-	static async getTextLogs(search: [string, string] | [string], date?: string) {
+	static async getTextLogs(search: [string, string] | [string], date?: string, TL: Translator = Chat.getTranslator()) {
 		if (Config.disableripgrep) {
-			throw new Chat.ErrorMessage("Helpticket logs are currently disabled.");
+			throw new Chat.ErrorMessage(TL`Helpticket logs are currently disabled.`);
 		}
 		const results = [];
 		if (await ConfigLoader.checkRipgrepAvailability()) {
@@ -538,7 +560,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 				]);
 			} catch (e: any) {
 				if (e.message.includes('No such file or directory')) {
-					throw new Chat.ErrorMessage(`No ticket logs for that month.`);
+					throw new Chat.ErrorMessage(TL`No ticket logs for that month.`);
 				}
 				if (e.code !== 1 && !e.message.includes('stdout maxBuffer')) {
 					throw e; // 2 means an error in ripgrep
@@ -553,10 +575,10 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 				if (line.trim()) results.push(JSON.parse(line));
 			}
 		} else {
-			if (!date) throw new Chat.ErrorMessage(`Specify a month.`);
+			if (!date) throw new Chat.ErrorMessage(TL`Specify a month.`);
 			const path = Monitor.logPath(`tickets/${date}.jsonl`);
 			if (!path.existsSync()) {
-				throw new Chat.ErrorMessage(`There are no logs for the month "${date}".`);
+				throw new Chat.ErrorMessage(TL`There are no logs for the month "${date}".`);
 			}
 			const stream = path.createReadStream();
 			for await (const line of stream.byLine()) {
@@ -600,7 +622,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 		if (buf) buf = `<div class="infobox"><strong><a href="${info.url}">${info.title}</a></strong><hr />${buf}</div>`;
 		return buf;
 	}
-	static async visualizeBattleLogs(rooms: string[], reported?: ID) {
+	static async visualizeBattleLogs(rooms: string[], TL: Translator, reported?: ID) {
 		const logs = [];
 		for (const room of rooms) {
 			const log = await getBattleLog(room);
@@ -614,7 +636,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 				.join('');
 			if (chatBuffer) {
 				return (
-					`<div class="infobox"><details class="readmore"><summary><strong>Battle chat logs:</strong><br /></summary>` +
+					`<div class="infobox"><details class="readmore"><summary><strong>${TL`Battle chat logs:`}</strong><br /></summary>` +
 					`${chatBuffer}</details></div>`
 				);
 			}
@@ -624,32 +646,36 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 		reportUserid: ID,
 		proofString: string,
 		ticket: TicketState,
+		TL: Translator,
 		title?: string,
 		inner?: string,
 	) {
 		if (ticket.resolved) return '';
-		let buf = `<details class="readmore"><summary>${title || 'Punish reported user:'}</summary><div class="infobox">`;
+		let buf = `<details class="readmore"><summary>${title || TL`Punish reported user:`}</summary><div class="infobox">`;
 		if (inner) buf += inner;
-		const punishments = ['Warn', 'Lock', 'Weeklock', 'Namelock', 'Weeknamelock'];
+		const punishments = [TLkey`Warn`, TLkey`Lock`, TLkey`Weeklock`, TLkey`Namelock`, TLkey`Weeknamelock`];
 		for (const name of punishments) {
 			buf += `<form data-submitsend="/msgroom staff,/${toID(name)} ${reportUserid},{reason} spoiler: ${proofString}">`;
-			buf += `<button class="button notifying" type="submit">${name}</button><br />`;
-			buf += `Optional reason: <input name="reason" />`;
+			buf += `<button class="button notifying" type="submit">${TL(name)}</button><br />`;
+			buf += `${TL`Optional reason:`} <input name="reason" />`;
 			buf += `</form><br />`;
 		}
 		buf += `</div></details><br />`;
 		return buf;
 	}
-	static getTextButton(ticket: TicketState & { text: [string, string] }) {
+	static getTextButton(ticket: TicketState & { text: [string, string] }, TL: Translator) {
 		let buf = '';
 		const titleBuf = [
 			...ticket.text[0].split('\n').map(Utils.escapeHTML),
 			...ticket.text[1].split('<br />').map(Utils.stripHTML),
 		].slice(0, 3);
 		const noteBuf = Object.entries(ticket.notes || {})
-			.map(([userid, note]) => Utils.html`${note} (by ${userid})`)
+			.map(([userid, note]) => {
+				const noteText = Utils.escapeHTML(note);
+				return TL`${noteText} (by ${userid})`;
+			})
 			.join('&#10;');
-		const notes = ticket.notes ? `&#10;Staff notes:&#10;${noteBuf}` : '';
+		const notes = ticket.notes ? `&#10;${TL`Staff notes:`}&#10;${noteBuf}` : '';
 		const title = `title="${titleBuf.join('&#10;')}${notes}"`;
 		const user = Users.get(ticket.userid);
 		let namelockDisplay = '';
@@ -664,7 +690,7 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 		buf += ticket.claimed ?
 			`${ticket.userid}${namelockDisplay}:` :
 			`<strong>${ticket.userid}</strong>${namelockDisplay}:`;
-		buf += ` ${ticket.type}</a>`;
+		buf += ` ${TL(ticket.type)}</a>`;
 		return buf;
 	}
 	static async ban(user: User | ID, reason = '') {
@@ -691,23 +717,28 @@ export class HelpTicket extends Rooms.SimpleRoomGame {
 		user = toID(user);
 		return Punishments.unpunish(user, 'TICKETBAN');
 	}
-	static getBanMessage(userid: ID, punishment: Punishment) {
+	static getBanMessage(userid: ID, punishment: Punishment, TL: Translator) {
 		if (userid !== punishment.id) {
 			const { id: punished, reason } = punishment;
-			return (
-				`You are banned from creating help tickets` +
-				`${punished !== userid ? `, because you have the same IP as ${userid}` : ''}. ${reason ? `Reason: ${reason}` : ''}`
-			);
+			const banMessage = punished !== userid ?
+				TL`You are banned from creating help tickets, because you have the same IP as ${userid}.` :
+				TL`You are banned from creating help tickets.`;
+			return `${banMessage} ${reason ? TL`Reason: ${reason}` : ''}`;
 		}
-		return `You are banned from creating help tickets.`;
+		return TL`You are banned from creating help tickets.`;
 	}
 	static notifyResolved(user: User, ticket: TicketState, userid = user.id) {
 		const { result, time, by, seen, note } = ticket.resolved!;
 		if (seen) return;
-		const timeString = (Date.now() - time) > 1000 ? `, ${Chat.toDurationString(Date.now() - time)} ago.` : '.';
-		user.send(`|pm|~Staff|${user.getIdentity()}|Hello! Your report was resolved by ${by}${timeString}`);
+		const TL = user.TL;
+		const elapsed = Date.now() - time;
+		const duration = Chat.toDurationString(elapsed);
+		const resolvedMessage = elapsed > 1000 ?
+			TL`Hello! Your report was resolved by ${by}, ${duration} ago.` :
+			TL`Hello! Your report was resolved by ${by}.`;
+		user.send(`|pm|~Staff|${user.getIdentity()}|${resolvedMessage}`);
 		if (result?.trim()) {
-			user.send(`|pm|~Staff|${user.getIdentity()}|The result was "${result}"`);
+			user.send(`|pm|~Staff|${user.getIdentity()}|${TL`The result was "${result}"`}`);
 		}
 		if (note?.trim()) {
 			user.send(`|pm|~Staff|${user.getIdentity()}|/raw <small>${note}</small>`);
@@ -761,7 +792,7 @@ function notifyUnclaimedTicket(hasAssistRequest: boolean) {
 
 		if (ticket.needsDelayWarning && !ticket.claimed && delayWarnings[ticket.type]) {
 			ticketRoom.add(
-				`|c|~Staff|${ticketRoom.TL(delayWarningPreamble)}${ticketRoom.TL(delayWarnings[ticket.type])}`
+				`|c|~Staff|${ticketRoom.TL(delayWarningPreamble)} ${ticketRoom.TL(delayWarnings[ticket.type])}`
 			).update();
 			ticket.needsDelayWarning = false;
 		}
@@ -769,9 +800,10 @@ function notifyUnclaimedTicket(hasAssistRequest: boolean) {
 	for (const i in room.users) {
 		const user: User = room.users[i];
 		if (user.can('mute', null, room) && !user.settings.ignoreTickets) {
+			const TL = Chat.getTranslator(room.settings.language || user.language);
 			user.sendTo(
 				room,
-				`|tempnotify|helptickets|Unclaimed help tickets!|${hasAssistRequest ? 'Public Room Staff need help' : 'There are unclaimed Help tickets'}`
+				`|tempnotify|helptickets|${TL`Unclaimed help tickets!`}|${hasAssistRequest ? TL`Public Room Staff need help` : TL`There are unclaimed Help tickets`}`
 			);
 		}
 	}
@@ -780,6 +812,7 @@ function notifyUnclaimedTicket(hasAssistRequest: boolean) {
 export function notifyStaff() {
 	const room = Rooms.get('staff');
 	if (!room) return;
+	const TL = Chat.getTranslator(room.settings.language || null);
 	let buf = ``;
 	const sortedTickets = HelpTicket.list();
 	const listOnlyTypes = Object.keys(textTickets).filter(type => textTickets[type].listOnly);
@@ -809,9 +842,9 @@ export function notifyStaff() {
 			if (ticket.type === 'Public Room Assistance Request') hasAssistRequest = true;
 		}
 		if (ticket.text) {
-			buf += HelpTicket.getTextButton(ticket as TicketState & { text: [string, string] });
+			buf += HelpTicket.getTextButton(ticket as TicketState & { text: [string, string] }, TL);
 		} else if (ticketGame) {
-			buf += ticketGame.getButton();
+			buf += ticketGame.getButton(TL);
 		}
 		buf += ` `;
 		count++;
@@ -819,8 +852,10 @@ export function notifyStaff() {
 	if (hiddenTicketCount > 1) {
 		const notifying = hiddenTicketUnclaimedCount > 0 ? ` notifying` : ``;
 		if (hiddenTicketUnclaimedCount > 0) hasUnclaimed = true;
+		// hiddenTicketCount is always 2 or more here
+		const moreTickets = TL`and ${hiddenTicketCount} more Help tickets (${hiddenTicketUnclaimedCount} unclaimed)`;
 		buf = buf.slice(0, fourthTicketIndex) +
-			`<button class="button${notifying}" name="send" value="/ht list">and ${hiddenTicketCount} more Help ticket${Chat.plural(hiddenTicketCount)} (${hiddenTicketUnclaimedCount} unclaimed)</button> `;
+			`<button class="button${notifying}" name="send" value="/ht list">${moreTickets}</button> `;
 	}
 	for (const type of listOnlyTypes) {
 		const matches = sortedTickets.filter(
@@ -829,21 +864,24 @@ export function notifyStaff() {
 		if (matches.length) {
 			hasUnclaimed = true;
 			count += matches.length;
-			buf += `<button class="button notifying" name="send" value="/j view-help-list-${type}">${ticketTitles[type]} (${matches.length} open)</button> `;
+			const typeTitle = TL(ticketTitles[type]);
+			const openCount = matches.length;
+			buf += `<button class="button notifying" name="send" value="/j view-help-list-${type}">${TL`${typeTitle} (${openCount} open)`}</button> `;
 		}
 	}
-	buf = `|${hasUnclaimed ? 'uhtml' : 'uhtmlchange'}|latest-tickets|<div class="infobox" style="padding: 6px 4px">${buf}${count === 0 ? `There were open Help tickets, but they've all been closed now.` : ``}</div>`;
+	buf = `|${hasUnclaimed ? 'uhtml' : 'uhtmlchange'}|latest-tickets|<div class="infobox" style="padding: 6px 4px">${buf}${count === 0 ? TL`There were open Help tickets, but they've all been closed now.` : ``}</div>`;
 	room.send(buf);
 
+	const needHelpText = hasAssistRequest ? TL`Public Room Staff need help` : TL`There are unclaimed Help tickets`;
 	if (hasUnclaimed) {
-		buf = `|tempnotify|helptickets|Unclaimed help tickets!|${hasAssistRequest ? 'Public Room Staff need help' : 'There are unclaimed Help tickets'}`;
+		buf = `|tempnotify|helptickets|${TL`Unclaimed help tickets!`}|${needHelpText}`;
 	} else {
 		buf = `|tempnotifyoff|helptickets`;
 	}
 
 	if (hasUnclaimed) {
 		// only notify for people highlighting
-		buf = `${buf}|${hasAssistRequest ? 'Public Room Staff need help' : 'There are unclaimed Help tickets'}`;
+		buf = `${buf}|${needHelpText}`;
 	}
 	for (const user of Object.values(room.users)) {
 		if (user.can('lock') && !user.settings.ignoreTickets) user.sendTo(room, buf);
@@ -998,7 +1036,7 @@ for (const room of Rooms.rooms.values()) {
 // convert old-style Staff-room ticketbans to regular ones
 void convertRoomPunishments();
 
-const delayWarningPreamble = TLkey`Hi! All global staff members are busy right now and we apologize for the delay. `;
+const delayWarningPreamble = TLkey`Hi! All global staff members are busy right now and we apologize for the delay.`;
 const delayWarnings: { [k: string]: string } = {
 	'PM Harassment': TLkey`Please make sure you have given us the permission to check the PMs between you and the user you reported. You can also provide any relevant context; for example, a replay of a battle with the person you're reporting.`,
 	'Battle Harassment': TLkey`Please save the replay of the battle and provide a link to it in this chat, so we can see the harassment even if the battle expires. You can save the replay by clicking on the "Upload and share replay" button once the battle has ended.`,
@@ -1058,47 +1096,52 @@ const ticketPages: { [k: string]: string } = {
 	confirmroomhelp: TLkey`Call a Global Staff member to help`,
 	confirmother: TLkey`Call a Global Staff member`,
 };
-const cheatingScenarios = [
-	[
-		`My opponent's Pokemon used moves it couldn't learn`,
-		`It was probably a disguised Zoroark (<psicon pokemon="zoroark" />), which has the ability <a href="//${Config.routes.dex}/abilities/illusion">Illusion</a>. This happens often in Random Battles!`,
-	],
-	[
-		`My opponent got very lucky (critical hits, freezes, flinches, etc.)`,
-		`Sometimes, <a href="//${Config.routes.root}/pages/rng">that's just how RNG works</a>!`,
-	],
-	[
-		`My opponent used six of the same Pokemon or too many Legendaries`,
-		`Certain tiers, like Anything Goes, do not have Species Clause, which normally restricts a player to only one of each Pokemon. In addition, many tiers allow lots of legendaries, and you are allowed to use them!`,
-	],
-	[
-		`My Pokemon used a move I didn't choose`,
-		`You accidentally selected the wrong move and didn't notice. It happens more often than you might think!`,
-	],
-	[
-		`My Pokemon moved last when it shouldn't have`,
-		`You probably accidentally chose a move with negative priority, like Trick Room, Dragon Tail, or Roar.`,
-	],
-	[
-		`My Pokemon's Ability didn't work`,
-		`Perhaps Weezing's <a href="//${Config.routes.dex}/abilities/neutralizinggas">Neutralizing Gas</a> was active (<psicon pokemon="weezinggalar" />), or another effect, like <a href="https://dex.pokemonshowdown.com/abilities/moldbreaker">Mold Breaker</a>, was suppressing the Ability.`,
-	],
-	[
-		`My Pokemon's move failed when I attacked the opponent in a Double Battle)`,
-		`You attacked your own partner Pokemon, which failed because no Pokemon was there.`,
-	],
-];
+const cheatingScenarios = (TL: Translator) => {
+	const dex = Config.routes.dex;
+	const root = Config.routes.root;
+	return [
+		[
+			TL`My opponent's Pokemon used moves it couldn't learn`,
+			TL`It was probably a disguised Zoroark (<psicon pokemon="zoroark" />), which has the ability <a href="//${dex}/abilities/illusion">Illusion</a>. This happens often in Random Battles!`,
+		],
+		[
+			TL`My opponent got very lucky (critical hits, freezes, flinches, etc.)`,
+			TL`Sometimes, <a href="//${root}/pages/rng">that's just how RNG works</a>!`,
+		],
+		[
+			TL`My opponent used six of the same Pokemon or too many Legendaries`,
+			TL`Certain tiers, like Anything Goes, do not have Species Clause, which normally restricts a player to only one of each Pokemon. In addition, many tiers allow lots of legendaries, and you are allowed to use them!`,
+		],
+		[
+			TL`My Pokemon used a move I didn't choose`,
+			TL`You accidentally selected the wrong move and didn't notice. It happens more often than you might think!`,
+		],
+		[
+			TL`My Pokemon moved last when it shouldn't have`,
+			TL`You probably accidentally chose a move with negative priority, like Trick Room, Dragon Tail, or Roar.`,
+		],
+		[
+			TL`My Pokemon's Ability didn't work`,
+			TL`Perhaps Weezing's <a href="//${dex}/abilities/neutralizinggas">Neutralizing Gas</a> was active (<psicon pokemon="weezinggalar" />), or another effect, like <a href="https://dex.pokemonshowdown.com/abilities/moldbreaker">Mold Breaker</a>, was suppressing the Ability.`,
+		],
+		[
+			TL`My Pokemon's move failed when I attacked the opponent in a Double Battle)`,
+			TL`You attacked your own partner Pokemon, which failed because no Pokemon was there.`,
+		],
+	];
+};
 
 export const textTickets: { [k: string]: TextTicketInfo } = {
 	pmharassment: {
-		title: "Who's harassing you in PMs?",
+		title: TLkey`Who's harassing you in PMs?`,
 		checker(input) {
 			if (!Users.get(input)) {
-				return ['That user was not found.'];
+				return [TLkey`That user was not found.`];
 			}
 			return true;
 		},
 		async getReviewDisplay(ticket, staff, conn) {
+			const TL = staff.TL;
 			let buf = '';
 			const reportUserid = toID(ticket.text[0]);
 			const sharedBattles = getCommonBattles(ticket.userid, null, reportUserid, null, conn);
@@ -1109,20 +1152,22 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 				ticket.userid,
 				`spoiler:PMs with ${reportUserid} (as ${ticket.userid})${replayString ? `, ${replayString}` : ''}`,
 				ticket,
-				`Punish <strong>${ticket.userid}</strong> (reporter)`,
-				`<h2 style="color:red">You are about to punish the reporter. Are you sure you want to do this?</h2>`,
+				TL,
+				TL`Punish <strong>${ticket.userid}</strong> (reporter)`,
+				`<h2 style="color:red">${TL`You are about to punish the reporter. Are you sure you want to do this?`}</h2>`,
 			);
-			buf += `<strong>Reported user:</strong> <span class="username">${reportUserid}</span> </strong>`;
-			buf += `<button class="button" name="send" value="/modlog room=global,user='${reportUserid}'">Global Modlog</button><br />`;
+			buf += `<strong>${TL`Reported user:`}</strong> <span class="username">${reportUserid}</span> </strong>`;
+			buf += `<button class="button" name="send" value="/modlog room=global,user='${reportUserid}'">${TL`Global Modlog`}</button><br />`;
 			buf += HelpTicket.displayPunishmentList(
 				reportUserid,
 				`spoiler:PMs with ${ticket.userid}${replayString ? `, ${replayString}` : ''}`,
 				ticket,
-				`Punish <strong>${reportUserid}</strong> (reported user)`
+				TL,
+				TL`Punish <strong>${reportUserid}</strong> (reported user)`
 			);
 
 			if (replays.length) {
-				const battleLogHTML = await HelpTicket.visualizeBattleLogs(replays, reportUserid);
+				const battleLogHTML = await HelpTicket.visualizeBattleLogs(replays, TL, reportUserid);
 				if (battleLogHTML) {
 					buf += `<br />`;
 					buf += battleLogHTML;
@@ -1139,36 +1184,37 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 		},
 	},
 	inapname: {
-		title: "What's the inappropriate username?",
-		contextMessage: "If the username is offensive in a non-English language, or if it's not obvious, please be sure to explain below.",
+		title: TLkey`What's the inappropriate username?`,
+		contextMessage: TLkey`If the username is offensive in a non-English language, or if it's not obvious, please be sure to explain below.`,
 		checker(input) {
 			if (!Users.get(input)) {
 				return [
-					"Please specify a valid username - that name was not found.",
-					"Maybe you spelled it wrong?",
+					TLkey`Please specify a valid username - that name was not found.`,
+					TLkey`Maybe you spelled it wrong?`,
 				];
 			}
 			return true;
 		},
 		getReviewDisplay(ticket, staff, conn, state) {
+			const TL = staff.TL;
 			let buf = ``;
 			if (!ticket.open) return buf;
 			const cmds: [string, string][] = [
-				['Forcerename', '/forcerename'],
-				['Namelock', '/namelock'],
-				['Weeknamelock', '/weeknamelock'],
+				[TL`Forcerename`, '/forcerename'],
+				[TL`Namelock`, '/namelock'],
+				[TL`Weeknamelock`, '/weeknamelock'],
 			];
 			const tar = toID(ticket.text[0]); // should always be the reported userid
 			const name = Utils.escapeHTML(Users.getExact(tar)?.name || tar);
-			buf += `<br /><strong>Reported user:</strong> <a href="https://${Config.routes.root}/users/${tar}">${name}</a> `;
-			buf += `<button class="button" name="send" value="/modlog room=global,user='${tar}'">Global Modlog</button><br />`;
+			buf += `<br /><strong>${TL`Reported user:`}</strong> <a href="https://${Config.routes.root}/users/${tar}">${name}</a> `;
+			buf += `<button class="button" name="send" value="/modlog room=global,user='${tar}'">${TL`Global Modlog`}</button><br />`;
 			buf += `<details ${state?.list ? 'open' : ''} class="readmore">`;
-			buf += `<summary>Punish <strong>${name}</strong> (reported user)</summary>`;
+			buf += `<summary>${TL`Punish <strong>${name}</strong> (reported user)`}</summary>`;
 			buf += `<div class="infobox">`;
 			for (const [cmdName, cmd] of cmds) {
 				buf += `<form data-submitsend="/msgroom staff,${cmd} ${tar},{reason}">`;
 				buf += `<button class="button notifying" type="submit">${cmdName}</button><br />`;
-				buf += `Reason (optional:) <input name="reason" /></form><br />`;
+				buf += `${TL`Reason (optional:)`} <input name="reason" /></form><br />`;
 			}
 			buf += `</div></details>`;
 			return buf;
@@ -1181,11 +1227,11 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 		},
 	},
 	battleharassment: {
-		title: "Please provide a link to the battle (taken from the \"Upload and share\" button or copied from the browser URL)",
+		title: TLkey`Please provide a link to the battle (taken from the "Upload and share" button or copied from the browser URL)`,
 		async checker(input, context) {
 			const replays = getBattleLinks(input).concat(getBattleLinks(context));
 			if (!replays.length) {
-				return ['Please provide at least one valid battle or replay URL.'];
+				return [TLkey`Please provide at least one valid battle or replay URL.`];
 			}
 			let atLeastOne = false;
 			for (const replay of replays) {
@@ -1197,8 +1243,8 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 			}
 			if (!atLeastOne) {
 				return [
-					'None of the battle links provided are valid.',
-					'They may have expired, or you may have misspelled the URL.',
+					TLkey`None of the battle links provided are valid.`,
+					TLkey`They may have expired, or you may have misspelled the URL.`,
 				];
 			}
 			return true;
@@ -1209,6 +1255,7 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 			}
 		},
 		async getReviewDisplay(ticket, staff, connection) {
+			const TL = staff.TL;
 			let buf = ``;
 			const [text, context] = ticket.text;
 			let rooms = getBattleLinks(text);
@@ -1225,37 +1272,40 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 				ticket.userid,
 				proof,
 				ticket,
-				`Punish <strong>${ticket.userid}</strong> (reporter)`,
-				`<h2 style="color:red">You are about to punish the reporter. Are you sure you want to do this?</h2>`
+				TL,
+				TL`Punish <strong>${ticket.userid}</strong> (reporter)`,
+				`<h2 style="color:red">${TL`You are about to punish the reporter. Are you sure you want to do this?`}</h2>`
 			);
 			const opp = getReportedUser(ticket) || (await listOpponentsFrom(ticket))[0];
 			if (opp) {
-				buf += `<br /><strong>Reported user:</strong> <span class="username">${opp}</span> `;
-				buf += `<button class="button" name="send" value="/modlog room=global,user='${opp}'">Global Modlog</button><br />`;
+				buf += `<br /><strong>${TL`Reported user:`}</strong> <span class="username">${opp}</span> `;
+				buf += `<button class="button" name="send" value="/modlog room=global,user='${opp}'">${TL`Global Modlog`}</button><br />`;
 				buf += HelpTicket.displayPunishmentList(
 					opp,
 					proof,
 					ticket,
-					`Punish <strong>${opp}</strong> (reported user)`
+					TL,
+					TL`Punish <strong>${opp}</strong> (reported user)`
 				);
 			}
-			buf += `<strong>Battle links:</strong> ${rooms.map(url => Chat.formatText(`<<${url}>>`)).join(', ')}<br />`;
+			buf += `<strong>${TL`Battle links:`}</strong> ${rooms.map(url => Chat.formatText(`<<${url}>>`)).join(', ')}<br />`;
 			buf += `<br />`;
-			const battleLogHTML = await HelpTicket.visualizeBattleLogs(rooms, opp);
+			const battleLogHTML = await HelpTicket.visualizeBattleLogs(rooms, TL, opp);
 			if (battleLogHTML) buf += battleLogHTML;
 			return buf;
 		},
 	},
 	roomhelp: {
-		title: "Enter the name of the room",
+		title: TLkey`Enter the name of the room`,
 		getReviewDisplay(ticket, staff) {
+			const TL = staff.TL;
 			let buf = ``;
 			const room = Rooms.search(ticket.text[0])!;
 			if (!staff.inRooms.has(room.roomid)) {
-				buf += `<button class="button" name="send" value="/msgroom staff,/join ${room.roomid}">Join room</button>`;
+				buf += `<button class="button" name="send" value="/msgroom staff,/join ${room.roomid}">${TL`Join room`}</button>`;
 				buf += `<br />`;
 			} else {
-				buf += `<p>You're already in that room.</p>`;
+				buf += `<p>${TL`You're already in that room.`}</p>`;
 			}
 			return buf;
 		},
@@ -1263,24 +1313,25 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 			const room = Rooms.search(input);
 			if (!room) {
 				return [
-					`That room was not found.`,
-					`Enter either the room name or a room alias.`,
+					TLkey`That room was not found.`,
+					TLkey`Enter either the room name or a room alias.`,
 				];
 			}
 			if (room.settings.isPrivate) {
-				return ['You may only request help for public rooms.'];
+				return [TLkey`You may only request help for public rooms.`];
 			}
 			return true;
 		},
 	},
 	inappokemon: {
-		title: "Please provide replays of the battle with inappropriate Pokemon nicknames",
-		disclaimer: "If the nickname is offensive in a non-english language, or if it's not obvious, please be sure to explain.",
+		title: TLkey`Please provide replays of the battle with inappropriate Pokemon nicknames`,
+		disclaimer: TLkey`If the nickname is offensive in a non-english language, or if it's not obvious, please be sure to explain.`,
 		checker(input) {
 			if (BATTLES_REGEX.test(input) || REPLAY_REGEX.test(input)) return true;
-			return ['Please provide at least one valid battle or replay URL.'];
+			return [TLkey`Please provide at least one valid battle or replay URL.`];
 		},
 		async getReviewDisplay(ticket, staff, conn) {
+			const TL = staff.TL;
 			let buf = ``;
 			const [text, context] = ticket.text;
 			let links = getBattleLinks(text);
@@ -1291,23 +1342,25 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 				ticket.userid,
 				proof,
 				ticket,
-				`Punish <strong>${ticket.userid}</strong> (reporter)`,
-				`<h2 style="color:red">You are about to punish the reporter. Are you sure you want to do this?</h2>`
+				TL,
+				TL`Punish <strong>${ticket.userid}</strong> (reporter)`,
+				`<h2 style="color:red">${TL`You are about to punish the reporter. Are you sure you want to do this?`}</h2>`
 			);
 			if (opp) {
-				buf += `<strong>Reported user:</strong> <span class="username">${opp}</span> </strong>`;
-				buf += `<button class="button" name="send" value="/modlog room=global,user='${opp}'">Global Modlog</button><br />`;
+				buf += `<strong>${TL`Reported user:`}</strong> <span class="username">${opp}</span> </strong>`;
+				buf += `<button class="button" name="send" value="/modlog room=global,user='${opp}'">${TL`Global Modlog`}</button><br />`;
 				buf += HelpTicket.displayPunishmentList(
 					opp,
 					proof,
 					ticket,
-					`Punish <strong>${opp}</strong> (reported)`,
+					TL,
+					TL`Punish <strong>${opp}</strong> (reported)`,
 				);
 			}
-			buf += `<p><strong>Battle links given:</strong><p>`;
+			buf += `<p><strong>${TL`Battle links given:`}</strong><p>`;
 			links = links.filter((url, i) => links.indexOf(url) === i);
 			buf += links.map(uri => Chat.formatText(`<<${uri}>>`)).join(', ');
-			buf += `<div class="infobox"><strong>Names in given battles:</strong><hr />`;
+			buf += `<div class="infobox"><strong>${TL`Names in given battles:`}</strong><hr />`;
 			for (const link of links) {
 				const names = [];
 				const roomData = await getBattleLog(link);
@@ -1338,8 +1391,9 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 		},
 	},
 	ipappeal: {
-		title: "Where are you currently connecting from? Please give its name, city, and country.",
+		title: TLkey`Where are you currently connecting from? Please give its name, city, and country.`,
 		async getReviewDisplay(ticket, staff, conn, state) {
+			const TL = staff.TL;
 			const tarUser = Users.get(ticket.userid);
 			let info = state?.ips;
 			const stringIps = info?.some((f: any) => typeof f === 'string');
@@ -1356,33 +1410,35 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 					}
 				}
 			}
-			let buf = `<strong>IPs:</strong><br />`;
+			let buf = `<strong>${TL`IPs:`}</strong><br />`;
 			for (const data of info) {
 				const ip = data.ip;
 				buf += `<details class="readmore"><summary>`;
 				buf += `<strong><a href="https://whatismyipaddress.com/ip/${ip}">${ip}</a></strong></summary>`;
 				const ipPunishments = Punishments.ips.get(ip);
 				if (ipPunishments) {
-					const str = ipPunishments.map(p => (
-						`${Punishments.punishmentTypes.get(p.type)?.desc || p.type} as ` +
-						`<a href="https://${Config.routes.root}/users/${p.id}">${p.id}</a>` +
-						(p.reason ? Utils.html` (${p.reason})` : '')
-					));
-					if (str) buf += `Punishments: ${str.join(' | ')}<br />`;
+					const str = ipPunishments.map(p => {
+						const punishmentDesc = TL(Punishments.punishmentTypes.get(p.type)?.desc || p.type);
+						const userLink = `<a href="https://${Config.routes.root}/users/${p.id}">${p.id}</a>`;
+						return TL`${punishmentDesc} as ${userLink}` + (p.reason ? Utils.html` (${p.reason})` : '');
+					});
+					if (str) buf += `${TL`Punishments:`} ${str.join(' | ')}<br />`;
 				}
-				buf += `Host: ${data.shortHost} [${data.hostType}]<br />`;
-				buf += `<button class="button" name="send" value="/modlog room=global,ip=${ip}">Modlog</button><br />`;
+				buf += `${TL`Host:`} ${data.shortHost} [${data.hostType}]<br />`;
+				buf += `<button class="button" name="send" value="/modlog room=global,ip=${ip}">${TL`Modlog`}</button><br />`;
 				if (ipPunishments) {
+					const hostType = data.hostType;
 					const unlockCmd = staff.can('globalban') ?
 						`/unlockip ${ip}` :
-						`Can someone \`\`/unlockip ${ip}\`\` (${data.hostType} host)`;
-					buf += `<button class="button" name="send" value="/msgroom staff,${unlockCmd}">Unlock IP</button><br />`;
+						TL`Can someone \`\`/unlockip ${ip}\`\` (${hostType} host)`;
+					buf += `<button class="button" name="send" value="/msgroom staff,${unlockCmd}">${TL`Unlock IP`}</button><br />`;
+					const ownerField = '{owner}';
 					const marksharedCmd = staff.can('globalban') ?
-						`/markshared ${ip}, {owner}` :
-						`Can someone \`\`/markshared ${ip}, {owner}\`\``;
+						`/markshared ${ip}, ${ownerField}` :
+						TL`Can someone \`\`/markshared ${ip}, ${ownerField}\`\``;
 					buf += `<form data-submitsend="/msgroom staff,${marksharedCmd}">`;
-					buf += `<input name="owner" placeholder="School/Organization Name, City, Country" size="40" required />`;
-					buf += `<button class="button" type="submit">Mark as shared IP</button>`;
+					buf += `<input name="owner" placeholder="${TL`School/Organization Name, City, Country`}" size="40" required />`;
+					buf += `<button class="button" type="submit">${TL`Mark as shared IP`}</button>`;
 					buf += `</form>`;
 				}
 				buf += `</details>`;
@@ -1395,15 +1451,15 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 		},
 		checker(text, context, pageId, user) {
 			if (!toID(text)) {
-				return ['Please tell us where you are connecting from.'];
+				return [TLkey`Please tell us where you are connecting from.`];
 			}
 			if (!(user.locked || user.namelocked || user.semilocked)) {
-				return ['You are not punished.'];
+				return [TLkey`You are not punished.`];
 			}
 			if (!user.registered) {
 				return [
-					"Because this account isn't registered (with a password), we cannot verify your identity.",
-					"Please come back with a different account you've registered in the past.",
+					TLkey`Because this account isn't registered (with a password), we cannot verify your identity.`,
+					TLkey`Please come back with a different account you've registered in the past.`,
 				];
 			}
 			const punishments = Punishments.search(user.id);
@@ -1412,15 +1468,15 @@ export const textTickets: { [k: string]: TextTicketInfo } = {
 			if (punishments.length) {
 				for (const [, , punishment] of punishments) {
 					if (userids.includes(punishment.id as ID)) {
-						return ['Your current punishment was explicitly given to you. Please open an Appeal ticket instead.'];
+						return [TLkey`Your current punishment was explicitly given to you. Please open an Appeal ticket instead.`];
 					}
 				}
 			}
 
 			if (user.ips.some(i => Punishments.isBlacklistedSharedIp(i))) {
 				return [
-					"Your network has too many users who consistently misbehave on it. As such, we cannot unlock you, to ensure they don't abuse it.",
-					"Apologies for the inconvenience. It should expire in a few days.",
+					TLkey`Your network has too many users who consistently misbehave on it. As such, we cannot unlock you, to ensure they don't abuse it.`,
+					TLkey`Apologies for the inconvenience. It should expire in a few days.`,
 				];
 			}
 			return true;
@@ -1442,7 +1498,7 @@ export const pages: Chat.PageTable = {
 			if (!user.named) {
 				const buf = `>view-help-request${query.length ? '-' + query.join('-') : ''}\n` +
 					`|init|html\n` +
-					`|title|Request Help\n` +
+					`|title|${this.TL`Request Help`}\n` +
 					`|pagehtml|<div class="pad"><h2>${this.TL`Request help from global staff`}</h2><p>${this.TL`Please <button name="login" class="button">Log In</button> to request help.`}</p></div>`;
 				connection.send(buf);
 				return Rooms.RETRY_AFTER_LOGIN;
@@ -1452,7 +1508,7 @@ export const pages: Chat.PageTable = {
 
 			const ticketBan = Punishments.isTicketBanned(user);
 			if (ticketBan) {
-				return connection.popup(HelpTicket.getBanMessage(user.id, ticketBan));
+				return connection.popup(HelpTicket.getBanMessage(user.id, ticketBan, this.TL));
 			}
 			let ticket = tickets[user.id];
 			const ipTicket = checkIp(user.latestIp);
@@ -1512,7 +1568,7 @@ export const pages: Chat.PageTable = {
 				case 'pmharassment':
 					buf += `<p>${this.TL`If someone is harassing you in private messages (PMs), click the button below and a global staff member will take a look. If you are being harassed in a chatroom, please ask a room staff member to handle it.`}`;
 					if (!this.pageid.includes('confirm')) {
-						buf += ` If it's a minor issue, consider using <code>/ignore [username]</code> instead.`;
+						buf += ` ${this.TL`If it's a minor issue, consider using <code>/ignore [username]</code> instead.`}`;
 					}
 					buf += `</p>`;
 					if (!isLast) break;
@@ -1521,7 +1577,7 @@ export const pages: Chat.PageTable = {
 				case 'battleharassment':
 					buf += `<p>${this.TL`If someone is harassing you in a battle, click the button below and a global staff member will take a look. If you are being harassed in a chatroom, please ask a room staff member to handle it.`}`;
 					if (!this.pageid.includes('confirm')) {
-						buf += ` If it's a minor issue, consider using <code>/ignore [username]</code> instead.`;
+						buf += ` ${this.TL`If it's a minor issue, consider using <code>/ignore [username]</code> instead.`}`;
 					}
 					buf += `</p>`;
 					buf += `<p>${this.TL`Please save a replay of the battle if it has ended, or provide a link to the battle if it is still ongoing.`}</p>`;
@@ -1540,13 +1596,13 @@ export const pages: Chat.PageTable = {
 					buf += `<p><Button>confirminappokemon</Button></p>`;
 					break;
 				case 'cheating':
-					buf += `<p>Your opponent cannot control how lucky or unlucky you are, what moves you choose, or the mechanics of the battle. You may just be misunderstanding what happened in your battle!</p>`;
-					buf += `<h4>Some common situations</h4><ul>`;
-					for (const [scenario, explanation] of cheatingScenarios) {
+					buf += `<p>${this.TL`Your opponent cannot control how lucky or unlucky you are, what moves you choose, or the mechanics of the battle. You may just be misunderstanding what happened in your battle!`}</p>`;
+					buf += `<h4>${this.TL`Some common situations`}</h4><ul>`;
+					for (const [scenario, explanation] of cheatingScenarios(this.TL)) {
 						buf += `<li><details class="readmore"><summary>${scenario}</summary><br />${explanation}<br /><br /></details></li>`;
 					}
-					buf += `</ul><p>There are many more situations like this where the opponent was not cheating or hacking. If you're confused about what happened, upload your battle replay and share it with the Help room. They can help you understand what happened!</p>`;
-					buf += `<p style="text-align: center"><button class="button" name="send" value="/j help"><strong>Join the Help Room</strong></button></p>`;
+					buf += `</ul><p>${this.TL`There are many more situations like this where the opponent was not cheating or hacking. If you're confused about what happened, upload your battle replay and share it with the Help room. They can help you understand what happened!`}</p>`;
+					buf += `<p style="text-align: center"><button class="button" name="send" value="/j help"><strong>${this.TL`Join the Help Room`}</strong></button></p>`;
 					break;
 				case 'appeal':
 					// buf += `<p><b>${this.TL`What would you like to appeal?`}</b></p>`;
@@ -1554,7 +1610,7 @@ export const pages: Chat.PageTable = {
 					if (user.locked || isStaff) {
 						const hostfiltered = user.locked === '#hostfilter' || (user.latestHostType === 'proxy' && user.locked !== user.id);
 						if (!hostfiltered) {
-							buf += `<p><strong>I want to appeal my lock.</strong></p>`;
+							buf += `<p><strong>${this.TL`I want to appeal my lock.`}</strong></p>`;
 							const namelocked = user.named && user.id.startsWith('guest');
 							if (user.locked === user.id || namelocked || isStaff) {
 								if (user.permalocked || isStaff) {
@@ -1568,7 +1624,7 @@ export const pages: Chat.PageTable = {
 								buf += `<p><Button>${type}</Button></p>`;
 							}
 						}
-						buf += `<p><strong>I'm locked under a name or IP I don't recognize.</strong></p>`;
+						buf += `<p><strong>${this.TL`I'm locked under a name or IP I don't recognize.`}</strong></p>`;
 						if (hostfiltered) {
 							buf += `<p><Button>hostfilter</Button></p>`;
 						}
@@ -1581,7 +1637,7 @@ export const pages: Chat.PageTable = {
 							}
 						}
 					}
-					buf += `<p><strong>I am punished but do not fall under any of the above.</strong></p>`;
+					buf += `<p><strong>${this.TL`I am punished but do not fall under any of the above.`}</strong></p>`;
 					if (user.semilocked || isStaff) {
 						buf += `<p><Button>semilock</Button></p>`;
 					}
@@ -1594,7 +1650,7 @@ export const pages: Chat.PageTable = {
 					break;
 				case 'lock':
 					buf += `<p>${this.TL`If you want to appeal your lock or namelock, click the button below and a global staff member will be with you shortly.`}</p>`;
-					buf += `<p>You will have to explain in detail why your punishment is unjustified and why we would want to unlock you. Insufficient explanations such as "lol this is bs unlock me" will not be considered.</p>`;
+					buf += `<p>${this.TL`You will have to explain in detail why your punishment is unjustified and why we would want to unlock you. Insufficient explanations such as "lol this is bs unlock me" will not be considered.`}</p>`;
 					if (!isLast) break;
 					buf += `<p><Button>confirmappeal</Button></p>`;
 					break;
@@ -1604,36 +1660,37 @@ export const pages: Chat.PageTable = {
 					buf += `<p><Button>confirmipappeal</Button></p>`;
 					break;
 				case 'homeip':
-					buf += `<p>If you are using your home's wifi network, it means that the person you are being mistaken for did as well (maybe a family member?).</p>`;
-					buf += `<p>In any case, we have no ability to make the difference - for all we know, you are the same user. Please wait out the lock.</p>`;
+					buf += `<p>${this.TL`If you are using your home's wifi network, it means that the person you are being mistaken for did as well (maybe a family member?).`}</p>`;
+					buf += `<p>${this.TL`In any case, we have no ability to make the difference - for all we know, you are the same user. Please wait out the lock.`}</p>`;
 					break;
 				case 'device':
-					buf += `<p>Sorry, but you are considered responsible for whoever has access to your computer.</p>`;
-					buf += `<p>We have no way to make the difference between two people using the exact same computer. Please wait out the lock.</p>`;
+					buf += `<p>${this.TL`Sorry, but you are considered responsible for whoever has access to your computer.`}</p>`;
+					buf += `<p>${this.TL`We have no way to make the difference between two people using the exact same computer. Please wait out the lock.`}</p>`;
 					break;
 				case 'mobileip':
-					buf += `<p>If you are not the user who was punished, the lock should expire on its own within a few hours.</p>`;
-					buf += `<p>If you are in a hurry to communicate with another user, you can click on the following button to open a ticket.</p>`;
-					buf += `<p>A staff member will look at your case as soon as possible.</p>`;
+					buf += `<p>${this.TL`If you are not the user who was punished, the lock should expire on its own within a few hours.`}</p>`;
+					buf += `<p>${this.TL`If you are in a hurry to communicate with another user, you can click on the following button to open a ticket.`}</p>`;
+					buf += `<p>${this.TL`A staff member will look at your case as soon as possible.`}</p>`;
 					if (!isLast) break;
-					buf += `<button name="send" value="/ht submit IP-Appeal|||I am on a mobile IP.|">Submit ticket</button>`;
+					buf += `<button name="send" value="/ht submit IP-Appeal|||I am on a mobile IP.|">${this.TL`Submit ticket`}</button>`;
 					break;
 				case 'public':
 					if (user.ips.some(ip => Punishments.sharedIpBlacklist.has(ip))) {
-						buf += "<p>The public place you are in has had frequent misbehavior. As such, we can not unlock it, to prevent the bad users on it from abusing this. We apologize for the inconvenience.</p>";
+						buf += `<p>${this.TL`The public place you are in has had frequent misbehavior. As such, we can not unlock it, to prevent the bad users on it from abusing this. We apologize for the inconvenience.`}</p>`;
 						break;
 					} else {
-						buf += `<p>If you have been locked at school or in a library, please write down its name, city and country in the form below so we can verify your claim. This information is strictly confidential, and global staff will only use it to deal with your appeal.</p>`;
-						buf += `<p>If you have been locked using the wifi of another type of facility, please write down which kind it is in the form.</p>`;
+						buf += `<p>${this.TL`If you have been locked at school or in a library, please write down its name, city and country in the form below so we can verify your claim. This information is strictly confidential, and global staff will only use it to deal with your appeal.`}</p>`;
+						buf += `<p>${this.TL`If you have been locked using the wifi of another type of facility, please write down which kind it is in the form.`}</p>`;
 						buf += `<p><Button>confirmipappeal</Button></p>`;
 					}
 					break;
 				case 'timeleft':
 					const expiry = Punishments.checkLockExpiration(user.id);
 					if (typeof expiry !== 'string') {
-						buf += `<p>You aren't locked.</p>`;
+						buf += `<p>${this.TL`You aren't locked.`}</p>`;
 					} else {
-						buf += `Your lock ${expiry.trim().replace('(', '').replace(')', '') || "expires soon"}.`;
+						const lockExpiry = expiry.trim().replace('(', '').replace(')', '');
+						buf += lockExpiry ? this.TL`Your lock ${lockExpiry}.` : this.TL`Your lock expires soon.`;
 					}
 					break;
 				case 'reason':
@@ -1641,25 +1698,28 @@ export const pages: Chat.PageTable = {
 						.map(p => p[2])
 						.filter(t => ['LOCK', 'NAMELOCK'].includes(t.type));
 					if (!punishments.some(p => p.reason)) {
-						buf += `<p>No reasons were found on your lock.</p>`;
+						buf += `<p>${this.TL`No reasons were found on your lock.`}</p>`;
 						break;
 					}
 					for (const [idx, punishment] of punishments.entries()) {
 						if (punishments.indexOf(punishment) !== idx) {
 							continue;
 						} else if (punishment.reason) {
-							buf += Utils.html`<p>Your ${punishment.type} was for: ${punishment.reason}.</p>`;
+							const punishmentType = Utils.escapeHTML(punishment.type);
+							const reason = Utils.escapeHTML(punishment.reason);
+							buf += `<p>${this.TL`Your ${punishmentType} was for: ${reason}.`}</p>`;
 						}
 					}
 					break;
 				case 'startedit':
-					buf += `<p>If you have been locked, it is because your behavior on its own has broken PS rules - whether someone else "started" it does not excuse it.</p>`;
-					buf += `<p>If someone broke the rules during the interaction with led to your lock, they should have been punished as well when we addressed the report concerning you.</p>`;
+					buf += `<p>${this.TL`If you have been locked, it is because your behavior on its own has broken PS rules - whether someone else "started" it does not excuse it.`}</p>`;
+					buf += `<p>${this.TL`If someone broke the rules during the interaction with led to your lock, they should have been punished as well when we addressed the report concerning you.`}</p>`;
 					break;
 				case 'hostfilter':
 					buf += `<p>${this.TL`We automatically lock proxies and VPNs to prevent evasion of punishments and other attacks on our server. To get unlocked, you need to disable your proxy or VPN.`}</p>`;
 					buf += `<p>${this.TL`If you must use a proxy / VPN to access Pokemon Showdown (e.g. your school blocks the site normally), you will only be able to battle, not chat. When you go home, you will be unlocked and able to freely chat again.`}</p>`;
-					buf += `<p>For more detailed information, view the  <a href="//${Config.routes.root}/pages/proxyhelp">proxy help guide</a>.</p>`;
+					const proxyHelpLink = `//${Config.routes.root}/pages/proxyhelp`;
+					buf += `<p>${this.TL`For more detailed information, view the  <a href="${proxyHelpLink}">proxy help guide</a>.`}</p>`;
 					buf += `<p>${this.TL`If you are certain that you are not currently using a proxy / VPN, please continue and open a ticket. Please explain in detail how you are connecting to Pokemon Showdown.`}</p>`;
 					buf += `<p><Button>confirmipappeal</Button></p>`;
 					break;
@@ -1687,7 +1747,7 @@ export const pages: Chat.PageTable = {
 					buf += `<p><Button>other</Button></p>`;
 					break;
 				case 'password':
-					buf += `<p>The password reset process is no longer open to the public.</p>`;
+					buf += `<p>${this.TL`The password reset process is no longer open to the public.`}</p>`;
 					break;
 				case 'roomhelp':
 					buf += `<p>${this.TL`If you are a room driver or up in a public room, and you need help watching the chat, one or more global staff members would be happy to assist you!`}</p>`;
@@ -1714,13 +1774,13 @@ export const pages: Chat.PageTable = {
 						}
 						buf += `<form data-submitsend="/helpticket submit ${ticketTitles[page.slice(7)]} ${submitMeta} | {text} | {context}">`;
 						buf += `<textarea style="width: 100%" name="text"></textarea><br />`;
-						buf += `<strong>${"Do you have any other information you want to provide? (this is optional)"}</strong>`;
+						buf += `<strong>${this.TL`Do you have any other information you want to provide? (this is optional)`}</strong>`;
 						if (textTicket.contextMessage) {
-							buf += `<br />${textTicket.contextMessage}`;
+							buf += `<br />${this.TL(textTicket.contextMessage)}`;
 						}
 						buf += `<br />`;
 						buf += `<textarea style="width: 100%" name="context"></textarea><br />`;
-						buf += `<br /><button class="button notifying" type="submit">Submit ticket</button></form>`;
+						buf += `<br /><button class="button notifying" type="submit">${this.TL`Submit ticket`}</button></form>`;
 					} else {
 						buf += `<p><b>${this.TL`Are you sure you want to submit a ticket for ${type}?`}</b></p>`;
 						buf += `<p><button class="button notifying" name="send" value="/helpticket submit ${ticketTitles[page.slice(7)]} ${submitMeta}">${this.TL`Yes, contact global staff`}</button> <a href="/view-help-request-${query.slice(0, i).join('-')}${meta}" target="replace">`;
@@ -1728,8 +1788,7 @@ export const pages: Chat.PageTable = {
 					}
 					if (textTicket || page.includes('confirmpmharassment')) {
 						buf += `<p>`;
-						buf += `Global staff might take more than a few minutes to handle your report. `;
-						buf += `If you are being disturbed by another user, we advise you to type <code>/ignore [username]</code> in a chatroom to ignore their messages.`;
+						buf += this.TL`Global staff might take more than a few minutes to handle your report. If you are being disturbed by another user, we advise you to type <code>/ignore [username]</code> in a chatroom to ignore their messages.`;
 					}
 					break;
 				}
@@ -1749,34 +1808,35 @@ export const pages: Chat.PageTable = {
 			this.checkCan('lock');
 			const type = toID(query.shift());
 			let buf = `<div class="pad">`;
-			this.title = '[Help Tickets]';
+			this.title = `[${this.TL`Help Tickets`}]`;
 			if (!type) {
-				buf += `<h2>Help Tickets</h2><hr />`;
+				buf += `<h2>${this.TL`Help Tickets`}</h2><hr />`;
 				const keys = Object.keys(textTickets).filter(id => textTickets[id].listOnly);
 				if (!keys.length) {
-					buf += `<p class="message-error">Currently, no ticket types support mass-view in a list.</p>`;
-					buf += `<p>Use <code>/ht text [username]</code> to view an individual user's ticket instead.</p>`;
+					buf += `<p class="message-error">${this.TL`Currently, no ticket types support mass-view in a list.`}</p>`;
+					buf += `<p>${this.TL`Use <code>/ht text [username]</code> to view an individual user's ticket instead.`}</p>`;
 					return buf;
 				}
 				if (type && !keys.includes(type)) {
-					buf += `<p class="message-error">That ticket type does not support mass-view in a list.</p>`;
-					buf += `<p>Use <code>/ht text [username]</code> to view an individual user's ticket instead.</p>`;
+					buf += `<p class="message-error">${this.TL`That ticket type does not support mass-view in a list.`}</p>`;
+					buf += `<p>${this.TL`Use <code>/ht text [username]</code> to view an individual user's ticket instead.`}</p>`;
 					return buf;
 				}
-				buf += `<p class="message-error">Please specify a valid ticket type.</p>`;
-				buf += `<p>Valid mass-view ticket types:</p>`;
+				buf += `<p class="message-error">${this.TL`Please specify a valid ticket type.`}</p>`;
+				buf += `<p>${this.TL`Valid mass-view ticket types:`}</p>`;
 				buf += keys.map(k => `<a class="button" href="/view-help-list-${k}" target="replace">${k}</a>`).join(' | ');
 				return buf;
 			}
 			this.title += ` ${type}`;
-			buf += `<h2>Help Tickets (${ticketTitles[type]})</h2><hr />`;
+			const typeTitle = this.TL(ticketTitles[type]);
+			buf += `<h2>${this.TL`Help Tickets (${typeTitle})`}</h2><hr />`;
 			let count = 0;
 			for (const k in tickets) {
 				const ticket = tickets[k];
 				const typeId = HelpTicket.getTypeId(ticket.type);
 				if (!ticket.resolved && ticket.text && typeId === type) {
 					count++;
-					buf += `<strong>Reporter:</strong> ${ticket.userid}`;
+					buf += `<strong>${this.TL`Reporter:`}</strong> ${ticket.userid}`;
 					buf += await textTickets[typeId].getReviewDisplay(
 						ticket as TicketState & { text: [string, string] },
 						user,
@@ -1784,15 +1844,15 @@ export const pages: Chat.PageTable = {
 						{ list: true }
 					);
 					buf += `<form data-submitsend="/helpticket resolve ${ticket.userid},{text} spoiler:{private}">`;
-					buf += `<br /><strong>Resolve:</strong><br />`;
-					buf += `Respond to reporter: <textarea style="width: 100%" name="text" autocomplete="on"></textarea><br />`;
-					buf += `Staff notes (optional): <textarea style="width: 100%" name="private"></textarea><br />`;
-					buf += `<br /><button class="button notifying" type="submit">Resolve ticket</button></form>`;
+					buf += `<br /><strong>${this.TL`Resolve:`}</strong><br />`;
+					buf += `${this.TL`Respond to reporter:`} <textarea style="width: 100%" name="text" autocomplete="on"></textarea><br />`;
+					buf += `${this.TL`Staff notes (optional):`} <textarea style="width: 100%" name="private"></textarea><br />`;
+					buf += `<br /><button class="button notifying" type="submit">${this.TL`Resolve ticket`}</button></form>`;
 					buf += `<hr />`;
 				}
 			}
 			if (!count) {
-				buf += `<p class="message-error">No active tickets of the type '${ticketTitles[type]}' were found.</p>`;
+				buf += `<p class="message-error">${this.TL`No active tickets of the type '${typeTitle}' were found.`}</p>`;
 				return buf;
 			}
 			return buf;
@@ -1828,7 +1888,7 @@ export const pages: Chat.PageTable = {
 
 				buf += `<tr><td>${icon}</td>`;
 				buf += `<td>${Utils.escapeHTML(ticket.creator)}</td>`;
-				buf += `<td>${ticket.type}</td>`;
+				buf += `<td>${this.TL(ticket.type)}</td>`;
 				buf += Utils.html`<td>${ticket.claimed ? ticket.claimed : `-`}</td>`;
 				buf += `<td>`;
 				const roomid = 'help-' + ticket.userid;
@@ -1842,15 +1902,18 @@ export const pages: Chat.PageTable = {
 				const room = Rooms.get(roomid);
 				if (ticket.text) {
 					let title = Object.entries(ticket.notes || {})
-						.map(([userid, note]) => Utils.html`${note} (by ${userid})`)
+						.map(([userid, note]) => {
+							const noteText = Utils.escapeHTML(note);
+							return this.TL`${noteText} (by ${userid})`;
+						})
 						.join('&#10;');
 					if (title) {
-						title = `title="Staff notes:&#10;${title}"`;
+						title = `title="${this.TL`Staff notes:`}&#10;${title}"`;
 					}
-					buf += `<a class="button" ${title} href="/view-help-text-${ticket.userid}">${!ticket.claimed && ticket.open ? `Claim` : `View`}</a>`;
+					buf += `<a class="button" ${title} href="/view-help-text-${ticket.userid}">${!ticket.claimed && ticket.open ? this.TL`Claim` : this.TL`View`}</a>`;
 				} else if (room) {
 					const ticketGame = room.getGame(HelpTicket)!;
-					buf += `<a href="/${roomid}"><button class="button" ${ticketGame.getPreview()}>${!ticket.claimed && ticket.open ? this.TL`Claim` : this.TL`View`}</button></a> `;
+					buf += `<a href="/${roomid}"><button class="button" ${ticketGame.getPreview(this.TL)}>${!ticket.claimed && ticket.open ? this.TL`Claim` : this.TL`View`}</button></a> `;
 				}
 				if (logUrl) {
 					buf += `<a href="${logUrl}"><button class="button">${this.TL`Log`}</button></a>`;
@@ -1861,7 +1924,7 @@ export const pages: Chat.PageTable = {
 			buf += `</div></table><div class="ladder pad">`;
 			buf += `<table style="margin-left: auto; margin-right: auto"><tbody>`;
 			buf += `<tr><th colspan="5"><h2 style="margin: 5px auto">${this.TL`Ticket Bans`}<i class="fa fa-ban"></i></h2></th></tr>`;
-			buf += `<tr><th>Userids</th><th>IPs</th><th>Expires</th><th>Reason</th></tr>`;
+			buf += `<tr><th>${this.TL`Userids`}</th><th>${this.TL`IPs`}</th><th>${this.TL`Expires`}</th><th>${this.TL`Reason`}</th></tr>`;
 			const ticketBans = Utils.sortBy(
 				[...Punishments.getPunishments()].filter(([id, entry]) => entry.punishType === 'TICKETBAN'),
 				([id, entry]) => entry.expireTime
@@ -1883,20 +1946,21 @@ export const pages: Chat.PageTable = {
 			this.checkCan('lock');
 			const userid = query.shift();
 			if (!userid) {
-				throw new Chat.ErrorMessage(`Specify a userid to view the ticket for.`);
+				throw new Chat.ErrorMessage(this.TL`Specify a userid to view the ticket for.`);
 			}
 			const ticket = tickets[toID(userid)];
 			if (!ticket) {
-				throw new Chat.ErrorMessage(`Ticket not found.`);
+				throw new Chat.ErrorMessage(this.TL`Ticket not found.`);
 			}
 			if (!ticket.text) {
-				throw new Chat.ErrorMessage(`That is either not a text ticket, or it has not yet been submitted.`);
+				throw new Chat.ErrorMessage(this.TL`That is either not a text ticket, or it has not yet been submitted.`);
 			}
 			const ticketInfo = textTickets[HelpTicket.getTypeId(ticket.type)];
-			this.title = `[Text Ticket] ${ticket.userid}`;
+			this.title = `[${this.TL`Text Ticket`}] ${ticket.userid}`;
 			let buf = `<div class="pad">`;
 			buf += `<button class="button" name="send" value="/join ${this.pageid}" style="float:right"><i class="fa fa-refresh"></i> ${this.TL`Refresh`}</button>`;
-			buf += `<h2>Issue: ${ticket.type}</h2>`;
+			const ticketType = this.TL(ticket.type);
+			buf += `<h2>${this.TL`Issue: ${ticketType}`}</h2>`;
 			if (!ticket.claimed && ticket.open) {
 				ticket.claimed = user.id;
 				if (!ticket.state) ticket.state = {};
@@ -1905,36 +1969,38 @@ export const pages: Chat.PageTable = {
 				notifyStaff();
 				Chat.refreshPageFor(`help-text-${ticket.userid}`, 'staff', false, [user.id]);
 			} else if (ticket.claimed) {
-				buf += `<strong>Claimed:</strong> ${ticket.claimed}<br /><br />`;
+				buf += `<strong>${this.TL`Claimed:`}</strong> ${ticket.claimed}<br /><br />`;
 			}
-			buf += `<strong>From: <span class="username">${ticket.creator}</span></strong>`;
-			buf += `  <button class="button" name="send" value="/msgroom staff,/ht ban ${ticket.userid}">Ticketban</button> | `;
-			buf += `<button class="button" name="send" value="/modlog room=global,user='${ticket.userid}'">Global Modlog</button><br />`;
+			const creatorName = `<span class="username">${ticket.creator}</span>`;
+			buf += `<strong>${this.TL`From: ${creatorName}`}</strong>`;
+			buf += `  <button class="button" name="send" value="/msgroom staff,/ht ban ${ticket.userid}">${this.TL`Ticketban`}</button> | `;
+			buf += `<button class="button" name="send" value="/modlog room=global,user='${ticket.userid}'">${this.TL`Global Modlog`}</button><br />`;
 			buf += await ticketInfo.getReviewDisplay(ticket as TicketState & { text: [string, string] }, user, connection);
 			buf += `<br />`;
 			buf += `<div class="infobox">`;
 			const [text, context] = ticket.text;
-			buf += `<p><strong>Report text:</strong></p><hr />`;
+			buf += `<p><strong>${this.TL`Report text:`}</strong></p><hr />`;
 			buf += Chat.formatText(text);
 			if (context) {
-				buf += `<br /><hr /><strong>Context given: </strong><br />${context}`;
+				buf += `<br /><hr /><strong>${this.TL`Context given:`} </strong><br />${context}`;
 			}
 			buf += `</div>`;
 
 			if (ticket.notes) {
 				buf += `<br /><div class="infobox">`;
-				buf += `<details class="readmore"><summary>Hover notes:</summary>`;
+				buf += `<details class="readmore"><summary>${this.TL`Hover notes:`}</summary>`;
 				for (const staff in ticket.notes) {
-					buf += Utils.html`<p>${ticket.notes[staff]} (by ${staff})</p>`;
+					const noteText = Utils.escapeHTML(ticket.notes[staff]);
+					buf += `<p>${this.TL`${noteText} (by ${staff})`}</p>`;
 				}
 				buf += `<br /><form data-submitsend="/ht addnote ${ticket.userid},{note}&#10;/j view-help-text-${ticket.userid}">`;
-				buf += `Add note: <input name="note" /> <button type="submit" class="button">Submit</button>`;
+				buf += `${this.TL`Add note:`} <input name="note" /> <button type="submit" class="button">${this.TL`Submit`}</button>`;
 				buf += `</form>`;
 				buf += `</details></div>`;
 			} else {
 				buf += `<br /><div class="infobox">`;
 				buf += `<form data-submitsend="/ht note ${ticket.userid},{note}&#10;/j view-help-text-${ticket.userid}">`;
-				buf += `Add note: <input name="note" /> <button type="submit" class="button">Submit</button>`;
+				buf += `${this.TL`Add note:`} <input name="note" /> <button type="submit" class="button">${this.TL`Submit`}</button>`;
 				buf += `</form></div>`;
 			}
 
@@ -1943,7 +2009,7 @@ export const pages: Chat.PageTable = {
 				const responses = settings.responses[typeId];
 				if (Object.keys(responses || {}).length) {
 					buf += `<br /><div class="infobox">`;
-					buf += `<details class="readmore"><summary><strong>Responses</strong></summary>`;
+					buf += `<details class="readmore"><summary><strong>${this.TL`Responses`}</strong></summary>`;
 					const responseKeys = Object.keys(responses);
 					for (const [i, name] of responseKeys.entries()) {
 						buf += `<button class="button" name="send" value="/helpticket resolve ${ticket.userid},${responses[name]}">${name}</button>`;
@@ -1952,15 +2018,16 @@ export const pages: Chat.PageTable = {
 					buf += `</details></div><br />`;
 				}
 				buf += `<form data-submitsend="/helpticket resolve ${ticket.userid},{text} spoiler:{private}">`;
-				buf += `<br /><strong>Resolve:</strong><br />`;
-				buf += `Respond to reporter: <textarea style="width: 100%" name="text" autocomplete="on"></textarea><br />`;
-				buf += `Staff notes (optional): <textarea style="width: 100%" name="private"></textarea><br />`;
-				buf += `<br /><button class="button notifying" type="submit">Resolve ticket</button></form>`;
+				buf += `<br /><strong>${this.TL`Resolve:`}</strong><br />`;
+				buf += `${this.TL`Respond to reporter:`} <textarea style="width: 100%" name="text" autocomplete="on"></textarea><br />`;
+				buf += `${this.TL`Staff notes (optional):`} <textarea style="width: 100%" name="private"></textarea><br />`;
+				buf += `<br /><button class="button notifying" type="submit">${this.TL`Resolve ticket`}</button></form>`;
 			} else {
-				buf += Utils.html`<strong>Resolved: by ${ticket.resolved.by}</strong><br />`;
-				buf += Utils.html`<strong>Result:</strong> ${Chat.collapseLineBreaksHTML(ticket.resolved.result)}<br />`;
+				const resolvedBy = Utils.escapeHTML(ticket.resolved.by);
+				buf += `<strong>${this.TL`Resolved: by ${resolvedBy}`}</strong><br />`;
+				buf += Utils.html`<strong>${this.TL`Result:`}</strong> ${Chat.collapseLineBreaksHTML(ticket.resolved.result)}<br />`;
 				if (ticket.resolved.staffReason.includes('PROOF')) { // a note was added, show it
-					buf += Utils.html`<strong>Resolver notes:</strong> ${Chat.collapseLineBreaksHTML(ticket.resolved.staffReason)}<br />`;
+					buf += Utils.html`<strong>${this.TL`Resolver notes:`}</strong> ${Chat.collapseLineBreaksHTML(ticket.resolved.staffReason)}<br />`;
 				}
 			}
 			return buf;
@@ -1969,22 +2036,25 @@ export const pages: Chat.PageTable = {
 			this.checkCan('lock');
 			const args = query.join('-').split('--');
 			const userid = toID(args.shift());
-			if (!userid) throw new Chat.ErrorMessage(`Specify a userid to view ticket logs for.`);
+			if (!userid) throw new Chat.ErrorMessage(this.TL`Specify a userid to view ticket logs for.`);
 			const date = args.shift();
 			if (date) {
 				const parsed = new Date(date);
 				if (!/[0-9]{4}-[0-9]{2}/.test(date) || isNaN(parsed.getTime())) {
-					throw new Chat.ErrorMessage(`Invalid date.`);
+					throw new Chat.ErrorMessage(this.TL`Invalid date.`);
 				}
 			}
-			const logs = await HelpTicket.getTextLogs(['userid', userid], date);
-			this.title = `[Ticket Logs] ${userid}${date ? ` (${date})` : ''}`;
-			let buf = `<div class="pad"><h2>Ticket logs for ${userid}${date ? ` in the month of ${date}` : ''}</h2>`;
+			const logs = await HelpTicket.getTextLogs(['userid', userid], date, this.TL);
+			this.title = `[${this.TL`Ticket Logs`}] ${userid}${date ? ` (${date})` : ''}`;
+			const logsTitle = date ?
+				this.TL`Ticket logs for ${userid} in the month of ${date}` :
+				this.TL`Ticket logs for ${userid}`;
+			let buf = `<div class="pad"><h2>${logsTitle}</h2>`;
 			buf += `<button class="button" name="send" value="/join ${this.pageid}"><i class="fa fa-refresh"></i> ${this.TL`Refresh`}</button>`;
 			buf += `<hr />`;
 
 			if (!logs.length) {
-				buf += `<div class="message-error">None found.</div>`;
+				buf += `<div class="message-error">${this.TL`None found.`}</div>`;
 				return buf;
 			}
 			const stringifyDate = (num: number) => {
@@ -1997,15 +2067,17 @@ export const pages: Chat.PageTable = {
 			for (const ticket of logs) {
 				buf += `<details class="readmore"><summary>`;
 				const curDate = stringifyDate(ticket.created);
-				buf += `<strong>${ticket.type} - ${curDate.day} (${curDate.time})</strong></summary>`;
+				const ticketType = this.TL(ticket.type);
+				buf += `<strong>${ticketType} - ${curDate.day} (${curDate.time})</strong></summary>`;
 				const ticketInfo = textTickets[HelpTicket.getTypeId(ticket.type)];
-				this.title = `[Text Ticket] ${ticket.userid}`;
-				buf += `<h2>Issue: ${ticket.type}</h2>`;
-				buf += `<strong>From: <span class="username">${ticket.userid}</span></strong>`;
-				buf += `  <button class="button" name="send" value="/msgroom staff,/ht ban ${ticket.userid}">Ticketban</button> | `;
-				buf += `<button class="button" name="send" value="/modlog room=global,user='${ticket.userid}'">Global Modlog</button><br />`;
+				this.title = `[${this.TL`Text Ticket`}] ${ticket.userid}`;
+				buf += `<h2>${this.TL`Issue: ${ticketType}`}</h2>`;
+				const creatorName = `<span class="username">${ticket.userid}</span>`;
+				buf += `<strong>${this.TL`From: ${creatorName}`}</strong>`;
+				buf += `  <button class="button" name="send" value="/msgroom staff,/ht ban ${ticket.userid}">${this.TL`Ticketban`}</button> | `;
+				buf += `<button class="button" name="send" value="/modlog room=global,user='${ticket.userid}'">${this.TL`Global Modlog`}</button><br />`;
 				if (ticket.claimed) {
-					buf += `<br /><strong>Claimed:</strong> ${ticket.claimed}<br />`;
+					buf += `<br /><strong>${this.TL`Claimed:`}</strong> ${ticket.claimed}<br />`;
 				}
 				buf += await ticketInfo.getReviewDisplay(
 					ticket as TicketState & { text: [string, string] },
@@ -2016,10 +2088,10 @@ export const pages: Chat.PageTable = {
 				buf += `<br />`;
 				buf += `<div class="infobox">`;
 				const [text, context] = ticket.text;
-				buf += `<p><strong>Report text:</strong></p><hr />`;
+				buf += `<p><strong>${this.TL`Report text:`}</strong></p><hr />`;
 				buf += Chat.formatText(text);
 				if (context) {
-					buf += `<br /><hr /><strong>Context given: </strong><br />`;
+					buf += `<br /><hr /><strong>${this.TL`Context given:`} </strong><br />`;
 					// gotta account for the cases where we didn't escape html in context on submit
 					// If it includes <br />, it has been escaped and has several lines.
 					// If we can strip raw html out of it, it should be escaped.
@@ -2028,10 +2100,11 @@ export const pages: Chat.PageTable = {
 					buf += noEscape ? Chat.formatText(context) : context;
 				}
 				buf += `</div>`;
-				buf += Utils.html`<strong>Resolved: by ${ticket.resolved.by}</strong><br />`;
-				buf += Utils.html`<strong>Result:</strong> ${Chat.collapseLineBreaksHTML(ticket.resolved.result)}<br />`;
+				const resolvedBy = Utils.escapeHTML(ticket.resolved.by);
+				buf += `<strong>${this.TL`Resolved: by ${resolvedBy}`}</strong><br />`;
+				buf += Utils.html`<strong>${this.TL`Result:`}</strong> ${Chat.collapseLineBreaksHTML(ticket.resolved.result)}<br />`;
 				if (ticket.resolved.staffReason.includes('PROOF')) { // a note was added, show it
-					buf += Utils.html`<strong>Resolver notes:</strong> ${Chat.collapseLineBreaksHTML(ticket.resolved.staffReason)}<br />`;
+					buf += Utils.html`<strong>${this.TL`Resolver notes:`}</strong> ${Chat.collapseLineBreaksHTML(ticket.resolved.staffReason)}<br />`;
 				}
 				buf += `</details><hr />`;
 			}
@@ -2171,7 +2244,7 @@ export const pages: Chat.PageTable = {
 
 				for (const type of sortedStats) {
 					const resolution = `${this.TL`Resolved`}: ${typeStats[type].resolved}%<br/>${this.TL`Unresolved`}: ${typeStats[type].unresolved}%<br/>${this.TL`Dead`}: ${typeStats[type].dead}%`;
-					buf += `<tr><td>${type}</td><td>${typeStats[type].totaltickets}</td><td>${Chat.toDurationString(typeStats[type].total, { hhmmss: true })}</td><td>${Chat.toDurationString(typeStats[type].initwait, { hhmmss: true }) || '-'}</td><td>${Chat.toDurationString(typeStats[type].wait, { hhmmss: true }) || '-'}</td><td>${resolution}</td><td>${typeStats[type].result}%</td></tr>`;
+					buf += `<tr><td>${this.TL(type)}</td><td>${typeStats[type].totaltickets}</td><td>${Chat.toDurationString(typeStats[type].total, { hhmmss: true })}</td><td>${Chat.toDurationString(typeStats[type].initwait, { hhmmss: true }) || '-'}</td><td>${Chat.toDurationString(typeStats[type].wait, { hhmmss: true }) || '-'}</td><td>${resolution}</td><td>${typeStats[type].result}%</td></tr>`;
 				}
 			} else {
 				const staffStats: { [key: string]: { [key: string]: number } } = {};
@@ -2258,7 +2331,7 @@ export const commands: Chat.ChatCommands = {
 			if (!user.named) throw new Chat.ErrorMessage(this.TL`You need to choose a username before doing this.`);
 			return this.parse(`/join view-help-request${meta}`);
 		},
-		createhelp: [`/helpticket create - Creates a new ticket requesting help from global staff.`],
+		createhelp: [TLkey`/helpticket create - Creates a new ticket requesting help from global staff.`],
 
 		submittext: 'submit',
 		async submit(target, room, user, connection, cmd) {
@@ -2268,14 +2341,14 @@ export const commands: Chat.ChatCommands = {
 			if (!user.named) return this.popupReply(this.TL`You need to choose a username before doing this.`);
 			const ticketBan = Punishments.isTicketBanned(user);
 			if (ticketBan) {
-				return this.popupReply(HelpTicket.getBanMessage(user.id, ticketBan));
+				return this.popupReply(HelpTicket.getBanMessage(user.id, ticketBan, this.TL));
 			}
 			let ticket = tickets[user.id];
 			const ipTicket = checkIp(user.latestIp);
 			if (ticket?.open || ipTicket) {
 				if (!ticket && ipTicket) ticket = ipTicket;
 				if (ticket.text) {
-					return this.popupReply(`You already have a pending ticket, please wait.`);
+					return this.popupReply(this.TL`You already have a pending ticket, please wait.`);
 				}
 				const helpRoom = Rooms.get(`help-${ticket.userid}`);
 				if (!helpRoom) {
@@ -2283,7 +2356,7 @@ export const commands: Chat.ChatCommands = {
 					return;
 				}
 				helpRoom.auth.set(user.id, '+');
-				this.popupReply(`You already have a pending ticket, please wait.`);
+				this.popupReply(this.TL`You already have a pending ticket, please wait.`);
 				return this.parse(`/join help-${ticket.userid}`);
 			}
 			if (Monitor.countTickets(user.latestIp)) {
@@ -2305,8 +2378,9 @@ export const commands: Chat.ChatCommands = {
 				'Public Room Assistance Request': this.TL`Hi! Which room(s) do you need us to help you watch?`,
 				Other: this.TL`Hi! What seems to be the problem? Tell us about any people involved, and if this happened in a specific place on the site.`,
 			};
+			// shown to the staff joining the ticket room
 			const staffContexts: { [k: string]: string } = {
-				'IP-Appeal': `<p><strong>${user.name}'s IP Addresses</strong>: ${user.ips.map(ip => `<a href="https://whatismyipaddress.com/ip/${ip}" target="_blank">${ip}</a>`).join(', ')}</p>`,
+				'IP-Appeal': `<p><strong>${inStaffRoom.TL`${user.name}'s IP Addresses`}</strong>: ${user.ips.map(ip => `<a href="https://whatismyipaddress.com/ip/${ip}" target="_blank">${ip}</a>`).join(', ')}</p>`,
 			};
 			ticket = {
 				creator: user.name,
@@ -2333,17 +2407,17 @@ export const commands: Chat.ChatCommands = {
 				}
 				if (!toID(text)) {
 					this.parse(`/join view-${pageId}`);
-					return this.popupReply(`Please tell us what is happening.`);
+					return this.popupReply(this.TL`Please tell us what is happening.`);
 				}
 				text = text.replace(/\n/ig, ' ');
 				contextString = contextString.split('\n').map(t => Chat.formatText(t)).join('<br />');
 				if (text.length > 8192) {
-					return this.popupReply(`Your report is too long. Please use fewer words.`);
+					return this.popupReply(this.TL`Your report is too long. Please use fewer words.`);
 				}
 				const validation = await textTicket.checker?.(text, contextString || '', ticket.type, user, reportTarget);
 				if (Array.isArray(validation) && validation.length) {
 					this.parse(`/join view-${pageId}`);
-					return this.popupReply(`|html|` + validation.join('<br />'));
+					return this.popupReply(`|html|` + validation.map(line => this.TL(line)).join('<br />'));
 				}
 				ticket.text = [text, contextString];
 				ticket.active = true;
@@ -2365,25 +2439,25 @@ export const commands: Chat.ChatCommands = {
 
 				connection.send(`>view-${pageId}\n|deinit`);
 				Chat.refreshPageFor(`help-list-${HelpTicket.getTypeId(ticket.type)}`, 'staff');
-				return this.popupReply(`Your report has been submitted.`);
+				return this.popupReply(this.TL`Your report has been submitted.`);
 			}
 
 			let closeButtons = ``;
 			switch (ticket.type) {
 			case 'Appeal':
 			case 'IP-Appeal':
-				closeButtons = `<button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}">Close Ticket as Appeal Granted</button> <button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}, false">Close Ticket as Appeal Denied</button>`;
+				closeButtons = `<button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}">${inStaffRoom.TL`Close Ticket as Appeal Granted`}</button> <button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}, false">${inStaffRoom.TL`Close Ticket as Appeal Denied`}</button>`;
 				break;
 			case 'PM Harassment':
 			case 'Battle Harassment':
 			case 'Inappropriate Pokemon Nicknames':
 			case 'Inappropriate Username':
-				closeButtons = `<button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}">Close Ticket as Valid Report</button> <button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}, false">Close Ticket as Invalid Report</button>`;
+				closeButtons = `<button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}">${inStaffRoom.TL`Close Ticket as Valid Report`}</button> <button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}, false">${inStaffRoom.TL`Close Ticket as Invalid Report`}</button>`;
 				break;
 			case 'Public Room Assistance Request':
 			case 'Other':
 			default:
-				closeButtons = `<button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}">Close Ticket as Assisted</button> <button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}, false">Close Ticket as Unable to Assist</button>`;
+				closeButtons = `<button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}">${inStaffRoom.TL`Close Ticket as Assisted`}</button> <button class="button" style="margin: 5px 0" name="send" value="/helpticket close ${user.id}, false">${inStaffRoom.TL`Close Ticket as Unable to Assist`}</button>`;
 			}
 			let staffIntroButtons = '';
 			let pmRequestButton = '';
@@ -2393,33 +2467,43 @@ export const commands: Chat.ChatCommands = {
 					if (!Config.pmLogButton) break;
 					pmRequestButton = Config.pmLogButton(user.id, toID(reportTarget));
 					contexts['PM Harassment'] = this.TL`Hi! Please click the button below to give global staff permission to check PMs.` +
-						this.TL` Or if ${reportTarget} is not the user you want to report, please tell us the name of the user who you want to report.`;
+						` ` + this.TL`Or if ${reportTarget} is not the user you want to report, please tell us the name of the user who you want to report.`;
 					break;
 				case 'Inappropriate Username':
-					staffIntroButtons = Utils.html`<button class="button" name="send" value="/forcerename ${reportTarget}">Force-rename ${reportTarget}</button> `;
+					staffIntroButtons = Utils.html`<button class="button" name="send" value="/forcerename ${reportTarget}">` +
+						`${inStaffRoom.TL`Force-rename ${Utils.escapeHTML(reportTarget)}`}</button> `;
 					break;
 				}
-				staffIntroButtons += Utils.html`<button class="button" name="send" value="/modlog room=global, user='${reportTarget}'">Global Modlog for ${reportTarget}</button> <button class="button" name="send" value="/sharedbattles ${user.id}, ${toID(reportTarget)}">Shared battles</button> `;
+				const escapedTarget = Utils.escapeHTML(reportTarget);
+				staffIntroButtons += Utils.html`<button class="button" name="send" value="/modlog room=global, user='${reportTarget}'">` +
+					`${inStaffRoom.TL`Global Modlog for ${escapedTarget}`}</button> ` +
+					Utils.html`<button class="button" name="send" value="/sharedbattles ${user.id}, ${toID(reportTarget)}">` +
+					`${inStaffRoom.TL`Shared battles`}</button> `;
 			}
 			if (ticket.type === 'Appeal') {
-				staffIntroButtons += Utils.html`<button class="button" name="send" value="/modlog room=global, user='${user.name}'">Global Modlog for ${user.name}</button>`;
+				const escapedName = Utils.escapeHTML(user.name);
+				staffIntroButtons += Utils.html`<button class="button" name="send" value="/modlog room=global, user='${user.name}'">` +
+					`${inStaffRoom.TL`Global Modlog for ${escapedName}`}</button>`;
 			}
 			const introMsg = Utils.html`<h2 style="margin:0">${this.TL`Help Ticket`} - ${user.name}</h2>` +
-				`<p><b>${this.TL`Issue`}</b>: ${ticket.type}<br />${this.TL`A Global Staff member will be with you shortly.`}</p>`;
+				`<p><b>${this.TL`Issue`}</b>: ${this.TL(ticket.type)}<br />${this.TL`A Global Staff member will be with you shortly.`}</p>`;
+			const creatorName = ticket.creator;
 			const staffMessage = [
-				`<p>${closeButtons} <details><summary class="button">More Options</summary> ${staffIntroButtons}`,
-				`<button class="button" name="send" value="/modlog room=global, user='${ticket.userid}'"><small>Global Modlog for ${ticket.creator}</small></button>`,
-				`<button class="button" name="send" value="/helpticket ban ${user.id}"><small>Ticketban</small></button>`,
-				`<button class="button" name="send" value="/am edithistory ${ticket.userid}"><small>Artemis History for ${ticket.creator}</small></button></p></details>`,
+				`<p>${closeButtons} <details><summary class="button">${inStaffRoom.TL`More Options`}</summary> ${staffIntroButtons}`,
+				`<button class="button" name="send" value="/modlog room=global, user='${ticket.userid}'"><small>${inStaffRoom.TL`Global Modlog for ${creatorName}`}</small></button>`,
+				`<button class="button" name="send" value="/helpticket ban ${user.id}"><small>${inStaffRoom.TL`Ticketban`}</small></button>`,
+				`<button class="button" name="send" value="/am edithistory ${ticket.userid}"><small>${inStaffRoom.TL`Artemis History for ${creatorName}`}</small></button></p></details>`,
 			].join('<br />');
 			const staffHint = staffContexts[ticketType] || '';
 			let reportTargetInfo = '';
 			if (reportTargetType === 'room') {
-				reportTargetInfo = `Reported in room: <a href="/${reportTarget}">${reportTarget}</a>`;
+				const roomLink = `<a href="/${reportTarget}">${reportTarget}</a>`;
+				reportTargetInfo = inStaffRoom.TL`Reported in room: ${roomLink}`;
 				const reportRoom = Rooms.get(reportTarget) as GameRoom | undefined;
 				void reportRoom?.uploadReplay?.(user, connection, 'forpunishment');
 			} else if (reportTargetType === 'user') {
-				reportTargetInfo = `Reported user: <strong class="username">${reportTarget}</strong><p></p>`;
+				const reportedName = `<strong class="username">${reportTarget}</strong>`;
+				reportTargetInfo = `${inStaffRoom.TL`Reported user: ${reportedName}`}<p></p>`;
 
 				const targetID = toID(reportTarget);
 				if (targetID !== ticket.userid) {
@@ -2429,10 +2513,13 @@ export const commands: Chat.ChatCommands = {
 						this.connection
 					);
 
+					const escapedTarget = Utils.escapeHTML(reportTarget);
+					const escapedCreator = Utils.escapeHTML(ticket.creator);
 					if (!commonBattles.length) {
-						reportTargetInfo += Utils.html`There are no common battles between '${reportTarget}' and '${ticket.creator}'.`;
+						reportTargetInfo += inStaffRoom.TL`There are no common battles between '${escapedTarget}' and '${escapedCreator}'.`;
 					} else {
-						reportTargetInfo += Utils.html`Showing ${commonBattles.length} common battle(s) between '${reportTarget}' and '${ticket.creator}': `;
+						const battleCount = commonBattles.length;
+						reportTargetInfo += inStaffRoom.TL`Showing ${battleCount} common battle(s) between '${escapedTarget}' and '${escapedCreator}': `;
 						reportTargetInfo += commonBattles.map(
 							roomid => Utils.html`<a href=/${roomid}>${roomid.replace(/^battle-/, '')}`
 						).join(', ');
@@ -2461,7 +2548,8 @@ export const commands: Chat.ChatCommands = {
 			const ticketGame = helpRoom.getGame(HelpTicket)!;
 			Chat.runHandlers('onTicketCreate', ticket, user);
 			helpRoom.modlog({ action: 'TICKETOPEN', isGlobal: false, loggedBy: user.id, note: ticket.type });
-			ticketGame.addText(`${user.name} opened a new ticket. Issue: ${ticket.type}`, user);
+			const ticketTypeName = helpRoom.TL(ticket.type);
+			ticketGame.addText(helpRoom.TL`${user.name} opened a new ticket. Issue: ${ticketTypeName}`, user);
 			void this.parse(`/join help-${user.id}`);
 			if (!(user.id in ticketGame.playerTable)) {
 				// User was already in the room, manually add them to the "game" so they get a popup if they try to leave
@@ -2471,7 +2559,8 @@ export const commands: Chat.ChatCommands = {
 			switch (ticket.type) {
 			case 'IP-Appeal':
 				if (user.locked === '#hostfilter') {
-					context += this.TL` (Have you looked at https://${Config.routes.root}/pages/proxyhelp?)`;
+					const proxyHelpLink = `https://${Config.routes.root}/pages/proxyhelp`;
+					context += ` (${this.TL`Have you looked at ${proxyHelpLink}?`})`;
 				}
 				break;
 			}
@@ -2502,12 +2591,12 @@ export const commands: Chat.ChatCommands = {
 				return this.parse(`/help helpticket`);
 			}
 			const ticket = tickets[ticketId];
-			if (!ticket) return this.popupReply(`That ticket was not found.`);
+			if (!ticket) return this.popupReply(this.TL`That ticket was not found.`);
 			if (ticket.resolved) {
-				return this.popupReply(`That ticket has already been resolved.`);
+				return this.popupReply(this.TL`That ticket has already been resolved.`);
 			}
 			if (!ticket.text) {
-				return this.popupReply(`That ticket cannot be resolved with /helpticket resolve. Join it instead.`);
+				return this.popupReply(this.TL`That ticket cannot be resolved with /helpticket resolve. Join it instead.`);
 			}
 			const { publicReason, privateReason } = this.parseSpoiler(result);
 			ticket.resolved = {
@@ -2526,7 +2615,7 @@ export const commands: Chat.ChatCommands = {
 			const duration = Date.now() - (ticket.state?.claimTime || ticket.created);
 			// ticketType\ttotalTime\ttimeToFirstClaim\tinactiveTime\tresolution\tresult\tstaff,userids,separated,with,commas
 			writeStats(`${ticket.type}\t${duration}\t0\t0\tresolved\tvalid\t${user.id}`);
-			this.popupReply(`You resolved ${ticketId}'s ticket.`);
+			this.popupReply(this.TL`You resolved ${ticketId}'s ticket.`);
 			await HelpTicket.modlog({
 				action: 'TEXTTICKET CLOSE',
 				loggedBy: user.id,
@@ -2546,7 +2635,7 @@ export const commands: Chat.ChatCommands = {
 			this.checkCan('lock');
 			return this.parse('/join view-help-tickets');
 		},
-		listhelp: [`/helpticket list - Lists all tickets. Requires: % @ ~`],
+		listhelp: [TLkey`/helpticket list - Lists all tickets. Requires: % @ ~`],
 
 		inapnames: 'massview',
 		usernames: 'massview',
@@ -2565,7 +2654,7 @@ export const commands: Chat.ChatCommands = {
 			this.checkCan('lock');
 			return this.parse('/join view-help-stats');
 		},
-		statshelp: [`/helpticket stats - List the stats for help tickets. Requires: % @ ~`],
+		statshelp: [TLkey`/helpticket stats - List the stats for help tickets. Requires: % @ ~`],
 
 		note: 'addnote',
 		addnote(target, room, user) {
@@ -2574,22 +2663,22 @@ export const commands: Chat.ChatCommands = {
 			if (!target) return this.parse(`/help helpticket addnote`);
 			const [ticketName, note] = Utils.splitFirst(target, ',').map(i => i.trim());
 			const ticketId = toID(ticketName);
-			if (!ticketId) throw new Chat.ErrorMessage(`Specify the userid that created the ticket you want to mark.`);
+			if (!ticketId) throw new Chat.ErrorMessage(this.TL`Specify the userid that created the ticket you want to mark.`);
 			const ticket = tickets[ticketId];
-			if (!ticket) throw new Chat.ErrorMessage(`${ticketId} does not have an active ticket.`);
-			if (ticket.resolved) throw new Chat.ErrorMessage(`${ticketId}'s ticket has already been resolved.`);
-			if (!note) throw new Chat.ErrorMessage(`You must specify a note to add.`);
+			if (!ticket) throw new Chat.ErrorMessage(this.TL`${ticketId} does not have an active ticket.`);
+			if (ticket.resolved) throw new Chat.ErrorMessage(this.TL`${ticketId}'s ticket has already been resolved.`);
+			if (!note) throw new Chat.ErrorMessage(this.TL`You must specify a note to add.`);
 			if (!ticket.notes) ticket.notes = {};
 			ticket.notes[user.id] = note;
 			writeTickets();
 			notifyStaff();
-			if (!room || room.roomid !== 'staff') this.sendReply(`Added the note "${note}" to ${ticketId}'s ticket.`);
+			if (!room || room.roomid !== 'staff') this.sendReply(this.TL`Added the note "${note}" to ${ticketId}'s ticket.`);
 			this.room = Rooms.get('staff') || null;
-			this.addGlobalModAction(`${user.name} added the note "${note}" to ${ticket.userid}'s helpticket.`);
+			this.addGlobalModAction(inStaffRoom.TL`${user.name} added the note "${note}" to ${ticket.userid}'s helpticket.`);
 			this.globalModlog(`HELPTICKET NOTE`, ticket.userid, note);
 		},
 		addnotehelp: [
-			`/helpticket note [ticket userid], [note] - Adds a note to the [ticket], to be displayed in the hover text. Requires: % @ ~`,
+			TLkey`/helpticket note [ticket userid], [note] - Adds a note to the [ticket], to be displayed in the hover text. Requires: % @ ~`,
 		],
 		removenote(target, room, user) {
 			this.checkCan('lock');
@@ -2598,31 +2687,33 @@ export const commands: Chat.ChatCommands = {
 			let [ticketName, staff] = Utils.splitFirst(target, ',').map(i => i.trim());
 			const targetId = toID(ticketName);
 			if (!targetId) {
-				throw new Chat.ErrorMessage(`Specify the userid that created the ticket you want to remove a note from.`);
+				throw new Chat.ErrorMessage(this.TL`Specify the userid that created the ticket you want to remove a note from.`);
 			}
 			const ticket = tickets[targetId];
-			if (!ticket || ticket.resolved) throw new Chat.ErrorMessage(`${targetId} does not have a pending ticket.`);
+			if (!ticket || ticket.resolved) throw new Chat.ErrorMessage(this.TL`${targetId} does not have a pending ticket.`);
 			staff = toID(staff) || user.id;
-			if (!ticket.notes) throw new Chat.ErrorMessage(`${targetId}'s ticket does not have any notes.`);
+			if (!ticket.notes) throw new Chat.ErrorMessage(this.TL`${targetId}'s ticket does not have any notes.`);
 			const note = ticket.notes[staff];
 			if (!note) {
-				throw new Chat.ErrorMessage(`${staff === user.id ? 'you do' : `'${staff}' does`} not have a note on that ticket.`);
+				throw new Chat.ErrorMessage(staff === user.id ?
+					this.TL`you do not have a note on that ticket.` :
+					this.TL`'${staff}' does not have a note on that ticket.`);
 			}
 			if (!room || room.roomid !== 'staff') {
-				this.sendReply(`You removed the note '${note}' (by ${staff}) on ${ticket.userid}'s ticket.`);
+				this.sendReply(this.TL`You removed the note '${note}' (by ${staff}) on ${ticket.userid}'s ticket.`);
 			}
 			delete ticket.notes[staff];
 			if (!Object.keys(ticket.notes).length) delete ticket.notes;
 			writeTickets();
 			notifyStaff();
 			this.room = Rooms.get('staff') || null;
-			this.addModAction(`${user.name} removed ${staff}'s note ("${note}") from ${ticket.userid}'s helpticket.`);
+			this.addModAction(inStaffRoom.TL`${user.name} removed ${staff}'s note ("${note}") from ${ticket.userid}'s helpticket.`);
 			this.globalModlog(`HELPTICKET REMOVENOTE`, ticket.userid, `${note} (originally by ${staff})`);
 		},
 		removenotehelp: [
-			`/helpticket removenote [ticket userid], [staff] - Removes a note from the [ticket].`,
-			`If a [staff] userid is given, removes the note from that staff member (defaults to your userid).`,
-			`Requires: % @ ~`,
+			TLkey`/helpticket removenote [ticket userid], [staff] - Removes a note from the [ticket].`,
+			TLkey`If a [staff] userid is given, removes the note from that staff member (defaults to your userid).`,
+			TLkey`Requires: % @ ~`,
 		],
 
 		ar: 'addresponse',
@@ -2636,24 +2727,26 @@ export const commands: Chat.ChatCommands = {
 			}
 			const typeId = HelpTicket.getTypeId(type);
 			if (!(typeId in textTickets)) {
-				throw new Chat.ErrorMessage([`'${type}' is not a valid text ticket type.`,
-					`Valid types: ${Object.keys(textTickets).join(', ')}.`]);
+				const validTypes = Object.keys(textTickets).join(', ');
+				throw new Chat.ErrorMessage([this.TL`'${type}' is not a valid text ticket type.`,
+					this.TL`Valid types: ${validTypes}.`]);
 			}
 			if (!settings.responses[typeId]) {
 				settings.responses[typeId] = {};
 			}
 			if (settings.responses[typeId][name] && !this.cmd.includes('f')) {
-				throw new Chat.ErrorMessage([`That button already exists for that ticket type.`,
-					`Use /ht forceaddresponse to override it if you're sure.`]);
+				throw new Chat.ErrorMessage([this.TL`That button already exists for that ticket type.`,
+					this.TL`Use /ht forceaddresponse to override it if you're sure.`]);
 			}
 			settings.responses[typeId][name] = response;
 			writeSettings();
-			this.privateGlobalModAction(`${user.name} added a response button '${name}' for the ticket type ${typeId} ("${response}")`);
+			const TL = roomTL(this.room, this.TL);
+			this.privateGlobalModAction(TL`${user.name} added a response button '${name}' for the ticket type ${typeId} ("${response}")`);
 			this.globalModlog(`HELPTICKET ADDRESPONSE`, null, `'${response}' named ${name} for ${typeId}`);
 		},
 		addresponsehelp: [
-			`/helpticket addresponse [type], [name], [response] - Adds a [response] button to the given ticket [type] with the given [name].`,
-			`Requires: % @ ~`,
+			TLkey`/helpticket addresponse [type], [name], [response] - Adds a [response] button to the given ticket [type] with the given [name].`,
+			TLkey`Requires: % @ ~`,
 		],
 
 		rr: 'removeresponse',
@@ -2663,48 +2756,48 @@ export const commands: Chat.ChatCommands = {
 			if (!toID(type) || !toID(name)) return this.parse(`/help helpticket removeresponse`);
 			const typeId = HelpTicket.getTypeId(type);
 			if (!(type in textTickets)) {
-				throw new Chat.ErrorMessage(`'${type}' is not a valid text ticket type.`);
+				throw new Chat.ErrorMessage(this.TL`'${type}' is not a valid text ticket type.`);
 			}
 			if (!settings.responses[typeId]?.[name]) {
-				throw new Chat.ErrorMessage(`'${name}' is not a response for the ${typeId} ticket type .`);
+				throw new Chat.ErrorMessage(this.TL`'${name}' is not a response for the ${typeId} ticket type .`);
 			}
 			delete settings.responses[typeId][name];
 			if (!Object.keys(settings.responses[typeId]).length) {
 				delete settings.responses[typeId];
 			}
 			writeSettings();
-			this.privateGlobalModAction(`${user.name} removed the response named '${name}' from the responses for ${typeId} tickets`);
+			const TL = roomTL(this.room, this.TL);
+			this.privateGlobalModAction(TL`${user.name} removed the response named '${name}' from the responses for ${typeId} tickets`);
 			this.globalModlog('HELPTICKET REMOVERESPONSE', null, `${name} (from ${typeId})`);
 		},
 		removeresponsehelp: [
-			`/helpticket removeresponse [type], [name] - Removes the response button with the given [name] from the given ticket [type].`,
-			`Requires: % @ ~`,
+			TLkey`/helpticket removeresponse [type], [name] - Removes the response button with the given [name] from the given ticket [type].`,
+			TLkey`Requires: % @ ~`,
 		],
 
 		lr: 'listresponses',
 		listresponses(target, room, user) {
 			this.checkCan('lock');
-			let buf = `<strong>Help ticket response buttons `;
 			target = toID(target);
 			if (target && !(target in textTickets)) {
-				throw new Chat.ErrorMessage(`Invalid ticket type: ${target}.`);
+				throw new Chat.ErrorMessage(this.TL`Invalid ticket type: ${target}.`);
 			}
-			buf += `${target ? `for the type ${target}:` : ""}</strong><hr />`;
+			let buf = `<strong>${target ? this.TL`Help ticket response buttons for the type ${target}:` : this.TL`Help ticket response buttons`}</strong><hr />`;
 			const table = target ? { [target]: settings.responses[target] } : settings.responses;
 			if (!Object.keys(table).length) {
-				buf += `<p class="message-error">None</p>`;
+				buf += `<p class="message-error">${this.TL`None`}</p>`;
 				return this.sendReplyBox(buf);
 			}
 			buf += Object.keys(table).map(type => (
-				`<p>${ticketTitles[type]}<p>` +
+				`<p>${this.TL(ticketTitles[type])}<p>` +
 				Object.keys(settings.responses[type])
 					.map(name => Utils.html`<p>- ${name}: "${settings.responses[type][name]}"</p>`).join('')
 			)).join('<hr />');
 			return this.sendReplyBox(buf);
 		},
 		listresponseshelp: [
-			`/helpticket listresponses [optional type] - List current response buttons for text tickets. `,
-			`If a [type] is given, lists responses only for that type. Requires: % @ ~`,
+			TLkey`/helpticket listresponses [optional type] - List current response buttons for text tickets. `,
+			TLkey`If a [type] is given, lists responses only for that type. Requires: % @ ~`,
 		],
 
 		close(target, room, user) {
@@ -2737,9 +2830,9 @@ export const commands: Chat.ChatCommands = {
 				writeTickets();
 			}
 			ticket.claimed = user.name;
-			this.sendReply(`You closed ${ticket.creator}'s ticket.`);
+			this.sendReply(this.TL`You closed ${ticket.creator}'s ticket.`);
 		},
-		closehelp: [`/helpticket close [user] - Closes an open ticket. Requires: % @ ~`],
+		closehelp: [TLkey`/helpticket close [user] - Closes an open ticket. Requires: % @ ~`],
 
 		tb: 'ban',
 		ticketban: 'ban',
@@ -2755,6 +2848,7 @@ export const commands: Chat.ChatCommands = {
 			if (reason.length > 300) {
 				throw new Chat.ErrorMessage(this.TL`The reason is too long. It cannot exceed 300 characters.`);
 			}
+			const TL = roomTL(this.room, this.TL);
 
 			let username;
 			let userid;
@@ -2763,34 +2857,41 @@ export const commands: Chat.ChatCommands = {
 				username = targetUser.getLastName();
 				userid = targetUser.getLastId();
 				if (punishment) {
-					return this.privateModAction(`${username} would be ticket banned by ${user.name} but was already ticket banned.`);
+					return this.privateModAction(TL`${username} would be ticket banned by ${user.name} but was already ticket banned.`);
 				}
 				if (targetUser.trusted) {
-					Monitor.log(`[CrisisMonitor] Trusted user ${targetUser.name}${(targetUser.trusted !== targetUser.id ? ` (${targetUser.trusted})` : ``)} was ticket banned by ${user.name}, and should probably be demoted.`);
+					const trustedID = targetUser.trusted !== targetUser.id ? ` (${targetUser.trusted})` : ``;
+					// shown in the staff room
+					Monitor.log(`[CrisisMonitor] ${inStaffRoom.TL`Trusted user ${targetUser.name}${trustedID} was ticket banned by ${user.name}, and should probably be demoted.`}`);
 				}
 			} else {
 				username = targetUsername;
 				userid = toID(targetUsername);
 				if (punishment) {
-					return this.privateModAction(`${username} would be ticket banned by ${user.name} but was already ticket banned.`);
+					return this.privateModAction(TL`${username} would be ticket banned by ${user.name} but was already ticket banned.`);
 				}
 			}
 
 			if (targetUser) {
-				targetUser.popup(`|modal|${user.name} has banned you from creating help tickets.${(reason ? `\n\nReason: ${reason}` : ``)}\n\nYour ban will expire in a few days.`);
+				const banMessage = targetUser.TL`${user.name} has banned you from creating help tickets.`;
+				const reasonMessage = reason ? `\n\n${targetUser.TL`Reason: ${reason}`}` : ``;
+				targetUser.popup(`|modal|${banMessage}${reasonMessage}\n\n${targetUser.TL`Your ban will expire in a few days.`}`);
 			}
 
 			const affected: (User | ID)[] = await HelpTicket.ban(targetUser || userid, reason);
-			this.addGlobalModAction(`${username} was ticket banned by ${user.name}.${reason ? ` (${reason})` : ``}`);
+			const reasonText = reason ? ` (${reason})` : ``;
+			this.addGlobalModAction(TL`${username} was ticket banned by ${user.name}.${reasonText}`);
 			const acAccount = (targetUser && targetUser.autoconfirmed !== userid && targetUser.autoconfirmed);
 
 			let displayMessage = '';
 			if (affected.length > 1) {
 				const alts = affected.slice(1).map(userObj => typeof userObj === 'string' ? userObj : userObj.getLastName()).join(", ");
-				displayMessage = `${username}'s ${acAccount ? ` ac account: ${acAccount}, ` : ""}ticket banned alts: ${alts}`;
+				displayMessage = acAccount ?
+					TL`${username}'s  ac account: ${acAccount}, ticket banned alts: ${alts}` :
+					TL`${username}'s ticket banned alts: ${alts}`;
 				this.privateModAction(displayMessage);
 			} else if (acAccount) {
-				displayMessage = `${username}'s ac account: ${acAccount}`;
+				displayMessage = TL`${username}'s ac account: ${acAccount}`;
 				this.privateModAction(displayMessage);
 			}
 			if (targetUser?.previousIDs.length) {
@@ -2838,7 +2939,7 @@ export const commands: Chat.ChatCommands = {
 			notifyStaff();
 			return true;
 		},
-		banhelp: [`/helpticket ban [user], (reason) - Bans a user from creating tickets for 2 days. Requires: % @ ~`],
+		banhelp: [TLkey`/helpticket ban [user], (reason) - Bans a user from creating tickets for 2 days. Requires: % @ ~`],
 
 		unticketban: 'unban',
 		unban(target, room, user) {
@@ -2853,11 +2954,13 @@ export const commands: Chat.ChatCommands = {
 			}
 
 			const affected = HelpTicket.unban(targetID);
-			this.addModAction(`${affected} was ticket unbanned by ${user.name}.`);
+			const TL = roomTL(this.room, this.TL);
+			this.addModAction(TL`${affected} was ticket unbanned by ${user.name}.`);
 			this.globalModlog("UNTICKETBAN", toID(target));
-			Users.get(target)?.popup(`${user.name} has ticket unbanned you.`);
+			const unbannedUser = Users.get(target);
+			unbannedUser?.popup(unbannedUser.TL`${user.name} has ticket unbanned you.`);
 		},
-		unbanhelp: [`/helpticket unban [user] - Ticket unbans a user. Requires: % @ ~`],
+		unbanhelp: [TLkey`/helpticket unban [user] - Ticket unbans a user. Requires: % @ ~`],
 
 		ignore(target, room, user) {
 			this.checkCan('lock');
@@ -2868,7 +2971,7 @@ export const commands: Chat.ChatCommands = {
 			user.update();
 			this.sendReply(this.TL`You are now ignoring help ticket notifications.`);
 		},
-		ignorehelp: [`/helpticket ignore - Ignore notifications for unclaimed help tickets. Requires: % @ ~`],
+		ignorehelp: [TLkey`/helpticket ignore - Ignore notifications for unclaimed help tickets. Requires: % @ ~`],
 
 		unignore(target, room, user) {
 			this.checkCan('lock');
@@ -2879,7 +2982,7 @@ export const commands: Chat.ChatCommands = {
 			user.update();
 			this.sendReply(this.TL`You will now receive help ticket notifications.`);
 		},
-		unignorehelp: [`/helpticket unignore - Stop ignoring notifications for help tickets. Requires: % @ ~`],
+		unignorehelp: [TLkey`/helpticket unignore - Stop ignoring notifications for help tickets. Requires: % @ ~`],
 
 		delete(target, room, user) {
 			// This is a utility only to be used if something goes wrong
@@ -2897,19 +3000,19 @@ export const commands: Chat.ChatCommands = {
 			}
 			this.sendReply(this.TL`You deleted ${target}'s ticket.`);
 		},
-		deletehelp: [`/helpticket delete [user] - Deletes a user's ticket. Requires: ~`],
+		deletehelp: [TLkey`/helpticket delete [user] - Deletes a user's ticket. Requires: ~`],
 
 		logs(target, room, user) {
 			this.checkCan('lock');
 			const [targetString, dateString] = Utils.splitFirst(target, ',').map(i => i.trim());
 			const id = toID(targetString);
-			if (!id) throw new Chat.ErrorMessage(`Specify a userid.`);
+			if (!id) throw new Chat.ErrorMessage(this.TL`Specify a userid.`);
 			return this.parse(`/j view-help-logs-${id}${dateString ? `--${dateString}` : ''}`);
 		},
 		logshelp: [
-			`/helpticket logs [userid][, month] - View logs of the [userid]'s text tickets. `,
-			`If a [month] is given, searches only that month.`,
-			`Requires: % @ ~`,
+			TLkey`/helpticket logs [userid][, month] - View logs of the [userid]'s text tickets. `,
+			TLkey`If a [month] is given, searches only that month.`,
+			TLkey`Requires: % @ ~`,
 		],
 
 		async private(target, room, user) {
@@ -2919,11 +3022,11 @@ export const commands: Chat.ChatCommands = {
 			const userid = toID(username);
 			if (!userid) return this.parse(`/help helpticket`);
 			if (!/[0-9]{4}-[0-9]{2}-[0-9]{2}/.test(date)) {
-				throw new Chat.ErrorMessage(`Invalid date (must be YYYY-MM-DD format).`);
+				throw new Chat.ErrorMessage(this.TL`Invalid date (must be YYYY-MM-DD format).`);
 			}
 			const logPath = Monitor.logPath(`chat/help-${userid}/${date.slice(0, -3)}/${date}.txt`);
 			if (!(await logPath.exists())) {
-				throw new Chat.ErrorMessage(`There are no logs for tickets from '${userid}' on the date '${date}'.`);
+				throw new Chat.ErrorMessage(this.TL`There are no logs for tickets from '${userid}' on the date '${date}'.`);
 			}
 			if (!(await Monitor.logPath(`private/${userid}`).exists())) {
 				await Monitor.logPath(`private/${userid}`).mkdirp();
@@ -2931,10 +3034,11 @@ export const commands: Chat.ChatCommands = {
 			await logPath.copyFile(Monitor.logPath(`private/${userid}/${date}.txt`).path);
 			await logPath.write(''); // empty out the logfile
 			this.globalModlog(`HELPTICKET PRIVATELOGS`, null, `${userid} (${date})`);
-			this.privateGlobalModAction(`${user.name} set the ticket logs for '${userid}' on '${date}' to be private.`);
+			const TL = roomTL(this.room, this.TL);
+			this.privateGlobalModAction(TL`${user.name} set the ticket logs for '${userid}' on '${date}' to be private.`);
 		},
 		privatehelp: [
-			`/helpticket private [user], [date] - Makes the ticket logs for a user on a date private to upperstaff. Requires: ~`,
+			TLkey`/helpticket private [user], [date] - Makes the ticket logs for a user on a date private to upperstaff. Requires: ~`,
 		],
 		async public(target, room, user) {
 			this.checkCan('bypassall');
@@ -2943,11 +3047,11 @@ export const commands: Chat.ChatCommands = {
 			const userid = toID(username);
 			if (!userid) return this.parse(`/help helpticket`);
 			if (!/[0-9]{4}-[0-9]{2}-[0-9]{2}/.test(date)) {
-				throw new Chat.ErrorMessage(`Invalid date (must be YYYY-MM-DD format).`);
+				throw new Chat.ErrorMessage(this.TL`Invalid date (must be YYYY-MM-DD format).`);
 			}
 			const logPath = Monitor.logPath(`private/${userid}/${date}.txt`);
 			if (!(await logPath.exists())) {
-				throw new Chat.ErrorMessage(`There are no logs for tickets from '${userid}' on the date '${date}'.`);
+				throw new Chat.ErrorMessage(this.TL`There are no logs for tickets from '${userid}' on the date '${date}'.`);
 			}
 			const monthPath = Monitor.logPath(`chat/help-${userid}/${date.slice(0, -3)}`);
 			if (!(await monthPath.exists())) {
@@ -2956,10 +3060,11 @@ export const commands: Chat.ChatCommands = {
 			await logPath.copyFile(Monitor.logPath(`chat/help-${userid}/${date.slice(0, -3)}/${date}.txt`).path);
 			await logPath.unlinkIfExists();
 			this.globalModlog(`HELPTICKET PUBLICLOGS`, null, `${userid} (${date})`);
-			this.privateGlobalModAction(`${user.name} set the ticket logs for '${userid}' on '${date}' to be public.`);
+			const TL = roomTL(this.room, this.TL);
+			this.privateGlobalModAction(TL`${user.name} set the ticket logs for '${userid}' on '${date}' to be public.`);
 		},
 		publichelp: [
-			`/helpticket public [user], [date] - Makes the ticket logs for the [user] on the [date] public to staff. Requires: ~`,
+			TLkey`/helpticket public [user], [date] - Makes the ticket logs for the [user] on the [date] public to staff. Requires: ~`,
 		],
 	},
 
@@ -2970,18 +3075,18 @@ export const commands: Chat.ChatCommands = {
 	},
 
 	helptickethelp: [
-		`/helpticket create - Creates a new ticket, requesting help from global staff.`,
-		`/helpticket list - Lists all tickets. Requires: % @ ~`,
-		`/helpticket close [user] - Closes an open ticket. Requires: % @ ~`,
-		`/helpticket ban [user], (reason) - Bans a user from creating tickets for 2 days. Requires: % @ ~`,
-		`/helpticket unban [user] - Ticket unbans a user. Requires: % @ ~`,
-		`/helpticket ignore - Ignore notifications for unclaimed help tickets. Requires: % @ ~`,
-		`/helpticket unignore - Stop ignoring notifications for help tickets. Requires: % @ ~`,
-		`/helpticket delete [user] - Deletes a user's ticket. Requires: ~`,
-		`/helpticket logs [userid][, month] - View logs of the [userid]'s text tickets. Requires: % @ ~`,
-		`/helpticket note [ticket userid], [note] - Adds a note to the [ticket], to be displayed in the hover text. Requires: % @ ~`,
-		`/helpticket private [user], [date] - Makes the ticket logs for a user on a date private to upperstaff. Requires: ~`,
-		`/helpticket public [user], [date] - Makes the ticket logs for the [user] on the [date] public to staff. Requires: ~`,
+		TLkey`/helpticket create - Creates a new ticket, requesting help from global staff.`,
+		TLkey`/helpticket list - Lists all tickets. Requires: % @ ~`,
+		TLkey`/helpticket close [user] - Closes an open ticket. Requires: % @ ~`,
+		TLkey`/helpticket ban [user], (reason) - Bans a user from creating tickets for 2 days. Requires: % @ ~`,
+		TLkey`/helpticket unban [user] - Ticket unbans a user. Requires: % @ ~`,
+		TLkey`/helpticket ignore - Ignore notifications for unclaimed help tickets. Requires: % @ ~`,
+		TLkey`/helpticket unignore - Stop ignoring notifications for help tickets. Requires: % @ ~`,
+		TLkey`/helpticket delete [user] - Deletes a user's ticket. Requires: ~`,
+		TLkey`/helpticket logs [userid][, month] - View logs of the [userid]'s text tickets. Requires: % @ ~`,
+		TLkey`/helpticket note [ticket userid], [note] - Adds a note to the [ticket], to be displayed in the hover text. Requires: % @ ~`,
+		TLkey`/helpticket private [user], [date] - Makes the ticket logs for a user on a date private to upperstaff. Requires: ~`,
+		TLkey`/helpticket public [user], [date] - Makes the ticket logs for the [user] on the [date] public to staff. Requires: ~`,
 	],
 };
 

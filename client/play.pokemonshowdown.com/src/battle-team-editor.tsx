@@ -388,7 +388,7 @@ export class TeamEditorState extends PSModel {
 					clipboardTeam.team.folder = folder;
 				} else {
 					const team: Team = {
-						name: `${clipboardTeam.team.name} (copy)`,
+						name: TL`${clipboardTeam.team.name} (copy)`,
 						format: clipboardTeam.team.format,
 						folder,
 						packedTeam: clipboardTeam.team.packedTeam,
@@ -894,7 +894,7 @@ export class TeamEditorState extends PSModel {
 			<small>
 				<PSIcon pokemon={set} /> {set.name || set.species}
 				{set.ability && ` [${set.ability}]`}{set.item && ` @ ${set.item}`}
-				{} - {set.moves.join(' / ') || '(No moves)'}
+				{} - {set.moves.join(' / ') || TL`(No moves)`}
 			</small>
 		</div>;
 		const renderTeam = (team: Team, sets: Dex.PokemonSet[]) => <div class="set"><small>
@@ -903,7 +903,7 @@ export class TeamEditorState extends PSModel {
 		</small></div>;
 
 		return <div class="infobox">
-			Clipboard
+			{TL`Clipboard`}
 			{Object.values(TeamEditorState.clipboard.teams || {})?.map(clipboardTeam => (
 				clipboardTeam.entire ? (
 					renderTeam(clipboardTeam.team, Object.values(clipboardTeam.sets))
@@ -1770,7 +1770,7 @@ class TeamTextbox extends preact.Component<{
 				<label>{TL`Level`}</label>{set.level || editor.format.defaultLevel}
 			</span>
 			<span class="detailcell">
-				<label>{TL`Shiny`}</label>{set.shiny ? 'Yes' : '\u2014'}
+				<label>{TL`Shiny`}</label>{set.shiny ? TL`Yes` : '\u2014'}
 			</span>
 			{editor.gen === 9 && !editor.format.isChampions && !editor.format.isCobblemon ? (
 				<span class="detailcell">
@@ -1834,7 +1834,7 @@ class TeamTextbox extends preact.Component<{
 					class="textbox teamtextbox" style={`padding-left:${editor.narrow ? '50px' : '100px'}`}
 					onInput={this.input} onContextMenu={this.contextMenu} onKeyUp={this.keyUp} onKeyDown={this.keyDown}
 					onClick={this.keyUp} onChange={this.maybeReplaceLine}
-					placeholder=" Paste exported teams, pokepaste URLs, or JSON here" readOnly={editor.readonly}
+					placeholder={` ${TL`Paste exported teams, pokepaste URLs, or JSON here`}`} readOnly={editor.readonly}
 				/>
 				<textarea
 					class="textbox teamtextbox heighttester" tabIndex={-1} aria-hidden
@@ -2963,7 +2963,7 @@ class TeamEditorForm extends preact.Component<{
 								{!!(set.shiny || editor.gen >= 2) && <span class="detailcell">
 									<label>{TL`Shiny`}</label> {}
 									{set.shiny ? <img
-										src={`${Dex.resourcePrefix}sprites/misc/shiny.png`} width={18} height={18} alt="Yes" style="margin-top: -2px"
+										src={`${Dex.resourcePrefix}sprites/misc/shiny.png`} width={18} height={18} alt={TL`Yes`} style="margin-top: -2px"
 									/> : '\u2014'}
 								</span>}
 								{editor.gen === 9 && !editor.format.isChampions && !editor.format.isCobblemon && <span class="detailcell">
@@ -3077,7 +3077,7 @@ function SetSourceButtons(props: {
 						</>)}
 					</div>
 				) : (
-					<div>No {set.species} sets found in boxes</div>
+					<div>{TL`No ${set.species} sets found in boxes`}</div>
 				)}
 			</div>
 		)}
@@ -3180,7 +3180,7 @@ class SetImportForm extends preact.Component<{
 			if (!this.textbox.value.trim() && !this.revertText) {
 				this.setState({ error: '', copied: false, dirty: false });
 			} else {
-				this.setState({ error: 'No Pokemon set found.', copied: false, dirty });
+				this.setState({ error: TL`No Pokemon set found.`, copied: false, dirty });
 			}
 			return;
 		}
@@ -3412,10 +3412,12 @@ class StatForm extends preact.Component<{
 	renderSpreadGuesser() {
 		const { editor, set } = this.props;
 		const team = editor.team;
+		// non-breaking spaces, so the link never wraps
+		const analysisLabel = TL`Smogon analysis`.replace(/ /g, '\u00a0');
 
 		if (editor.gen < 3) {
 			return <p>
-				(<a target="_blank" href={this.smogdexLink(set.species)}>Smogon&nbsp;analysis</a>)
+				(<a target="_blank" href={this.smogdexLink(set.species)}>{analysisLabel}</a>)
 			</p>;
 		}
 
@@ -3440,7 +3442,7 @@ class StatForm extends preact.Component<{
 					)}
 				</button>
 			)}
-			<small> (<a target="_blank" href={this.smogdexLink(set.species)}>Smogon&nbsp;analysis</a>)</small>
+			<small> (<a target="_blank" href={this.smogdexLink(set.species)}>{analysisLabel}</a>)</small>
 			{/* <small>
 				({role} | bulk: phys {Math.round(guess.moveCount.physicalBulk / 1000)}
 				{} + spec {Math.round(guess.moveCount.specialBulk / 1000)}
@@ -3956,7 +3958,7 @@ class DetailsForm extends preact.Component<{
 					type="number" inputMode="numeric" min="1" max="100" step="1"
 					class="textbox inputform numform default-placeholder" style="width: 50px"
 					onInput={this.changeLevel} onChange={this.changeLevel} disabled={editor.format.isChampions}
-				/></label><small>(You probably want to change the team's levels by changing the format, not here)</small></p>
+				/></label><small>{TL`(You probably want to change the team's levels by changing the format, not here)`}</small></p>
 				{editor.gen > 1 && (<>
 					<p><div class="label">{TL.label(TL`Shiny`)}<div class="labeled">
 						<label class="checkbox inline"><input
@@ -3979,7 +3981,7 @@ class DetailsForm extends preact.Component<{
 							<label class="checkbox inline"><input
 								type="radio" name="gender" value="" checked={!set.gender || set.gender === 'N'}
 								onInput={this.changeGender} onChange={this.changeGender}
-							/> Random</label>
+							/> {TL`Random`}</label>
 						</div>
 					)}</div></p>
 					{editor.format.isLetsGo ? (
@@ -4010,11 +4012,11 @@ class DetailsForm extends preact.Component<{
 							<label class="checkbox inline"><input
 								type="checkbox" name="gigantamax" value="true" checked={set.gigantamax}
 								onInput={this.changeGigantamax} onChange={this.changeGigantamax}
-							/> Gigantamax</label>
+							/> {TL`Gigantamax`}</label>
 						) : species.forme === 'Gmax' && (
 							<label class="checkbox inline"><input
 								type="checkbox" checked disabled
-							/> Gigantamax</label>
+							/> {TL`Gigantamax`}</label>
 						)}
 					</p>
 				)}

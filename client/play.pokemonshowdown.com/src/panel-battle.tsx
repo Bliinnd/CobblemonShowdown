@@ -429,7 +429,7 @@ class TimerButton extends preact.Component<{ room: BattleRoom, top: number }> {
 
 				if (room.battle.totalTimeLeft) {
 					const totalTime = this.secondsToTime(room.battle.totalTimeLeft);
-					time += ` |  ${totalTime} total`;
+					time += ` |  ${TL`${totalTime} total`}`;
 				}
 			}
 		}
@@ -513,6 +513,19 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 			});
 			return true;
 		}
+	}
+	/**
+	 * CobblemonShowdown : nom affiché d'un Pokémon dans les commandes (espèce
+	 * traduite s'il n'a pas de vrai surnom ; le nom brut reste utilisé pour les choix).
+	 */
+	static pokemonName(pokemon: { name: string, speciesForme: string }) {
+		return BattleTextParser.pokemonDisplayName(pokemon.name, pokemon.speciesForme);
+	}
+	/** CobblemonShowdown : nom traduit d'une attaque (nom exact uniquement). */
+	static moveName(name: string | undefined) {
+		if (!name) return name;
+		const move = Dex.moves.get(name);
+		return move.exists && move.name === name ? TL(move) : name;
 	}
 	renderUIText(id: string, values?: { [placeholder: string]: string | undefined }) {
 		return <span
@@ -716,7 +729,9 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 			aria-disabled={props.moveData.disabled}
 		>
 			{props.name}<br />
-			<small class="type">{props.type} <span class="effectiveness-icon">{props.tags}</span></small> {}
+			<small class="type">
+				{BattleTextParser.typeName(props.type)} <span class="effectiveness-icon">{props.tags}</span>
+			</small> {}
 			<small class="pp">{pp}</small>&nbsp;
 		</button>;
 	}
@@ -747,7 +762,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 			style={props.disabled === 'fade' ? 'opacity: 0.5' : ''} data-tooltip={props.tooltip}
 		>
 			{PSIcon({ pokemon })}
-			{pokemon.name}
+			{BattlePanel.pokemonName(pokemon)}
 			{
 				!props.noHPBar && !pokemon.fainted &&
 				<span class={hpColorClass}>
@@ -1044,7 +1059,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 		for (let i = 0; i < choices.choices.length; i++) {
 			const choiceString = choices.choices[i];
 			if (choiceString === "testfight") {
-				buf.push(this.renderUIText('lockedIntoMove', { POKEMON: request.side.pokemon[i].name }));
+				buf.push(this.renderUIText('lockedIntoMove', { POKEMON: BattlePanel.pokemonName(request.side.pokemon[i]) }));
 				return buf;
 			}
 			let choice;
@@ -1062,7 +1077,10 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 				if (choice.megax) actions += BattleTextParser.ui('actionMegaEvolveX');
 				if (choice.megay) actions += BattleTextParser.ui('actionMegaEvolveY');
 				if (choice.ultra) actions += BattleTextParser.ui('actionUltraBurst');
-				if (choice.tera) actions += BattleTextParser.ui('actionTerastallize', { TYPE: active?.canTerastallize || '???' });
+				if (choice.tera) {
+					const teraType = active?.canTerastallize ? BattleTextParser.typeName(active.canTerastallize) : '???';
+					actions += BattleTextParser.ui('actionTerastallize', { TYPE: teraType });
+				}
 				if (choice.max && active?.canDynamax) {
 					actions += BattleTextParser.ui(active?.gigantamax ? 'actionGigantamax' : 'actionDynamax');
 				}
@@ -1070,33 +1088,35 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 				if (choice.targetLoc > 0) {
 					const targetPokemon = battle.farSide.active[choice.targetLoc - 1];
 					target = targetPokemon ?
-						BattleTextParser.ui('atTarget', { TARGET: targetPokemon.name }) :
+						BattleTextParser.ui('atTarget', { TARGET: BattlePanel.pokemonName(targetPokemon) }) :
 						BattleTextParser.ui('atSlot', { NUMBER: `${choice.targetLoc}` });
 				} else if (choice.targetLoc < 0) {
 					const targetPokemon = battle.nearSide.active[-choice.targetLoc - 1];
 					const isAlly = battle.gameType !== 'freeforall';
 					if (targetPokemon) {
-						target = BattleTextParser.ui(isAlly ? 'atAllyTarget' : 'atTarget', { TARGET: targetPokemon.name });
+						target = BattleTextParser.ui(isAlly ? 'atAllyTarget' : 'atTarget', {
+							TARGET: BattlePanel.pokemonName(targetPokemon),
+						});
 					} else {
 						target = BattleTextParser.ui(isAlly ? 'atAllySlot' : 'atSlot', { NUMBER: `${choice.targetLoc}` });
 					}
 				}
 				buf.push(this.renderUIText('willUseMove', {
-					POKEMON: pokemon.name,
+					POKEMON: BattlePanel.pokemonName(pokemon),
 					ACTIONS: actions,
-					MOVE: choices.currentMove(choice, i)?.name || '???',
+					MOVE: BattlePanel.moveName(choices.currentMove(choice, i)?.name) || '???',
 					AT: target,
 				}));
 			} else if (choice.choiceType === 'switch') {
 				const target = request.side.pokemon[choice.targetPokemon - 1];
 				buf.push(this.renderUIText(choices.isReviving(i) ? 'willRevive' : 'willSwitch', {
-					POKEMON: pokemon.name, TARGET: target.name,
+					POKEMON: BattlePanel.pokemonName(pokemon), TARGET: BattlePanel.pokemonName(target),
 				}));
 			} else if (choice.choiceType === 'shift') {
-				buf.push(this.renderUIText('willShift', { POKEMON: pokemon.name }));
+				buf.push(this.renderUIText('willShift', { POKEMON: BattlePanel.pokemonName(pokemon) }));
 			} else if (choice.choiceType === 'team') {
 				const target = request.side.pokemon[choice.targetPokemon - 1];
-				pickedNames.push(target.name);
+				pickedNames.push(BattlePanel.pokemonName(target));
 			}
 			if (!pickedNames.length) buf.push(<br />);
 		}
@@ -1134,7 +1154,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 		const pokemon = request.side.pokemon[index];
 
 		if (choices.current.move) {
-			const moveName = choices.currentMove()?.name;
+			const moveName = BattlePanel.moveName(choices.currentMove()?.name);
 			if (overlayVersion) {
 				return <>
 					<div class="overlay-controls-list">
@@ -1144,7 +1164,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 					<div class="targetcontrols">
 						<p class="overlay-message">
 							{this.renderOldChoices(request, choices, true)}
-							{this.renderUIText('moveTarget', { POKEMON: pokemon.name, MOVE: moveName })}
+							{this.renderUIText('moveTarget', { POKEMON: BattlePanel.pokemonName(pokemon), MOVE: moveName })}
 						</p>
 						<div class="switchmenu">
 							{this.renderMoveTargetControls(request, choices)}
@@ -1155,7 +1175,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 			return <div class="inline-controls">
 				<div class="whatdo">
 					{this.renderOldChoices(request, choices)}
-					{this.renderUIText('moveTarget', { POKEMON: pokemon.name, MOVE: moveName })} {}
+					{this.renderUIText('moveTarget', { POKEMON: BattlePanel.pokemonName(pokemon), MOVE: moveName })} {}
 				</div>
 				<div class="switchcontrols">
 					<div class="switchmenu">
@@ -1175,7 +1195,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 				</div>
 				{!room.overlayActive && <div class="whatdo">
 					{this.renderOldChoices(request, choices, true)}
-					{this.renderUIText('whatDo', { POKEMON: pokemon.name })}
+					{this.renderUIText('whatDo', { POKEMON: BattlePanel.pokemonName(pokemon) })}
 				</div>}
 				{room.overlayActive === 'move' && <div class="movecontrols">
 					{this.renderMoveMenu(choices, true)}
@@ -1191,7 +1211,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 		return <div class="inline-controls">
 			<div class="whatdo">
 				{this.renderOldChoices(request, choices)}
-				{this.renderUIText('whatDo', { POKEMON: pokemon.name })}
+				{this.renderUIText('whatDo', { POKEMON: BattlePanel.pokemonName(pokemon) })}
 			</div>
 			<div class="movecontrols">
 				<h3 class="moveselect">{TL`[Battle]`}</h3>
@@ -1210,8 +1230,8 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 	renderPlayerSwitchControls(request: BattleSwitchRequest, choices: BattleChoiceBuilder, overlayVersion = false) {
 		const pokemon = request.side.pokemon[choices.index()];
 		const prompt = choices.isReviving() ?
-			this.renderUIText('reviveWho', { POKEMON: pokemon.name }) :
-			this.renderUIText('replaceWho', { POKEMON: pokemon.name });
+			this.renderUIText('reviveWho', { POKEMON: BattlePanel.pokemonName(pokemon) }) :
+			this.renderUIText('replaceWho', { POKEMON: BattlePanel.pokemonName(pokemon) });
 		if (overlayVersion) {
 			return <>
 				<div class="overlay-controls-list">
@@ -1297,7 +1317,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 		if (!atEnd) return this.renderPlayerAnimationControls(overlayVersion);
 
 		let choices = room.choices;
-		if (!choices) return 'Error: Missing BattleChoiceBuilder';
+		if (!choices) return TL`Error: Missing BattleChoiceBuilder`;
 		if (choices.request !== request) {
 			choices = new BattleChoiceBuilder(request);
 			room.choices = choices;
@@ -1351,7 +1371,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 						href={`//${Config.routes.replays}/download`}
 						class="button replayDownloadButton"
 					>
-						<i class="fa fa-download" aria-hidden></i> Download replay</a>
+						<i class="fa fa-download" aria-hidden></i> {TL`[Download replay]`}</a>
 					<br />
 					<br />
 					<button class="button" data-cmd="/savereplay">

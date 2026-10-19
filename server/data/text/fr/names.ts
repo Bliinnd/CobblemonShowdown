@@ -44,7 +44,7 @@ export const TypeNames: { [id: string]: TranslationString } = {
 	Steel: "Acier",
 	Stellar: "Stellaire",
 	Water: "Eau",
-	"???": null, // NEEDS TRANSLATION
+	"???": "???",
 };
 
 export const NatureNames: { [id: string]: TranslationString } = {
@@ -78,66 +78,66 @@ export const NatureNames: { [id: string]: TranslationString } = {
 export const GenderNames: { [id: string]: TranslationString } = {
 	M: "Mâle",
 	F: "Femelle",
-	N: null, // NEEDS TRANSLATION
+	N: "Asexué",
 };
 
 export const StatusNames: { [id: string]: TranslationString } = {
-	brn: null, // NEEDS TRANSLATION
-	par: null, // NEEDS TRANSLATION
-	slp: null, // NEEDS TRANSLATION
-	frz: null, // NEEDS TRANSLATION
-	psn: null, // NEEDS TRANSLATION
-	tox: null, // NEEDS TRANSLATION
-	fnt: null, // NEEDS TRANSLATION
-	confusion: null, // NEEDS TRANSLATION
+	brn: "BRÛ",
+	par: "PAR",
+	slp: "SOM",
+	frz: "GEL",
+	psn: "PSN",
+	tox: "PSN",
+	fnt: "K.O.",
+	confusion: "Confus",
 };
 
 export const TargetNames: { [id: string]: TranslationString } = {
-	normal: null, // NEEDS TRANSLATION
-	normalDoubles: null, // NEEDS TRANSLATION
-	normalSingles: null, // NEEDS TRANSLATION
-	normalFFA: null, // NEEDS TRANSLATION
-	self: null, // NEEDS TRANSLATION
-	adjacentAlly: null, // NEEDS TRANSLATION
-	adjacentAllyDoubles: null, // NEEDS TRANSLATION
-	adjacentAllySingles: null, // NEEDS TRANSLATION
-	adjacentAllyOrSelf: null, // NEEDS TRANSLATION
-	adjacentAllyOrSelfDoubles: null, // NEEDS TRANSLATION
-	adjacentFoe: null, // NEEDS TRANSLATION
-	allAdjacentFoes: null, // NEEDS TRANSLATION
-	allAdjacentFoesDoubles: null, // NEEDS TRANSLATION
-	foeSide: null, // NEEDS TRANSLATION
-	allySide: null, // NEEDS TRANSLATION
-	allyTeam: null, // NEEDS TRANSLATION
-	allAdjacent: null, // NEEDS TRANSLATION
-	allAdjacentDoubles: null, // NEEDS TRANSLATION
-	allAdjacentFFA: null, // NEEDS TRANSLATION
-	any: null, // NEEDS TRANSLATION
-	all: null, // NEEDS TRANSLATION
-	scripted: null, // NEEDS TRANSLATION
-	randomNormal: null, // NEEDS TRANSLATION
-	randomNormalDoubles: null, // NEEDS TRANSLATION
-	allies: null, // NEEDS TRANSLATION
+	normal: "Peut cibler un allié ou un adversaire adjacent",
+	normalDoubles: "Peut cibler l’allié ou un adversaire",
+	normalSingles: "Touche l’adversaire",
+	normalFFA: "Peut cibler n’importe quel adversaire",
+	self: "Affecte le lanceur",
+	adjacentAlly: "Peut cibler un allié adjacent",
+	adjacentAllyDoubles: "Affecte votre allié",
+	adjacentAllySingles: "Échoue toujours en Combat Simple",
+	adjacentAllyOrSelf: "Peut cibler le lanceur ou un allié adjacent",
+	adjacentAllyOrSelfDoubles: "Peut cibler le lanceur ou son allié",
+	adjacentFoe: "Peut cibler un adversaire adjacent",
+	allAdjacentFoes: "Touche les adversaires adjacents",
+	allAdjacentFoesDoubles: "Touche les deux adversaires",
+	foeSide: "Affecte le camp adverse",
+	allySide: "Affecte le camp du lanceur",
+	allyTeam: "Affecte l’équipe du lanceur",
+	allAdjacent: "Touche les alliés et adversaires adjacents",
+	allAdjacentDoubles: "Touche l’allié et les deux adversaires",
+	allAdjacentFFA: "Touche tous les adversaires",
+	any: "Peut cibler un Pokémon éloigné en Combat Triple",
+	all: "Affecte tous les Pokémon",
+	scripted: "Cible choisie automatiquement",
+	randomNormal: "Touche un adversaire adjacent au hasard",
+	randomNormalDoubles: "Touche un adversaire au hasard",
+	allies: "Affecte le lanceur et ses alliés",
 };
 
 // from veekun/Poképédia who presumably got it from Pokédex 3D Pro
 // Stadium 2 names in comments
 export const EggGroupNames: { [id: string]: TranslationString } = {
-	Monster: null, // NEEDS TRANSLATION
-	"Water 1": null, // NEEDS TRANSLATION
-	Bug: null, // NEEDS TRANSLATION
-	Flying: null, // NEEDS TRANSLATION
-	Field: null, // NEEDS TRANSLATION
-	Fairy: null, // NEEDS TRANSLATION
-	Grass: null, // NEEDS TRANSLATION
-	"Human-Like": null, // NEEDS TRANSLATION
-	"Water 3": null, // NEEDS TRANSLATION
-	Mineral: null, // NEEDS TRANSLATION
-	Amorphous: null, // NEEDS TRANSLATION
-	"Water 2": null, // NEEDS TRANSLATION
-	Ditto: null, // NEEDS TRANSLATION
-	Dragon: null, // NEEDS TRANSLATION
-	Undiscovered: null, // NEEDS TRANSLATION
+	Monster: "Monstrueux",
+	"Water 1": "Aquatique 1",
+	Bug: "Insectoïde",
+	Flying: "Aérien",
+	Field: "Terrestre",
+	Fairy: "Féerique",
+	Grass: "Végétal",
+	"Human-Like": "Humanoïde",
+	"Water 3": "Aquatique 3",
+	Mineral: "Minéral",
+	Amorphous: "Amorphe",
+	"Water 2": "Aquatique 2",
+	Ditto: "Métamorph",
+	Dragon: "Draconique",
+	Undiscovered: "Inconnu",
 };
 
 export const ColorNames: { [id: string]: TranslationString } = {

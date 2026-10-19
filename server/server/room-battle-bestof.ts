@@ -31,7 +31,8 @@ export class BestOfPlayer extends RoomGamePlayer<BestOfGame> {
 		const gameNum = this.game.games.length + 1;
 
 		if (this.ready === false) {
-			const notification = `|tempnotify|choice|Next game|It's time for game ${gameNum} in your best-of-${this.game.bestOf}!`;
+			const notification = `|tempnotify|choice|${user.TL`Next game`}|` +
+				user.TL`It's time for game ${gameNum} in your best-of-${this.game.bestOf}!`;
 			if (battleRoom && user.inRooms.has(battleRoom.roomid)) {
 				battleRoom.send(notification);
 			} else {
@@ -51,10 +52,10 @@ export class BestOfPlayer extends RoomGamePlayer<BestOfGame> {
 		}
 
 		const cmd = `/msgroom ${room.roomid},/confirmready`;
-		const button = `|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game ${gameNum}, ${this.name}?</p><p style="margin:6px">` +
+		const button = `|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">${user.TL`Are you ready for game ${gameNum}, ${this.name}?`}</p><p style="margin:6px">` +
 			(this.ready ?
-				`<button class="button" disabled><i class="fa fa-check"></i> I'm ready!</button> &ndash; waiting for opponent...` :
-				`<button class="button notifying" name="send" value="${cmd}">I'm ready!</button>`
+				`<button class="button" disabled><i class="fa fa-check"></i> ${user.TL`I'm ready!`}</button> &ndash; ${user.TL`waiting for opponent...`}` :
+				`<button class="button notifying" name="send" value="${cmd}">${user.TL`I'm ready!`}</button>`
 			) +
 			`</p></div>`;
 		this.sendRoom(button);
@@ -140,14 +141,17 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 			if (this.forcedSettings.privacy) {
 				room.setPrivate(false);
 				room.settings.modjoin = null;
-				room.add(`|raw|<div class="broadcast-blue"><strong>This best-of set is required to be public due to a player having a name starting with '${this.forcedSettings.privacy}'.</div>`);
+				room.add(`|raw|<div class="broadcast-blue"><strong>${room.TL`This best-of set is required to be public due to a player having a name starting with '${this.forcedSettings.privacy}'.`}</div>`);
 			} else if (!options.tour || (room.tour?.allowModjoin)) {
 				room.setPrivate('hidden');
 				if (inviteOnly) room.settings.modjoin = '%';
 				room.privacySetter = privacySetter;
 				if (inviteOnly) {
 					room.settings.modjoin = '%';
-					room.add(`|raw|<div class="broadcast-red"><strong>This best-of set is invite-only!</strong><br />Users must be invited with <code>/invite</code> (or be staff) to join</div>`);
+					room.add(
+						`|raw|<div class="broadcast-red"><strong>${room.TL`This best-of set is invite-only!`}</strong><br />` +
+						`${room.TL`Users must be invited with <code>/invite</code> (or be staff) to join`}</div>`
+					);
 				}
 			}
 		}
@@ -172,12 +176,20 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 
 			room.setPrivate(privacy);
 			this.room.add(`|uhtmlchange|game${gameNum}|<a href="/${room.roomid}">${room.title}</a>`);
-			room.add(`|uhtmlchange|bestof|<h2><strong>Game ${gameNum}</strong> of <a href="/${this.roomid}">a best-of-${this.bestOf}</a></h2>`).update();
+			room.add(`|uhtmlchange|bestof|${this.gameHeader(room, gameNum)}`).update();
 			if (prevRoom) {
-				prevRoom.add(`|uhtmlchange|next|Next: <a href="/${room.roomid}"><strong>Game ${gameNum} of ${this.bestOf}</strong></a>`).update();
+				prevRoom.add(`|uhtmlchange|next|${this.nextGameLink(prevRoom, room.roomid, gameNum)}`).update();
 			}
 		}
 		this.updateDisplay();
+	}
+	/** `<h2>`: "Game 2 of a best-of-3", in the given battle room's language */
+	gameHeader(battleRoom: Room, gameNum: number) {
+		return `<h2>${battleRoom.TL`<strong>Game ${gameNum}</strong> of <a href="/${this.roomid}">a best-of-${this.bestOf}</a>`}</h2>`;
+	}
+	/** "Next: Game 2 of 3" link to the next battle, in `room`'s language */
+	nextGameLink(room: Room, nextRoomid: RoomID, gameNum: number) {
+		return `${room.TL`Next:`} <a href="/${nextRoomid}"><strong>${room.TL`Game ${gameNum} of ${this.bestOf}`}</strong></a>`;
 	}
 	clearWaiting() {
 		this.waitingBattle = null;
@@ -215,7 +227,7 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 			for (const p of this.players) {
 				if (!p.getUser()) {
 					// tbc this isn't just being offline, it's changing name or being offline for 15 minutes
-					this.forfeitPlayer(p, ` lost by being unavailable at the start of a game.`);
+					this.forfeitPlayer(p, ' lost by being unavailable at the start of a game.');
 					return;
 				}
 			}
@@ -241,17 +253,15 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 			Utils.html`|html|<table width="100%"><tr><td align="left">${p1.name}</td><td align="right">${p2.name}</tr>` +
 			`<tr><td align="left">${this.renderWins(p1)}</td><td align="right">${this.renderWins(p2)}</tr></table>`
 		);
-		battleRoom.add(
-			`|uhtml|bestof|<h2><strong>Game ${gameNum}</strong> of <a href="/${this.roomid}">a best-of-${this.bestOf}</a></h2>`
-		).update();
+		battleRoom.add(`|uhtml|bestof|${this.gameHeader(battleRoom, gameNum)}`).update();
 
-		this.room.add(`|html|<h2>Game ${gameNum}</h2>`);
+		this.room.add(`|html|<h2>${this.room.TL`Game ${gameNum}`}</h2>`);
 		this.room.add(Utils.html`|uhtml|game${gameNum}|<a href="/${battleRoom.roomid}">${battleRoom.title}</a>`);
 		this.updateDisplay();
 
-		prevBattleRoom?.add(
-			`|uhtml|next|Next: <a href="/${battleRoom.roomid}"><strong>Game ${gameNum} of ${this.bestOf}</strong></a>`
-		).update();
+		if (prevBattleRoom) {
+			prevBattleRoom.add(`|uhtml|next|${this.nextGameLink(prevBattleRoom, battleRoom.roomid, gameNum)}`).update();
+		}
 	}
 	renderWins(player: BestOfPlayer) {
 		const wins = this.games.filter(game => game.winner === player).length;
@@ -260,9 +270,10 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 		return player.num === 1 ? winBuf + restBuf : restBuf + winBuf;
 	}
 	updateDisplay() {
-		const p1name = this.players[0].name;
-		const p2name = this.players[1].name;
-		let buf = Utils.html`<br /><strong>${p1name} and ${p2name}'s Best-of-${this.bestOf} progress:</strong><br />`;
+		const TL = this.room.TL.bind(this.room);
+		const p1name = Utils.escapeHTML(this.players[0].name);
+		const p2name = Utils.escapeHTML(this.players[1].name);
+		let buf = `<br /><strong>${TL`${p1name} and ${p2name}'s Best-of-${this.bestOf} progress:`}</strong><br />`;
 		buf += '<table>';
 		for (const p of this.players) {
 			buf += Utils.html`<tr><td>${p.name}: </td><td>`;
@@ -331,15 +342,17 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 		this.room.add(`|fieldhtml|<center>${buf}</center>`);
 
 		buf = this.games.map(({ room, winner }, index) => {
-			let progress = `being played`;
-			if (winner) progress = Utils.html`won by ${winner.name}`;
-			if (winner === null) progress = `tied`;
-			return Utils.html`<p>Game ${index + 1}: <a href="/${room}"><strong>${progress}</strong></a></p>`;
+			let progress = TL`being played`;
+			if (winner) progress = TL`won by ${winner.name}`;
+			if (winner === null) progress = TL`tied`;
+			const gameNumber = index + 1;
+			return Utils.html`<p>${TL`Game ${gameNumber}:`} <a href="/${room}"><strong>${progress}</strong></a></p>`;
 		}).join('');
 		if (this.winner) {
-			buf += Utils.html`<p>${this.winner.name} won!</p>`;
+			const winnerName = Utils.escapeHTML(this.winner.name);
+			buf += `<p>${TL`${winnerName} won!`}</p>`;
 		} else if (this.winner === null) {
-			buf += `<p>The battle was tied.</p>`;
+			buf += `<p>${TL`The battle was tied.`}</p>`;
 		}
 		this.room.add(`|controlshtml|<center>${buf}</center>`);
 		this.room.update();
@@ -361,13 +374,15 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 			winner.wins++;
 			const loserPlayer = room.battle!.players.find(p => p.num !== winner.num);
 			if (loserPlayer && loserPlayer.dcSecondsLeft <= 0) { // disconnection means opp wins the set
-				return this.forfeit(loserPlayer.name, ` lost the series due to inactivity.`);
+				return this.forfeit(loserPlayer.name, ' lost the series due to inactivity.');
 			}
-			this.room.add(Utils.html`|html|${winner.name} won game ${this.games.length}!`).update();
+			const winnerName = Utils.escapeHTML(winner.name);
+			const gameNumber = this.games.length;
+			this.room.add(`|html|${this.room.TL`${winnerName} won game ${gameNumber}!`}`).update();
 		} else {
 			this.ties++;
 			this.winThreshold = Math.floor((this.bestOf - this.ties) / 2) + 1;
-			this.room.add(`|html|Game ${this.games.length} was a tie.`).update();
+			this.room.add(`|html|${this.room.TL`Game ${this.games.length} was a tie.`}`).update();
 		}
 
 		const overallWinner = this.players.find(p => p.wins >= this.winThreshold);
@@ -402,14 +417,15 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 			if (!p.ready) {
 				const now = Date.now() - 100; // fudge to make rounding work better
 				if (p.dcAutoloseTime && now > p.dcAutoloseTime) {
-					return this.forfeit(p.name, ` lost the series due to inactivity.`);
+					return this.forfeit(p.name, ' lost the series due to inactivity.');
 				}
-				const message = (p.dcAutoloseTime ?
-					`|inactive|${p.name} has ${Chat.toDurationString(p.dcAutoloseTime - now)} to reconnect!` :
-					`|inactive|${p.name} has ${Chat.toDurationString(this.nextBattleTimerEnd - now)} to confirm battle start!`
+				const timeLeft = Chat.toDurationString((p.dcAutoloseTime || this.nextBattleTimerEnd) - now);
+				const message = (room: Room) => (p.dcAutoloseTime ?
+					`|inactive|${room.TL`${p.name} has ${timeLeft} to reconnect!`}` :
+					`|inactive|${room.TL`${p.name} has ${timeLeft} to confirm battle start!`}`
 				);
-				this.waitingBattle?.add(message);
-				this.room.add(message);
+				this.waitingBattle?.add(message(this.waitingBattle));
+				this.room.add(message(this.room));
 			}
 		}
 		this.waitingBattle?.update();
@@ -418,17 +434,18 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 	confirmReady(user: User) {
 		const player = this.playerTable[user.id];
 		if (!player) {
-			throw new Chat.ErrorMessage("You aren't a player in this best-of set.");
+			throw new Chat.ErrorMessage(user.TL`You aren't a player in this best-of set.`);
 		}
 		if (!this.waitingBattle) {
-			throw new Chat.ErrorMessage("The battle is not currently waiting for ready confirmation.");
+			throw new Chat.ErrorMessage(user.TL`The battle is not currently waiting for ready confirmation.`);
 		}
 
 		player.ready = true;
 		player.updateReadyButton();
-		const readyMsg = `||${player.name} is ready for game ${this.games.length + 1}.`;
-		this.waitingBattle.add(readyMsg).update();
-		this.room.add(readyMsg).update();
+		const nextGameNum = this.games.length + 1;
+		const readyMsg = (room: Room) => `||${room.TL`${player.name} is ready for game ${nextGameNum}.`}`;
+		this.waitingBattle.add(readyMsg(this.waitingBattle)).update();
+		this.room.add(readyMsg(this.room)).update();
 		if (this.players.every(p => p.ready)) {
 			this.nextGame();
 		}
@@ -478,7 +495,7 @@ export class BestOfGame extends RoomGame<BestOfPlayer> {
 
 		message ||= ' forfeited the series.';
 		this.winner = this.players.find(p => p !== loser)!;
-		this.room.add(`||${loser.name}${message}`);
+		this.room.add(`||${Rooms.RoomBattle.forfeitMessage(this.room, loser.name, message)}`);
 		this.end(this.winner.id);
 
 		const lastBattle = Rooms.get(this.games[this.games.length - 1].room)?.battle;

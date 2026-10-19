@@ -2,6 +2,7 @@
  * Announcements chat plugin
  * By Spandamn
  */
+import { TLkey } from '../../sim/dex-text';
 
 export interface AnnouncementOptions {
 	activityNumber?: number;
@@ -98,7 +99,7 @@ export const commands: Chat.ChatCommands = {
 			this.modlog('ANNOUNCEMENT');
 			return this.privateModAction(room.TL`An announcement was started by ${user.name}.`);
 		},
-		newhelp: [`/announcement create [announcement] - Creates an announcement. Requires: % @ # ~`],
+		newhelp: [TLkey`/announcement create [announcement] - Creates an announcement. Requires: % @ # ~`],
 
 		htmledit: 'edit',
 		edit(target, room, user, connection, cmd, message) {
@@ -125,7 +126,7 @@ export const commands: Chat.ChatCommands = {
 			this.privateModAction(room.TL`The announcement was edited by ${user.name}.`);
 			this.parse('/announcement display');
 		},
-		edithelp: [`/announcement edit [announcement] - Edits the announcement. Requires: % @ # ~`],
+		edithelp: [TLkey`/announcement edit [announcement] - Edits the announcement. Requires: % @ # ~`],
 
 		timer(target, room, user) {
 			room = this.requireRoom();
@@ -142,21 +143,29 @@ export const commands: Chat.ChatCommands = {
 					throw new Chat.ErrorMessage(this.TL`Time should be a number of minutes less than one week.`);
 				}
 				announcement.setTimer({ timeoutMins });
-				room.add(`The announcement timer was turned on: the announcement will end in ${timeoutMins} minute${Chat.plural(timeoutMins)}.`);
+				room.add(timeoutMins === 1 ?
+					room.TL`The announcement timer was turned on: the announcement will end in ${timeoutMins} minute.` :
+					room.TL`The announcement timer was turned on: the announcement will end in ${timeoutMins} minutes.`);
 				this.modlog('ANNOUNCEMENT TIMER', null, `${timeoutMins} minutes`);
-				return this.privateModAction(`The announcement timer was set to ${timeoutMins} minute${Chat.plural(timeoutMins)} by ${user.name}.`);
+				const name = user.name;
+				return this.privateModAction(timeoutMins === 1 ?
+					room.TL`The announcement timer was set to ${timeoutMins} minute by ${name}.` :
+					room.TL`The announcement timer was set to ${timeoutMins} minutes by ${name}.`);
 			} else {
 				if (!this.runBroadcast()) return;
 				if (announcement.timeout) {
-					return this.sendReply(`The announcement timer is on and will end in ${announcement.timeoutMins} minute${Chat.plural(announcement.timeoutMins)}.`);
+					const timeoutMins = announcement.timeoutMins;
+					return this.sendReply(timeoutMins === 1 ?
+						this.TL`The announcement timer is on and will end in ${timeoutMins} minute.` :
+						this.TL`The announcement timer is on and will end in ${timeoutMins} minutes.`);
 				} else {
 					return this.sendReply(this.TL`The announcement timer is off.`);
 				}
 			}
 		},
 		timerhelp: [
-			`/announcement timer [minutes] - Sets the announcement to automatically end after [minutes] minutes. Requires: % @ # ~`,
-			`/announcement timer clear - Clears the announcement's timer. Requires: % @ # ~`,
+			TLkey`/announcement timer [minutes] - Sets the announcement to automatically end after [minutes] minutes. Requires: % @ # ~`,
+			TLkey`/announcement timer clear - Clears the announcement's timer. Requires: % @ # ~`,
 		],
 
 		close: 'end',
@@ -170,7 +179,7 @@ export const commands: Chat.ChatCommands = {
 			this.modlog('ANNOUNCEMENT END');
 			this.privateModAction(room.TL`The announcement was ended by ${user.name}.`);
 		},
-		endhelp: [`/announcement end - Ends a announcement and displays the results. Requires: % @ # ~`],
+		endhelp: [TLkey`/announcement end - Ends a announcement and displays the results. Requires: % @ # ~`],
 
 		show: '',
 		display: '',
@@ -186,18 +195,18 @@ export const commands: Chat.ChatCommands = {
 				announcement.displayTo(user, connection);
 			}
 		},
-		displayhelp: [`/announcement display - Displays the announcement`],
+		displayhelp: [TLkey`/announcement display - Displays the announcement`],
 	},
 	announcementhelp: [
-		`/announcement allows rooms to run their own announcements. These announcements are limited to one announcement at a time per room.`,
-		`Accepts the following commands:`,
-		`/announcement create [announcement] - Creates a announcement. Requires: % @ # ~`,
-		`/announcement htmlcreate [announcement] - Creates a announcement, with HTML allowed. Requires: # ~`,
-		`/announcement edit [announcement] - Edits the announcement. Requires: % @ # ~`,
-		`/announcement htmledit [announcement] - Edits the announcement, with HTML allowed. Requires: # ~`,
-		`/announcement timer [minutes] - Sets the announcement to automatically end after [minutes]. Requires: % @ # ~`,
-		`/announcement display - Displays the announcement`,
-		`/announcement end - Ends a announcement. Requires: % @ # ~`,
+		TLkey`/announcement allows rooms to run their own announcements. These announcements are limited to one announcement at a time per room.`,
+		TLkey`Accepts the following commands:`,
+		TLkey`/announcement create [announcement] - Creates a announcement. Requires: % @ # ~`,
+		TLkey`/announcement htmlcreate [announcement] - Creates a announcement, with HTML allowed. Requires: # ~`,
+		TLkey`/announcement edit [announcement] - Edits the announcement. Requires: % @ # ~`,
+		TLkey`/announcement htmledit [announcement] - Edits the announcement, with HTML allowed. Requires: # ~`,
+		TLkey`/announcement timer [minutes] - Sets the announcement to automatically end after [minutes]. Requires: % @ # ~`,
+		TLkey`/announcement display - Displays the announcement`,
+		TLkey`/announcement end - Ends a announcement. Requires: % @ # ~`,
 	],
 };
 

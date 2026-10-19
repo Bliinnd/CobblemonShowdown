@@ -387,7 +387,8 @@ export class BattleLog {
 		switch (args[0]) {
 		case 'warning':
 			this.message(`<strong>${TL.label(TL`Warning`)}</strong>` + BattleLog.escapeHTML(args[1]));
-			this.message(`Bug? Report it to <a href="http://www.smogon.com/forums/showthread.php?t=3453192">the replay viewer's Smogon thread</a>`);
+			const smogonThread = `<a href="http://www.smogon.com/forums/showthread.php?t=3453192">${TL`the replay viewer's Smogon thread`}</a>`;
+			this.message(TL`Bug? Report it to ${smogonThread}`);
 			if (this.scene) this.scene.wait(1000);
 			return;
 
@@ -395,10 +396,16 @@ export class BattleLog {
 			this.addDiv('', `<small>${TL.label(TL`Variation`)}<em>` + BattleLog.escapeHTML(args[1]) + '</em></small>');
 			break;
 
-		case 'rule':
+		case 'rule': {
+			// CobblemonShowdown : le serveur envoie les règles en anglais ("Nom: description") ;
+			// elles sont traduites ici, à l'affichage (battle.rules garde les noms anglais).
 			const ruleArgs = args[1].split(': ');
-			this.addDiv('', '<small><em>' + BattleLog.escapeHTML(ruleArgs[0]) + (ruleArgs[1] ? ':' : '') + '</em> ' + BattleLog.escapeHTML(ruleArgs[1] || '') + '</small>');
+			const ruleName = BattleLog.ruleName(ruleArgs[0]);
+			const ruleLabel = ruleArgs[1] ? TL.label(ruleName).replace(/\s+$/, '') : ruleName;
+			const ruleDesc = ruleArgs[1] ? BattleLog.ruleDescription(ruleArgs[1]) : '';
+			this.addDiv('', '<small><em>' + BattleLog.escapeHTML(ruleLabel) + '</em> ' + BattleLog.escapeHTML(ruleDesc) + '</small>');
 			break;
+		}
 
 		case 'rated':
 			this.addDiv('rated', '<strong>' + (BattleLog.escapeHTML(args[1]) || TL`Rated battle`) + '</strong>');
@@ -421,7 +428,7 @@ export class BattleLog {
 			if (this.addAFDMessage(args, kwArgs)) return;
 			const line = this.battleParser?.parseArgs(args, kwArgs || {}, true) ?? null;
 			if (line === null) {
-				this.addDiv('chat message-error', 'Unrecognized: |' + BattleLog.escapeHTML(args.join('|')));
+				this.addDiv('chat message-error', TL.label(TL`Unrecognized`) + '|' + BattleLog.escapeHTML(args.join('|')));
 				return;
 			}
 			if (line) this.messageFromLog(line);
@@ -1116,6 +1123,89 @@ export class BattleLog {
 		this.innerElem.appendChild(this.preemptElem.firstChild);
 	}
 
+	/**
+	 * CobblemonShowdown : nom d'une règle reçue dans une ligne `|rule|`
+	 * (formats Cobblemon et règles standard qu'ils incluent). Inconnu : texte brut.
+	 */
+	static ruleName(name: string): string {
+		switch (name) {
+		case 'Standard': return TL`Standard`;
+		case 'Standard AG': return TL`Standard AG`;
+		case 'Standard Doubles': return TL`Standard Doubles`;
+		case 'Standard NatDex': return TL`Standard NatDex`;
+		case 'Flat Rules': return TL`Flat Rules`;
+		case 'VGC Timer': return TL`VGC Timer`;
+		case 'Species Clause': return TL`Species Clause`;
+		case 'Nickname Clause': return TL`Nickname Clause`;
+		case 'Item Clause': return TL`Item Clause`;
+		case 'Sleep Clause Mod': return TL`Sleep Clause Mod`;
+		case 'Sleep Moves Clause': return TL`Sleep Moves Clause`;
+		case 'Gravity Sleep Clause': return TL`Gravity Sleep Clause`;
+		case 'OHKO Clause': return TL`OHKO Clause`;
+		case 'Evasion Clause': return TL`Evasion Clause`;
+		case 'Evasion Abilities Clause': return TL`Evasion Abilities Clause`;
+		case 'Evasion Items Clause': return TL`Evasion Items Clause`;
+		case 'Evasion Moves Clause': return TL`Evasion Moves Clause`;
+		case 'Endless Battle Clause': return TL`Endless Battle Clause`;
+		case 'Terastal Clause': return TL`Terastal Clause`;
+		case 'Dynamax Clause': return TL`Dynamax Clause`;
+		case 'Mega Rayquaza Clause': return TL`Mega Rayquaza Clause`;
+		case 'Z-Move Clause': return TL`Z-Move Clause`;
+		case 'Same Type Clause': return TL`Same Type Clause`;
+		case 'HP Percentage Mod': return TL`HP Percentage Mod`;
+		case 'Exact HP Mod': return TL`Exact HP Mod`;
+		case 'Cancel Mod': return TL`Cancel Mod`;
+		case 'NatDex Mod': return TL`NatDex Mod`;
+		case 'Obtainable': return TL`Obtainable`;
+		case 'Team Preview': return TL`Team Preview`;
+		case 'Tera Type Preview': return TL`Tera Type Preview`;
+		case 'Picked Team Size': return TL`Picked Team Size`;
+		case 'Adjust Level': return TL`Adjust Level`;
+		case 'Adjust Level Down': return TL`Adjust Level Down`;
+		case 'Best Of': return TL`Best Of`;
+		case 'Open Team Sheets': return TL`Open Team Sheets`;
+		case 'Force Open Team Sheets': return TL`Force Open Team Sheets`;
+		case 'Blitz': return TL`Blitz`;
+		case 'Little Cup': return TL`Little Cup`;
+		case 'Cobblemon No Egg Moves': return TL`Cobblemon No Egg Moves`;
+		case 'Cobblemon New Megas': return TL`Cobblemon New Megas`;
+		}
+		return name;
+	}
+	/** CobblemonShowdown : description d'une règle `|rule|` (voir `ruleName`). */
+	static ruleDescription(desc: string): string {
+		switch (desc) {
+		case 'Limit one of each Pokémon': return TL`Limit one of each Pokémon`;
+		case 'Limit one foe put to sleep': return TL`Limit one foe put to sleep`;
+		case 'OHKO moves are banned': return TL`OHKO moves are banned`;
+		case 'Evasion abilities, items, and moves are banned': return TL`Evasion abilities, items, and moves are banned`;
+		case 'Evasion abilities are banned': return TL`Evasion abilities are banned`;
+		case 'Evasion items are banned': return TL`Evasion items are banned`;
+		case 'Evasion moves are banned': return TL`Evasion moves are banned`;
+		case 'Sleep-inducing moves are banned': return TL`Sleep-inducing moves are banned`;
+		case 'The combination of sleep-inducing moves with imperfect accuracy and Gravity or Gigantamax Orbeetle are banned':
+			return TL`The combination of sleep-inducing moves with imperfect accuracy and Gravity or Gigantamax Orbeetle are banned`;
+		case 'The combination of Gravity and sleep-inducing moves with imperfect accuracy are banned':
+			return TL`The combination of Gravity and sleep-inducing moves with imperfect accuracy are banned`;
+		case 'Forcing endless battles is banned': return TL`Forcing endless battles is banned`;
+		case 'You cannot Terastallize': return TL`You cannot Terastallize`;
+		case 'You cannot dynamax': return TL`You cannot dynamax`;
+		case 'You cannot mega evolve Rayquaza': return TL`You cannot mega evolve Rayquaza`;
+		case 'Z-Moves are banned': return TL`Z-Moves are banned`;
+		case 'Pokémon in a team must share a type': return TL`Pokémon in a team must share a type`;
+		case 'HP is shown in percentages': return TL`HP is shown in percentages`;
+		case 'Exact HP is shown': return TL`Exact HP is shown`;
+		case 'Tera Types are shown at Team Preview': return TL`Tera Types are shown at Team Preview`;
+		case 'Super-fast timer': return TL`Super-fast timer`;
+		}
+		// Item Clause : "Limit 1 of each item"
+		const itemLimit = /^Limit (\d+) of each item$/.exec(desc);
+		if (itemLimit) {
+			const count = itemLimit[1];
+			return TL`Limit ${count} of each item`;
+		}
+		return desc;
+	}
 	static escapeFormat(formatid = '', fixGen6?: boolean): string {
 		let atIndex = formatid.indexOf('@@@');
 		if (atIndex >= 0) {
@@ -1145,8 +1235,9 @@ export class BattleLog {
 
 		let atIndex = formatid.indexOf('@@@');
 		if (atIndex >= 0) {
-			return this.formatName(formatid.slice(0, atIndex), fixGen6) +
-				' (Custom rules: ' + this.escapeHTML(formatid.slice(atIndex + 3)) + ')';
+			const formatName = this.formatName(formatid.slice(0, atIndex), fixGen6);
+			const customRules = this.escapeHTML(formatid.slice(atIndex + 3));
+			return TL`${formatName} (Custom rules: ${customRules})`;
 		}
 		if (fixGen6 && !formatid.startsWith('gen')) {
 			formatid = `gen6${formatid}`;
@@ -1332,7 +1423,7 @@ export class BattleLog {
 		case 'data-item':
 		case 'data-ability':
 		case 'data-move':
-			return ['chat message-error', '[outdated code no longer supported]'];
+			return ['chat message-error', '[' + TL`outdated code no longer supported` + ']'];
 		case 'text':
 			return ['chat', BattleLog.parseMessage(target), true];
 		case 'error':
@@ -1846,7 +1937,10 @@ export class BattleLog {
 		buf += '<div class="wrapper replay-wrapper" style="max-width:1180px;margin:0 auto">\n';
 		buf += '<input type="hidden" name="replayid" value="' + replayid + '" />\n';
 		buf += '<div class="battle"></div><div class="battle-log"></div><div class="replay-controls"></div><div class="replay-controls-2"></div>\n';
-		buf += `<h1 style="font-weight:normal;text-align:center"><strong>${BattleLog.escapeHTML(battle.tier)}</strong><br /><a href="http://${Config.routes.users}/${toID(battle.p1.name)}" class="subtle" target="_blank">${BattleLog.escapeHTML(battle.p1.name)}</a> vs. <a href="http://${Config.routes.users}/${toID(battle.p2.name)}" class="subtle" target="_blank">${BattleLog.escapeHTML(battle.p2.name)}</a></h1>\n`;
+		// CobblemonShowdown : le <title> reste en anglais (relu à l'import d'un replay)
+		const p1 = `<a href="http://${Config.routes.users}/${toID(battle.p1.name)}" class="subtle" target="_blank">${BattleLog.escapeHTML(battle.p1.name)}</a>`;
+		const p2 = `<a href="http://${Config.routes.users}/${toID(battle.p2.name)}" class="subtle" target="_blank">${BattleLog.escapeHTML(battle.p2.name)}</a>`;
+		buf += `<h1 style="font-weight:normal;text-align:center"><strong>${BattleLog.escapeHTML(battle.tier)}</strong><br />${TL`${p1} vs. ${p2}`}</h1>\n`;
 		buf += '<script type="text/plain" class="battle-log-data">' + battle.stepQueue.join('\n').replace(/\//g, '\\/') + '</script>\n'; // lgtm [js/incomplete-sanitization]
 		buf += '</div>\n';
 		buf += '<div class="battle-log battle-log-inline"><div class="inner">' + battle.scene.log.elem.innerHTML + '</div></div>\n';
@@ -1861,7 +1955,8 @@ export class BattleLog {
 		// unescape(encodeURIComponent()) is necessary because btoa doesn't support Unicode
 		const replayFile = BattleLog.createReplayFile(room);
 		if (!replayFile) {
-			return 'javascript:alert("You will need to click Download again once the replay file is at the end.");void 0';
+			const message = TL`You will need to click Download again once the replay file is at the end.`;
+			return 'javascript:alert(' + encodeURIComponent(JSON.stringify(message)) + ');void 0';
 		}
 		return 'data:text/plain;base64,' + encodeURIComponent(btoa(unescape(encodeURIComponent(replayFile))));
 	}

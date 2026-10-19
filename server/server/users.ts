@@ -46,6 +46,7 @@ const PERMALOCK_CACHE_TIME = 30 * 24 * 60 * 60 * 1000; // 30 days
 const DEFAULT_TRAINER_SPRITES = [1, 2, 101, 102, 169, 170, 265, 266];
 
 import { Utils, type ProcessManager } from '../lib';
+import { TLkey } from '../sim/dex-text';
 import {
 	Auth, GlobalAuth, PLAYER_SYMBOL, HOST_SYMBOL, type RoomPermission, type GlobalPermission,
 } from './user-groups';
@@ -640,14 +641,14 @@ export class User extends Chat.MessageContext {
 	async validateToken(token: string, name: string, userid: ID, connection: Connection) {
 		if (!token && Config.noguestsecurity) {
 			if (Users.isTrusted(userid)) {
-				this.send(`|nametaken|${name}|You need an authentication token to log in as a trusted user.`);
+				this.send(`|nametaken|${name}|${this.TL`You need an authentication token to log in as a trusted user.`}`);
 				return null;
 			}
 			return '1';
 		}
 
 		if (!token || token.startsWith(';')) {
-			this.send(`|nametaken|${name}|Your authentication token was invalid.`);
+			this.send(`|nametaken|${name}|${this.TL`Your authentication token was invalid.`}`);
 			return null;
 		}
 
@@ -666,33 +667,34 @@ export class User extends Chat.MessageContext {
 
 		if (signedHostname && Config.legalhosts && !Config.legalhosts.includes(signedHostname)) {
 			Monitor.warn(`forged assertion: ${tokenData}`);
-			this.send(`|nametaken|${name}|Your assertion is for the wrong server. This server is ${Config.legalhosts[0]}.`);
+			const legalHost = Config.legalhosts[0];
+			this.send(`|nametaken|${name}|${this.TL`Your assertion is for the wrong server. This server is ${legalHost}.`}`);
 			return null;
 		}
 
 		if (tokenDataSplit.length < 5) {
 			Monitor.warn(`outdated assertion format: ${tokenData}`);
-			this.send(`|nametaken|${name}|The assertion you sent us is corrupt or incorrect. Please send the exact assertion given by the login server's JSON response.`);
+			this.send(`|nametaken|${name}|${this.TL`The assertion you sent us is corrupt or incorrect. Please send the exact assertion given by the login server's JSON response.`}`);
 			return null;
 		}
 
 		if (signedUserid !== userid) {
 			// userid mismatch
-			this.send(`|nametaken|${name}|Your verification signature doesn't match your new username.`);
+			this.send(`|nametaken|${name}|${this.TL`Your verification signature doesn't match your new username.`}`);
 			return null;
 		}
 
 		if (signedChallenge !== challenge) {
 			// a user sent an invalid token
 			Monitor.debug(`verify token challenge mismatch: ${signedChallenge} <=> ${challenge}`);
-			this.send(`|nametaken|${name}|Your verification signature doesn't match your authentication token.`);
+			this.send(`|nametaken|${name}|${this.TL`Your verification signature doesn't match your authentication token.`}`);
 			return null;
 		}
 
 		const expiry = Config.tokenexpiry || 25 * 60 * 60;
 		if (Math.abs(parseInt(signedDate) - Date.now() / 1000) > expiry) {
 			Monitor.warn(`stale assertion: ${tokenData}`);
-			this.send(`|nametaken|${name}|Your assertion is stale. This usually means that the clock on the server computer is incorrect. If this is your server, please set the clock to the correct time.`);
+			this.send(`|nametaken|${name}|${this.TL`Your assertion is stale. This usually means that the clock on the server computer is incorrect. If this is your server, please set the clock to the correct time.`}`);
 			return null;
 		}
 
@@ -700,7 +702,7 @@ export class User extends Chat.MessageContext {
 		if (!success) {
 			Monitor.warn(`verify failed: ${token}`);
 			Monitor.warn(`challenge was: ${challenge}`);
-			this.send(`|nametaken|${name}|Your verification signature was invalid.`);
+			this.send(`|nametaken|${name}|${this.TL`Your verification signature was invalid.`}`);
 			return null;
 		}
 
@@ -730,7 +732,7 @@ export class User extends Chat.MessageContext {
 					continue;
 				}
 				if (room.game.allowRenames || !this.named) continue;
-				this.popup(`You can't change your name right now because you're in ${room.game.title}, which doesn't allow renaming.`);
+				this.popup(this.TL`You can't change your name right now because you're in ${room.game.title}, which doesn't allow renaming.`);
 				return false;
 			}
 		}
@@ -740,12 +742,12 @@ export class User extends Chat.MessageContext {
 			// technically it's not "taken", but if your client doesn't warn you
 			// before it gets to this stage it's your own fault for getting a
 			// bad error message
-			this.send(`|nametaken||Your name must contain at least one letter.`);
+			this.send(`|nametaken||${this.TL`Your name must contain at least one letter.`}`);
 			return false;
 		}
 
 		if (userid.length > 18) {
-			this.send(`|nametaken||Your name must be 18 characters or shorter.`);
+			this.send(`|nametaken||${this.TL`Your name must be 18 characters or shorter.`}`);
 			return false;
 		}
 		name = Chat.namefilter(name, this);
@@ -759,7 +761,7 @@ export class User extends Chat.MessageContext {
 		if (this.registered) newlyRegistered = false;
 
 		if (!userid) {
-			this.send(`|nametaken||Your name contains a banned word.`);
+			this.send(`|nametaken||${this.TL`Your name contains a banned word.`}`);
 			return false;
 		} else {
 			if (userid === this.id && !newlyRegistered) {
@@ -775,9 +777,9 @@ export class User extends Chat.MessageContext {
 			const elapsed = Date.now() - this.lastNewNameTime;
 			if (elapsed < NAMECHANGE_THROTTLE && !Config.nothrottle) {
 				if (this.newNames >= NAMES_PER_THROTTLE) {
+					const wait = Chat.toDurationString(NAMECHANGE_THROTTLE - elapsed);
 					this.send(
-						`|nametaken|${name}|You must wait ${Chat.toDurationString(NAMECHANGE_THROTTLE - elapsed)} more
-						seconds before using another unregistered name.`
+						`|nametaken|${name}|${this.TL`You must wait ${wait} more seconds before using another unregistered name.`}`
 					);
 					return false;
 				}
@@ -810,7 +812,7 @@ export class User extends Chat.MessageContext {
 					// user has just registered; don't merge just to be safe
 					if (conflictUser !== this) conflictUser.resetName();
 				} else {
-					this.send(`|nametaken|${name}|Someone is already using the name "${conflictUser.name}".`);
+					this.send(`|nametaken|${name}|${this.TL`Someone is already using the name "${conflictUser.name}".`}`);
 					return false;
 				}
 			}
@@ -1146,7 +1148,7 @@ export class User extends Chat.MessageContext {
 			if (this.semilocked.startsWith('#sharedip')) {
 				this.semilocked = null;
 			} else if (this.semilocked === '#dnsbl') {
-				this.popup(`You are locked because someone using your IP has spammed/hacked other websites. This usually means either you're using a proxy, you're in a country where other people commonly hack, or you have a virus on your computer that's spamming websites.`);
+				this.popup(this.TL`You are locked because someone using your IP has spammed/hacked other websites. This usually means either you're using a proxy, you're in a country where other people commonly hack, or you have a virus on your computer that's spamming websites.`);
 				this.semilocked = '#dnsbl.' as PunishType;
 			}
 		}
@@ -1309,12 +1311,13 @@ export class User extends Chat.MessageContext {
 			if (roomid.startsWith('view-')) {
 				return Chat.resolvePage(roomid, this, connection);
 			}
-			connection.sendTo(roomid, `|noinit|nonexistent|The room "${roomid}" does not exist.`);
+			connection.sendTo(roomid, `|noinit|nonexistent|${this.TL`The room "${roomid}" does not exist.`}`);
 			return false;
 		}
 		if (!room.checkModjoin(this)) {
 			if (!this.named) return Rooms.RETRY_AFTER_LOGIN;
-			connection.sendTo(roomid, `|noinit|joinfailed|The room "${roomid}" is invite-only, and you haven't been invited.`);
+			const inviteOnlyMessage = this.TL`The room "${roomid}" is invite-only, and you haven't been invited.`;
+			connection.sendTo(roomid, `|noinit|joinfailed|${inviteOnlyMessage}`);
 			return false;
 		}
 		if ((room as GameRoom).tour) {
@@ -1331,7 +1334,7 @@ export class User extends Chat.MessageContext {
 		}
 
 		if (!this.can('bypassall') && Punishments.isRoomBanned(this, room.roomid)) {
-			connection.sendTo(roomid, `|noinit|joinfailed|You are banned from the room "${roomid}".`);
+			connection.sendTo(roomid, `|noinit|joinfailed|${this.TL`You are banned from the room "${roomid}".`}`);
 			return false;
 		}
 
@@ -1339,7 +1342,7 @@ export class User extends Chat.MessageContext {
 			const groupchatbanned = Punishments.isGroupchatBanned(this);
 			if (groupchatbanned) {
 				const expireText = Punishments.checkPunishmentExpiration(groupchatbanned);
-				connection.sendTo(roomid, `|noinit|joinfailed|You are banned from using groupchats${expireText}.`);
+				connection.sendTo(roomid, `|noinit|joinfailed|${this.TL`You are banned from using groupchats${expireText}.`}`);
 				return false;
 			}
 			Punishments.monitorGroupchatJoin(room, this);
@@ -1397,9 +1400,11 @@ export class User extends Chat.MessageContext {
 	cancelReady() {
 		// setting variables because this can't be short-circuited
 		const searchesCancelled = Ladders.cancelSearches(this);
-		const challengesCancelled = Ladders.challenges.clearFor(this.id, 'they changed their username');
+		const challengesCancelled = Ladders.challenges.clearFor(
+			this.id, TLkey`Challenge cancelled because they changed their username.`
+		);
 		if (searchesCancelled || challengesCancelled) {
-			this.popup(`Your searches and challenges have been cancelled because you changed your username.`);
+			this.popup(this.TL`Your searches and challenges have been cancelled because you changed your username.`);
 		}
 		// cancel tour challenges
 		// no need for a popup because users can't change their name while in a tournament anyway
@@ -1454,7 +1459,7 @@ export class User extends Chat.MessageContext {
 			if (this.chatQueue.length >= THROTTLE_BUFFER_LIMIT - 1) {
 				connection.sendTo(
 					room,
-					`|raw|<strong class="message-throttle-notice">Your message was not sent because you've been typing too quickly.</strong>`
+					`|raw|<strong class="message-throttle-notice">${this.TL`Your message was not sent because you've been typing too quickly.`}</strong>`
 				);
 				return false;
 			} else {
@@ -1734,7 +1739,7 @@ function socketReceive(worker: ProcessManager.StreamWorker, workerid: number, so
 			THROTTLE_MULTILINE_WARN_STAFF : THROTTLE_MULTILINE_WARN
 	);
 	if (lines.length > maxLineCount && !Config.nothrottle) {
-		connection.popup(`You're sending too many lines at once. Try using a paste service like [[Pastebin]].`);
+		connection.popup(user.TL`You're sending too many lines at once. Try using a paste service like [[Pastebin]].`);
 		return;
 	}
 	// Emergency logging

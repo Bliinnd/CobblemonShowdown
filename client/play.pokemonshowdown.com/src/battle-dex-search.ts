@@ -678,6 +678,11 @@ abstract class BattleTypedSearch<T extends SearchType> {
 	isDoubles = false;
 	/** CobblemonShowdown : variantes "(Egg Moves)" qui autorisent les attaques apprises par reproduction. */
 	cobblemonEggMoves = false;
+	/**
+	 * CobblemonShowdown : Pokémon interdits dans le format, affichés en bas de la liste
+	 * ("Illegal results") même sans recherche.
+	 */
+	defaultIllegalResults: SearchRow[] | null = null;
 
 	/**
 	 * Cached copy of what the results list would be with only base filters
@@ -717,6 +722,7 @@ abstract class BattleTypedSearch<T extends SearchType> {
 				cobblemonFormat = cobblemonFormat.slice(0, -8) as ID;
 			}
 			if (!cobblemonFormat) cobblemonFormat = 'ou' as ID;
+			if (cobblemonFormat === 'doublesou' || cobblemonFormat === 'vgc') this.isDoubles = true;
 			this.formatType = cobblemonFormat === 'nationaldex' ? 'natdexcobblemon' : 'cobblemon';
 			this.dex = Dex.mod('cobblemon' as ID);
 			format = '' as ID;
@@ -896,7 +902,7 @@ abstract class BattleTypedSearch<T extends SearchType> {
 			}
 		} else {
 			results = [...this.baseResults];
-			illegalResults = null;
+			illegalResults = this.defaultIllegalResults?.length ? [...this.defaultIllegalResults] : null;
 		}
 		if (this.defaultFilter) {
 			results = this.defaultFilter(results);
@@ -1052,6 +1058,11 @@ abstract class BattleTypedSearch<T extends SearchType> {
 		if (!table) return pokemon.tier;
 
 		let id = pokemon.id;
+		// CobblemonShowdown : en Doubles OU, on affiche le tier en double.
+		if (this.formatType === 'cobblemon' && this.format === 'doublesou' && table.overrideDoublesTier) {
+			const doublesTier = table.overrideDoublesTier[id] || table.overrideDoublesTier[toID(pokemon.baseSpecies)];
+			if (doublesTier) return doublesTier;
+		}
 		if (id in table.overrideTier) {
 			return table.overrideTier[id];
 		}
@@ -1223,13 +1234,25 @@ class BattlePokemonSearch extends BattleTypedSearch<'pokemon'> {
 		let tierSet: SearchRow[] = table.tierSet;
 		let slices: { [k: string]: number } = table.formatSlices;
 		if (this.formatType === 'cobblemon' || this.formatType === 'natdexcobblemon') {
-			// CobblemonShowdown : tous les Pokémon autorisés dans le format, les autres
-			// apparaissent dans "Illegal results".
+			// CobblemonShowdown : d'abord les Pokémon du tier du format, puis "Others" (autorisés
+			// mais d'un autre tier), puis "Illegal results" (interdits dans le format, voir getResults).
 			const bans: { [id: string]: 1 } = table.metagameBans?.[format] || {};
-			tierSet = tierSet.filter(([type, id]) => type !== 'pokemon' || !(id in bans));
-			// En LC, une seule liste (quelques Pokémon autorisés sont classés Uber ailleurs)
-			if (format === 'lc') return [['header', "LC"], ...tierSet.filter(([type]) => type === 'pokemon')];
-			return tierSet.filter(([type], i) => type !== 'header' || tierSet[i + 1]?.[0] === 'pokemon');
+			const others: { [id: string]: 1 } = table.metagameOthers?.[format] || {};
+			const inTier: SearchRow[] = [];
+			const otherRows: SearchRow[] = [];
+			const illegalRows: SearchRow[] = [];
+			for (const row of tierSet) {
+				if (row[0] !== 'pokemon') continue;
+				if (row[1] in bans) illegalRows.push(row);
+				else if (row[1] in others) otherRows.push(row);
+				else inTier.push(row);
+			}
+			this.defaultIllegalResults = illegalRows;
+			const tierName = ({ ubers: "Uber", lc: "LC", doublesou: "DOU", vgc: "VGC" } as { [k: string]: string })[format] || "OU";
+			return [
+				['header', tierName], ...inTier,
+				...(otherRows.length ? [['header', TL`Others`] as SearchRow, ...otherRows] : []),
+			];
 		}
 		if (
 			format === 'ubers' || format === 'uber' || format === 'ubersuu' ||

@@ -168,7 +168,7 @@ export const translations: TranslationCatalog = {
 	"No effect": null,
 	"Weak": null,
 	"Resist": null,
-	"Immune": null, // NOT USED
+	"Immune": null,
 
 	// TRANSLATORS: battle tooltips
 	"Usually moves first (priority +{PRIORITY}).": null,

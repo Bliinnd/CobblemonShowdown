@@ -2885,7 +2885,13 @@ function runLearn(target: string, cmd: string, formatid: string) {
 	}
 	const validator = TeamValidator.get(format);
 
-	const species = validator.dex.species.get(targets.shift());
+	const speciesTarget = targets.shift()!;
+	let species = validator.dex.species.get(speciesTarget);
+	if (!species.exists) {
+		// French names (e.g. "Carchacrok") are exact matches found by dataSearch
+		const found = validator.dex.dataSearch(speciesTarget, ['Pokedex'])?.find(result => !result.isInexact);
+		if (found) species = validator.dex.species.get(found.name);
+	}
 	const setSources = validator.allSources(species);
 	const set: Partial<PokemonSet> = {
 		name: species.baseSpecies,
@@ -2912,7 +2918,11 @@ function runLearn(target: string, cmd: string, formatid: string) {
 			setSources.isHidden = true;
 			continue;
 		}
-		const move = validator.dex.moves.get(arg);
+		let move = validator.dex.moves.get(arg);
+		if (!move.exists) {
+			const found = validator.dex.dataSearch(arg, ['Moves'])?.find(result => !result.isInexact);
+			if (found) move = validator.dex.moves.get(found.name);
+		}
 		moveNames.push(move.name);
 		if (!move.exists) {
 			return { error: `Move '${move.id}' not found.` };

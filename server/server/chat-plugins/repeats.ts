@@ -126,7 +126,7 @@ export function destroy() {
 export const pages: Chat.PageTable = {
 	repeats(args, user) {
 		const room = this.requireRoom();
-		this.title = `[Repeats]`;
+		this.title = this.TL`[Repeats]`;
 		this.checkCan("mute", null, room);
 		let html = `<div class="ladder pad">`;
 		html += `<button class="button" name="send" value="/join view-repeats-${room.roomid}" style="float: right"><i class="fa fa-refresh"></i> ${this.TL`Refresh`}</button>`;
@@ -160,7 +160,7 @@ export const commands: Chat.ChatCommands = {
 		const isHTML = cmd.includes('html');
 		const isByMessages = cmd.includes('bymessages');
 		room = this.requireRoom();
-		if (room.settings.isPersonal) throw new Chat.ErrorMessage(`Personal rooms do not support repeated messages.`);
+		if (room.settings.isPersonal) throw new Chat.ErrorMessage(this.TL`Personal rooms do not support repeated messages.`);
 		this.checkCan(isHTML ? 'addhtml' : 'mute', null, room);
 		const [intervalString, name, ...messageArray] = target.split(',');
 		const id = toID(name);
@@ -197,13 +197,13 @@ export const commands: Chat.ChatCommands = {
 	repeathelp() {
 		this.runBroadcast();
 		this.sendReplyBox(
-			`<code>/repeat [minutes], [id], [phrase]</code>: repeats a given phrase every [minutes] minutes. Requires: % @ # ~<br />` +
-			`<code>/repeathtml [minutes], [id], [phrase]</code>: repeats a given phrase containing HTML every [minutes] minutes. Requires: # ~<br />` +
-			`<code>/repeatfaq [minutes], [FAQ name/alias]</code>: repeats a given Room FAQ every [minutes] minutes. Requires: % @ # ~<br />` +
-			`<code>/removerepeat [id]</code>: removes a repeated phrase. Requires: % @ # ~<br />` +
-			`<code>/viewrepeats [optional room]</code>: Displays all repeated phrases in a room. Requires: % @ # ~<br />` +
-			`You can append <code>bymessages</code> to a <code>/repeat</code> command to repeat a phrase based on how many messages have been sent in chat. For example, <code>/repeatfaqbymessages ...</code><br />` +
-			`Phrases for <code>/repeat</code> can include normal chat formatting, but not commands.`
+			`${this.TL`<code>/repeat [minutes], [id], [phrase]</code>: repeats a given phrase every [minutes] minutes. Requires: % @ # ~`}<br />` +
+			`${this.TL`<code>/repeathtml [minutes], [id], [phrase]</code>: repeats a given phrase containing HTML every [minutes] minutes. Requires: # ~`}<br />` +
+			`${this.TL`<code>/repeatfaq [minutes], [FAQ name/alias]</code>: repeats a given Room FAQ every [minutes] minutes. Requires: % @ # ~`}<br />` +
+			`${this.TL`<code>/removerepeat [id]</code>: removes a repeated phrase. Requires: % @ # ~`}<br />` +
+			`${this.TL`<code>/viewrepeats [optional room]</code>: Displays all repeated phrases in a room. Requires: % @ # ~`}<br />` +
+			`${this.TL`You can append <code>bymessages</code> to a <code>/repeat</code> command to repeat a phrase based on how many messages have been sent in chat. For example, <code>/repeatfaqbymessages ...</code>`}<br />` +
+			this.TL`Phrases for <code>/repeat</code> can include normal chat formatting, but not commands.`
 		);
 	},
 
@@ -211,7 +211,7 @@ export const commands: Chat.ChatCommands = {
 	repeatfaq(target, room, user, connection, cmd) {
 		room = this.requireRoom();
 		this.checkCan('mute', null, room);
-		if (room.settings.isPersonal) throw new Chat.ErrorMessage(`Personal rooms do not support repeated messages.`);
+		if (room.settings.isPersonal) throw new Chat.ErrorMessage(this.TL`Personal rooms do not support repeated messages.`);
 		const isByMessages = cmd.includes('bymessages');
 
 		let [intervalString, topic] = target.split(',');
@@ -220,12 +220,12 @@ export const commands: Chat.ChatCommands = {
 			throw new Chat.ErrorMessage(this.TL`You must specify an interval as a number of minutes or chat messages between 1 and 1440.`);
 		}
 		if (!roomFaqs[room.roomid]) {
-			throw new Chat.ErrorMessage(`This room has no FAQs.`);
+			throw new Chat.ErrorMessage(this.TL`This room has no FAQs.`);
 		}
 		topic = toID(getAlias(room.roomid, topic) || topic);
 		const faq = roomFaqs[room.roomid][topic];
 		if (!faq) {
-			throw new Chat.ErrorMessage(`Invalid topic.`);
+			throw new Chat.ErrorMessage(this.TL`Invalid topic.`);
 		}
 
 		if (Repeats.hasRepeat(room, topic as ID)) {

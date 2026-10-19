@@ -24,4 +24,14 @@ export const translations: TranslationCatalog = {
 	"There are no repeated phrases in this room.": "現在この部屋でリピートされているメッセージはありません。",
 	"{USER} removed all repeated phrases.": "{USER}が全てのリピートを削除しました。",
 	"You must specify a room when using this command in PMs.": "このコマンドをPMで使う場合は部屋を指定する必要があります。",
+	"[Repeats]": null, // NEEDS TRANSLATION
+	"Personal rooms do not support repeated messages.": null, // NEEDS TRANSLATION
+	"<code>/repeat [minutes], [id], [phrase]</code>: repeats a given phrase every [minutes] minutes. Requires: % @ # ~": null, // NEEDS TRANSLATION
+	"<code>/repeathtml [minutes], [id], [phrase]</code>: repeats a given phrase containing HTML every [minutes] minutes. Requires: # ~": null, // NEEDS TRANSLATION
+	"<code>/repeatfaq [minutes], [FAQ name/alias]</code>: repeats a given Room FAQ every [minutes] minutes. Requires: % @ # ~": null, // NEEDS TRANSLATION
+	"<code>/removerepeat [id]</code>: removes a repeated phrase. Requires: % @ # ~": null, // NEEDS TRANSLATION
+	"<code>/viewrepeats [optional room]</code>: Displays all repeated phrases in a room. Requires: % @ # ~": null, // NEEDS TRANSLATION
+	"You can append <code>bymessages</code> to a <code>/repeat</code> command to repeat a phrase based on how many messages have been sent in chat. For example, <code>/repeatfaqbymessages ...</code>": null, // NEEDS TRANSLATION
+	"Phrases for <code>/repeat</code> can include normal chat formatting, but not commands.": null, // NEEDS TRANSLATION
+
 };

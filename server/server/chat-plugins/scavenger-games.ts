@@ -7,8 +7,9 @@
  * @license MIT license
  */
 
-import { ScavengerHunt, type ScavengerHuntPlayer, sanitizeAnswer } from './scavengers';
+import { ScavengerHunt, type ScavengerHuntPlayer, sanitizeAnswer, gameTypeName } from './scavengers';
 import { Utils } from '../../lib';
+import { TLkey, type Translator } from '../../sim/dex-text';
 
 export type TwistEvent = (this: ScavengerHunt, ...args: any[]) => void;
 interface Twist {
@@ -90,9 +91,9 @@ class Leaderboard {
 		});
 	}
 
-	async htmlLadder(): Promise<string> {
+	async htmlLadder(TL: Translator): Promise<string> {
 		const data = await this.visualize('points');
-		return `<div class="ladder" style="overflow-y: scroll; max-height: 170px;"><table style="width: 100%"><tr><th>Rank</th><th>Name</th><th>Points</th></tr>${data.map(line =>
+		return `<div class="ladder" style="overflow-y: scroll; max-height: 170px;"><table style="width: 100%"><tr><th>${TL`Rank`}</th><th>${TL`Name`}</th><th>${TL`Points`}</th></tr>${data.map(line =>
 			`<tr><td>${line.rank}</td><td>${line.name}</td><td>${line.points}</td></tr>`).join('')
 		}</table></div>`;
 	}
@@ -100,9 +101,9 @@ class Leaderboard {
 
 const TWISTS: { [k: string]: Twist } = {
 	perfectscore: {
-		name: 'Perfect Score',
+		name: TLkey`Perfect Score`,
 		id: 'perfectscore',
-		desc: "Players who finish the hunt without submitting a single wrong answer get a shoutout!",
+		desc: TLkey`Players who finish the hunt without submitting a single wrong answer get a shoutout!`,
 
 		onLeave(player) {
 			if (!this.leftGame) this.leftGame = [];
@@ -132,28 +133,33 @@ const TWISTS: { [k: string]: Twist } = {
 			if (isReset) return;
 			const perfect = this.completed.filter(entry => entry.isPerfect).map(entry => entry.name);
 			if (perfect.length) {
-				this.announce(Utils.html`${Chat.toListString(perfect)} ${perfect.length > 1 ? 'have' : 'has'} completed the hunt without a single wrong answer!`);
+				const names = Utils.escapeHTML(this.TL.andList(perfect));
+				this.announce(perfect.length > 1 ?
+					this.TL`${names} have completed the hunt without a single wrong answer!` :
+					this.TL`${names} has completed the hunt without a single wrong answer!`);
 			}
 		},
 	},
 
 	bonusround: {
-		name: 'Bonus Round',
+		name: TLkey`Bonus Round`,
 		id: 'bonusround',
-		desc: "Players can choose whether or not they choose to complete the 4th question.",
+		desc: TLkey`Players can choose whether or not they choose to complete the 4th question.`,
 
 		onAfterLoad() {
 			if (this.questions.length === 3) {
-				this.announce('This twist requires at least four questions.  Please reset the hunt and make it again.');
+				this.announce(this.TL`This twist requires at least four questions.  Please reset the hunt and make it again.`);
 				this.huntLocked = true;
 			} else {
-				this.questions[this.questions.length - 1].hint += ' (You may choose to skip this question using ``/scavenge skip``.)';
+				// added to the hint everyone sees, so it follows the room's language
+				const skipNote = this.TL`(You may choose to skip this question using \`\`/scavenge skip\`\`.)`;
+				this.questions[this.questions.length - 1].hint += ' ' + skipNote;
 			}
 		},
 
 		onAnySubmit(player) {
 			if (this.huntLocked) {
-				player.sendRoom('The hunt was not set up correctly.  Please wait for the host to reset the hunt and create a new one.');
+				player.sendRoom(player.TL`The hunt was not set up correctly.  Please wait for the host to reset the hunt and create a new one.`);
 				return true;
 			}
 		},
@@ -163,7 +169,7 @@ const TWISTS: { [k: string]: Twist } = {
 			const currentQuestion = player.currentQuestion;
 
 			if (value === 'skip' && currentQuestion + 1 === this.questions.length) {
-				player.sendRoom('You have opted to skip the current question.');
+				player.sendRoom(player.TL`You have opted to skip the current question.`);
 				player.skippedQuestion = true;
 				this.onComplete(player);
 				return true;
@@ -180,22 +186,25 @@ const TWISTS: { [k: string]: Twist } = {
 			if (isReset) return;
 			const noSkip = this.completed.filter(entry => entry.noSkip).map(entry => entry.name);
 			if (noSkip.length) {
-				this.announce(Utils.html`${Chat.toListString(noSkip)} ${noSkip.length > 1 ? 'have' : 'has'} completed the hunt without skipping the last question!`);
+				const names = Utils.escapeHTML(this.TL.andList(noSkip));
+				this.announce(noSkip.length > 1 ?
+					this.TL`${names} have completed the hunt without skipping the last question!` :
+					this.TL`${names} has completed the hunt without skipping the last question!`);
 			}
 		},
 	},
 
 	incognito: {
-		name: 'Incognito',
+		name: TLkey`Incognito`,
 		id: 'incognito',
-		desc: "Upon answering the last question correctly, the player's finishing time will not be announced in the room!  Results will only be known at the end of the hunt.",
+		desc: TLkey`Upon answering the last question correctly, the player's finishing time will not be announced in the room!  Results will only be known at the end of the hunt.`,
 
 		onCorrectAnswer(player, value) {
 			if (player.currentQuestion + 1 >= this.questions.length) {
 				this.runEvent('PreComplete', player);
 
-				player.sendRoom(`Congratulations! You have gotten the correct answer.`);
-				player.sendRoom(`This is a special style where finishes aren't announced! To see your placement, wait for the hunt to end. Until then, it's your secret that you finished!`);
+				player.sendRoom(player.TL`Congratulations! You have gotten the correct answer.`);
+				player.sendRoom(player.TL`This is a special style where finishes aren't announced! To see your placement, wait for the hunt to end. Until then, it's your secret that you finished!`);
 				return false;
 			}
 		},
@@ -221,10 +230,10 @@ const TWISTS: { [k: string]: Twist } = {
 	},
 
 	spamfilter: {
-		name: 'Spam Filter',
+		name: TLkey`Spam Filter`,
 		id: 'spamfilter',
 
-		desc: 'Every wrong answer adds 30 seconds to your final time!',
+		desc: TLkey`Every wrong answer adds 30 seconds to your final time!`,
 
 		onIncorrectAnswer(player: ScavengerHuntPlayer, value: string) {
 			if (!player.incorrect) player.incorrect = [];
@@ -248,10 +257,14 @@ const TWISTS: { [k: string]: Twist } = {
 		onConfirmCompletion(player, time, blitz, place, result) {
 			blitz = result.blitz;
 			time = result.time;
-			const deductionMessage = player.incorrect?.length ?
-				Chat.count(player.incorrect, 'incorrect guesses', 'incorrect guess') :
-				"Perfect!";
-			return `<em>${Utils.escapeHTML(player.name)}</em> has finished the hunt! (Final Time: ${time} - ${deductionMessage}${(blitz ? " - BLITZ" : "")})`;
+			const TL = this.TL;
+			const name = `<em>${Utils.escapeHTML(player.name)}</em>`;
+			const wrong = player.incorrect?.length || 0;
+			const deductionMessage = !wrong ? TL`Perfect!` :
+				wrong === 1 ? TL`1 incorrect guess` : TL`${wrong} incorrect guesses`;
+			return blitz ?
+				TL`${name} has finished the hunt! (Final Time: ${time} - ${deductionMessage} - BLITZ)` :
+				TL`${name} has finished the hunt! (Final Time: ${time} - ${deductionMessage})`;
 		},
 
 		onEnd() {
@@ -260,13 +273,13 @@ const TWISTS: { [k: string]: Twist } = {
 	},
 
 	blindincognito: {
-		name: 'Blind Incognito',
+		name: TLkey`Blind Incognito`,
 		id: 'blindincognito',
-		desc: "Upon completing the last question, neither you nor other players will know if the last question is correct!  You may be in for a nasty surprise when the hunt ends!",
+		desc: TLkey`Upon completing the last question, neither you nor other players will know if the last question is correct!  You may be in for a nasty surprise when the hunt ends!`,
 
 		onAnySubmit(player, value) {
 			if (player.precompleted) {
-				player.sendRoom(`That may or may not be the right answer - if you aren't confident, you can try again!`);
+				player.sendRoom(player.TL`That may or may not be the right answer - if you aren't confident, you can try again!`);
 				return true;
 			}
 		},
@@ -275,14 +288,14 @@ const TWISTS: { [k: string]: Twist } = {
 			if (player.currentQuestion + 1 >= this.questions.length) {
 				this.runEvent('PreComplete', player);
 
-				player.sendRoom(`That may or may not be the right answer - if you aren't confident, you can try again!`);
+				player.sendRoom(player.TL`That may or may not be the right answer - if you aren't confident, you can try again!`);
 				return true;
 			}
 		},
 
 		onIncorrectAnswer(player, value) {
 			if (player.currentQuestion + 1 >= this.questions.length) {
-				player.sendRoom(`That may or may not be the right answer - if you aren't confident, you can try again!`);
+				player.sendRoom(player.TL`That may or may not be the right answer - if you aren't confident, you can try again!`);
 				return false;
 			}
 		},
@@ -307,13 +320,13 @@ const TWISTS: { [k: string]: Twist } = {
 	},
 
 	timetrial: {
-		name: 'Time Trial',
+		name: TLkey`Time Trial`,
 		id: 'timetrial',
-		desc: "Time starts when the player starts the hunt!",
+		desc: TLkey`Time starts when the player starts the hunt!`,
 
 		onAfterLoad() {
 			if (this.questions.length === 3) {
-				this.announce('This twist requires at least four questions. Please reset the hunt and make it again.');
+				this.announce(this.TL`This twist requires at least four questions. Please reset the hunt and make it again.`);
 				this.huntLocked = true;
 			}
 			this.altIps = {};
@@ -321,10 +334,11 @@ const TWISTS: { [k: string]: Twist } = {
 		},
 
 		onJoin(user: User) {
+			const TL = this.room.userTL(user);
 			if (!Config.noipchecks) {
 				const altIp = user.ips.find(ip => this.altIps[ip] && this.altsIps[ip].id !== user.id);
 				if (altIp) {
-					user.sendTo(this.room, `You already have started the hunt as ${this.altIps[altIp].name}.`);
+					user.sendTo(this.room, TL`You already have started the hunt as ${this.altIps[altIp].name}.`);
 					return true;
 				}
 			}
@@ -332,10 +346,10 @@ const TWISTS: { [k: string]: Twist } = {
 			if (this.addPlayer(user)) {
 				this.cacheUserIps(user);
 				delete this.leftHunt[user.id];
-				user.sendTo(this.room, "You joined the scavenger hunt! Use the command /scavenge to answer.");
+				user.sendTo(this.room, TL`You joined the scavenger hunt! Use the command /scavenge to answer.`);
 				this.onSendQuestion(user);
 			} else {
-				user.sendTo(this.room, "You have already joined the hunt.");
+				user.sendTo(this.room, TL`You have already joined the hunt.`);
 			}
 			return true;
 		},
@@ -348,7 +362,7 @@ const TWISTS: { [k: string]: Twist } = {
 
 		onAnySubmit(player) {
 			if (this.huntLocked) {
-				player.sendRoom('The hunt was not set up correctly.  Please wait for the host to reset the hunt and create a new one.');
+				player.sendRoom(player.TL`The hunt was not set up correctly.  Please wait for the host to reset the hunt and create a new one.`);
 				return true;
 			}
 		},
@@ -366,9 +380,10 @@ const TWISTS: { [k: string]: Twist } = {
 			this.completed.push(result);
 			const place = Utils.formatOrder(this.completed.length);
 
-			this.announce(
-				Utils.html`<em>${result.name}</em> is the ${place} player to finish the hunt! (${takenTime}${(blitz ? " - BLITZ" : "")})`
-			);
+			const name = Utils.html`<em>${result.name}</em>`;
+			this.announce(blitz ?
+				this.TL`${name} is the ${place} player to finish the hunt! (${takenTime} - BLITZ)` :
+				this.TL`${name} is the ${place} player to finish the hunt! (${takenTime})`);
 			Utils.sortBy(this.completed, entry => entry.duration);
 
 			player.destroy(); // remove from user.games;
@@ -378,15 +393,15 @@ const TWISTS: { [k: string]: Twist } = {
 
 	scavengersfeud: {
 		id: 'scavengersfeud',
-		name: 'Scavengers Feud',
-		desc: 'After completing the hunt, players will guess what the most common incorrect answer for each question is.',
+		name: TLkey`Scavengers Feud`,
+		desc: TLkey`After completing the hunt, players will guess what the most common incorrect answer for each question is.`,
 		onAfterLoad() {
 			this.guesses = {};
 			this.incorrect = this.questions.map(() => ({}));
 
 			this.questions.push({
-				hint: 'Please enter what you think are the most common incorrect answers to each question.  (Enter your guesses in the order of the previous questions, and separate them with a comma)',
-				answer: ['Any'],
+				hint: this.TL`Please enter what you think are the most common incorrect answers to each question.  (Enter your guesses in the order of the previous questions, and separate them with a comma)`,
+				answer: [this.TL`Any`],
 				spoilers: [],
 			});
 		},
@@ -440,21 +455,21 @@ const TWISTS: { [k: string]: Twist } = {
 				}
 
 				// display the data
-				const matchDisplay = matches.length ? matches.join(', ') : 'No wrong answers!';
+				const matchDisplay = matches.length ? matches.join(', ') : this.TL`No wrong answers!`;
 				const playerDisplay = matches.length ?
-					matchedPlayers.length ? `- ${matchedPlayers.join(', ')}` : '- No one guessed correctly!' :
+					matchedPlayers.length ? `- ${matchedPlayers.join(', ')}` : `- ${this.TL`No one guessed correctly!`}` :
 					'';
 				buffer.push(`Q${idx + 1}: ${matchDisplay} ${playerDisplay}`);
 			}
 
-			this.announce(`<h3>Most common incorrect answers:</h3>${buffer.join('<br />')}`);
+			this.announce(`<h3>${this.TL`Most common incorrect answers:`}</h3>${buffer.join('<br />')}`);
 		},
 	},
 
 	pointless: {
 		id: 'pointless',
-		name: 'Pointless',
-		desc: 'Players get bonus points for guessing the least commonly guessed answers.',
+		name: TLkey`Pointless`,
+		desc: TLkey`Players get bonus points for guessing the least commonly guessed answers.`,
 		onAfterLoad() {
 			this.correct = this.questions.map(() => ({}));
 		},
@@ -486,14 +501,14 @@ const TWISTS: { [k: string]: Twist } = {
 				buffer.push(`Q${idx + 1}: ${matchDisplay} - ${playerDisplay}`);
 			}
 
-			this.announce(`<h3>Least frequent correct answers:</h3>${buffer.join('<br />')}`);
+			this.announce(`<h3>${this.TL`Least frequent correct answers:`}</h3>${buffer.join('<br />')}`);
 		},
 	},
 
 	minesweeper: {
 		id: 'minesweeper',
-		name: 'Minesweeper',
-		desc: 'The huntmaker adds \'mines\' to the hunt using `!(mine)` - players that dodge all mines get extra points, while the huntmaker gets points every time a mine is hit.',
+		name: TLkey`Minesweeper`,
+		desc: TLkey`The huntmaker adds 'mines' to the hunt using \`!(mine)\` - players that dodge all mines get extra points, while the huntmaker gets points every time a mine is hit.`,
 		onAfterLoad() {
 			this.guesses = this.questions.map(() => []);
 			this.mines = [];
@@ -502,7 +517,7 @@ const TWISTS: { [k: string]: Twist } = {
 				question.answer = question.answer.filter(ans => !ans.startsWith('!'));
 			}
 			if ((this.mines as string[][]).some(mineSet => mineSet.length === 0)) {
-				this.announce('This twist requires at least one mine for each question. Please reset the hunt and make it again.');
+				this.announce(this.TL`This twist requires at least one mine for each question. Please reset the hunt and make it again.`);
 				this.huntLocked = true;
 			}
 		},
@@ -530,7 +545,10 @@ const TWISTS: { [k: string]: Twist } = {
 				this.questions[questionNumber].hint = value;
 			}
 
-			this.announce(`The ${questionAnswer} for question ${questionNumber + 1} has been edited.`);
+			const questionNum = questionNumber + 1;
+			this.announce(questionAnswer === 'hint' ?
+				this.TL`The hint for question ${questionNum} has been edited.` :
+				this.TL`The answer for question ${questionNum} has been edited.`);
 			if (questionAnswer === 'hint') {
 				for (const p in this.playerTable) {
 					this.playerTable[p].onNotifyChange(questionNumber);
@@ -541,7 +559,7 @@ const TWISTS: { [k: string]: Twist } = {
 
 		onAnySubmit(player) {
 			if (this.huntLocked) {
-				player.sendRoom('The hunt was not set up correctly.  Please wait for the host to reset the hunt and create a new one.');
+				player.sendRoom(player.TL`The hunt was not set up correctly.  Please wait for the host to reset the hunt and create a new one.`);
 				return true;
 			}
 		},
@@ -552,13 +570,11 @@ const TWISTS: { [k: string]: Twist } = {
 			if (!this.guesses[curr][player.id]) this.guesses[curr][player.id] = new Set();
 			this.guesses[curr][player.id].add(sanitizeAnswer(value));
 
-			throw new Chat.ErrorMessage("That is not the answer - try again!");
+			throw new Chat.ErrorMessage(player.TL`That is not the answer - try again!`);
 		},
 
 		onShowEndBoard(endedBy?: User) {
-			const sliceIndex = this.gameType === 'official' ? 5 : 3;
-			const hosts = Chat.toListString(this.hosts.map(h => `<em>${Utils.escapeHTML(h.name)}</em>`));
-
+			const TL = this.TL;
 			const mines: { mine: string, users: string[] }[][] = [];
 
 			for (const mineSet of this.mines as string[][]) {
@@ -577,13 +593,11 @@ const TWISTS: { [k: string]: Twist } = {
 			for (const mineSet of mines) mineSet.sort();
 
 			this.announce(
-				`The ${this.gameType ? `${this.gameType} ` : ""}scavenger hunt by ${hosts} was ended ${(endedBy ? "by " + Utils.escapeHTML(endedBy.name) : "automatically")}.<br />` +
-				`${this.completed.slice(0, sliceIndex).map((p, i) => `${Utils.formatOrder(i + 1)} place: <em>${Utils.escapeHTML(p.name)}</em> <span style="color: lightgreen;">[${p.time}]</span>.<br />`).join("")}` +
-				`${this.completed.length > sliceIndex ? `Consolation Prize: ${this.completed.slice(sliceIndex).map(e => `<em>${Utils.escapeHTML(e.name)}</em> <span style="color: lightgreen;">[${e.time}]</span>`).join(', ')}<br />` : ''}<br />` +
-				`<details style="cursor: pointer;"><summary>Solution: </summary><br />` +
+				this.getEndBoardHeader(endedBy) +
+				`<details style="cursor: pointer;"><summary>${TL`Solution:`} </summary><br />` +
 				`${this.questions.map((q, i) => (
 					`${i + 1}) ${this.formatOutput(q.hint)} <span style="color: lightgreen">[<em>${Utils.escapeHTML(q.answer.join(' / '))}</em>]</span><br/>` +
-					`<details style="cursor: pointer;"><summary>Mines: </summary>${mines[i].map(({ mine, users }) => Utils.escapeHTML(`${mine}: ${users.join(' / ') || '-'}`)).join('<br />')}</details>`
+					`<details style="cursor: pointer;"><summary>${TL`Mines:`} </summary>${mines[i].map(({ mine, users }) => Utils.escapeHTML(`${mine}: ${users.join(' / ') || '-'}`)).join('<br />')}</details>`
 				)).join("<br />")}` +
 				`</details>`
 			);
@@ -615,7 +629,10 @@ const TWISTS: { [k: string]: Twist } = {
 				if (!player.mines?.length) noMines.push(name);
 			}
 			if (noMines.length) {
-				this.announce(Utils.html`${Chat.toListString(noMines)} ${noMines.length > 1 ? 'have' : 'has'} completed the hunt without hitting a single mine!`);
+				const names = Utils.escapeHTML(this.TL.andList(noMines));
+				this.announce(noMines.length > 1 ?
+					this.TL`${names} have completed the hunt without hitting a single mine!` :
+					this.TL`${names} has completed the hunt without hitting a single mine!`);
 				// Points are awarded manually
 			}
 		},
@@ -625,11 +642,11 @@ const TWISTS: { [k: string]: Twist } = {
 const MODES: { [k: string]: GameMode | string } = {
 	ko: 'kogames',
 	kogames: {
-		name: 'KO Games',
+		name: TLkey`KO Games`,
 		id: 'kogames',
 
 		mod: {
-			name: 'KO Games',
+			name: TLkey`KO Games`,
 			id: 'KO Games',
 			isGameMode: true,
 
@@ -640,7 +657,8 @@ const MODES: { [k: string]: GameMode | string } = {
 			onJoin(user: User) {
 				const game = this.room.scavgame!;
 				if (game.playerlist && !game.playerlist.includes(user.id)) {
-					user.sendTo(this.room, 'You are not allowed to join this scavenger hunt.');
+					const TL = this.room.userTL(user);
+					user.sendTo(this.room, TL`You are not allowed to join this scavenger hunt.`);
 					return true;
 				}
 			},
@@ -648,7 +666,7 @@ const MODES: { [k: string]: GameMode | string } = {
 			onAfterEnd() {
 				const game = this.room.scavgame!;
 				if (!this.completed.length) {
-					this.announce('No one has completed the hunt - the round has been void.');
+					this.announce(this.TL`No one has completed the hunt - the round has been void.`);
 					return;
 				}
 
@@ -657,7 +675,8 @@ const MODES: { [k: string]: GameMode | string } = {
 				// elimination
 				if (!game.playerlist) {
 					game.playerlist = this.completed.map(entry => toID(entry.name));
-					this.announce(`Round ${game.round} - ${Chat.toListString(this.completed.map(p => `<em>${p.name}</em>`))} have successfully completed the last hunt and have moved on to the next round!`);
+					const finishers = this.TL.andList(this.completed.map(p => `<em>${p.name}</em>`));
+					this.announce(this.TL`Round ${game.round} - ${finishers} have successfully completed the last hunt and have moved on to the next round!`);
 				} else {
 					let eliminated = [];
 					const completed = this.completed.map(entry => toID(entry.name)) as string[];
@@ -672,7 +691,11 @@ const MODES: { [k: string]: GameMode | string } = {
 						}
 					}
 
-					this.announce(`Round ${game.round} - ${Chat.toListString(eliminated.map(n => `<em>${n}</em>`))} ${Chat.plural(eliminated, 'have', 'has')} been eliminated! ${Chat.toListString(game.playerlist.map(p => `<em>${this.playerTable[p].name}</em>`))} have successfully completed the last hunt and have moved on to the next round!`);
+					const eliminatedList = this.TL.andList(eliminated.map(n => `<em>${n}</em>`));
+					const survivors = this.TL.andList(game.playerlist.map(p => `<em>${this.playerTable[p].name}</em>`));
+					this.announce(eliminated.length === 1 ?
+						this.TL`Round ${game.round} - ${eliminatedList} has been eliminated! ${survivors} have successfully completed the last hunt and have moved on to the next round!` :
+						this.TL`Round ${game.round} - ${eliminatedList} have been eliminated! ${survivors} have successfully completed the last hunt and have moved on to the next round!`);
 				}
 
 				// process end of game
@@ -680,10 +703,10 @@ const MODES: { [k: string]: GameMode | string } = {
 					const winningUser = Users.get(game.playerlist[0]);
 					const winner = winningUser ? winningUser.name : game.playerlist[0];
 
-					this.announce(`Congratulations to the winner - ${winner}!`);
+					this.announce(this.TL`Congratulations to the winner - ${winner}!`);
 					game.destroy();
 				} else if (!game.playerlist.length) {
-					this.announce('Everyone has been eliminated!  Better luck next time!');
+					this.announce(this.TL`Everyone has been eliminated!  Better luck next time!`);
 					game.destroy();
 				}
 			},
@@ -696,11 +719,11 @@ const MODES: { [k: string]: GameMode | string } = {
 	scav: 'scavengergames',
 	scavgames: 'scavengergames',
 	scavengergames: {
-		name: 'Scavenger Games',
+		name: TLkey`Scavenger Games`,
 		id: 'scavengergames',
 
 		mod: {
-			name: 'Scavenger Games',
+			name: TLkey`Scavenger Games`,
 			id: 'scavengergames',
 			isGameMode: true,
 
@@ -712,7 +735,8 @@ const MODES: { [k: string]: GameMode | string } = {
 			onJoin(user) {
 				const game = this.room.scavgame!;
 				if (game.playerlist && !game.playerlist.includes(user.id)) {
-					user.sendTo(this.room, 'You are not allowed to join this scavenger hunt.');
+					const TL = this.room.userTL(user);
+					user.sendTo(this.room, TL`You are not allowed to join this scavenger hunt.`);
 					return true;
 				}
 			},
@@ -720,7 +744,7 @@ const MODES: { [k: string]: GameMode | string } = {
 			onAfterEnd() {
 				const game = this.room.scavgame!;
 				if (!this.completed.length) {
-					this.announce('No one has completed the hunt - the round has been void.');
+					this.announce(this.TL`No one has completed the hunt - the round has been void.`);
 					return;
 				}
 				game.round++;
@@ -737,17 +761,25 @@ const MODES: { [k: string]: GameMode | string } = {
 					}
 				}
 
-				this.announce(`Round ${game.round} - ${Chat.toListString(eliminated.map(n => `<em>${n}</em>`))} ${eliminated.length ? `${Chat.plural(eliminated, 'have', 'has')} been eliminated!` : ''} ${Chat.toListString(game.playerlist.map(p => `<em>${this.playerTable[p].name}</em>`))} have successfully completed the last hunt and have moved on to the next round!`);
+				const eliminatedList = this.TL.andList(eliminated.map(n => `<em>${n}</em>`));
+				const survivors = this.TL.andList(game.playerlist.map(p => `<em>${this.playerTable[p].name}</em>`));
+				if (!eliminated.length) {
+					this.announce(this.TL`Round ${game.round} - ${survivors} have successfully completed the last hunt and have moved on to the next round!`);
+				} else if (eliminated.length === 1) {
+					this.announce(this.TL`Round ${game.round} - ${eliminatedList} has been eliminated! ${survivors} have successfully completed the last hunt and have moved on to the next round!`);
+				} else {
+					this.announce(this.TL`Round ${game.round} - ${eliminatedList} have been eliminated! ${survivors} have successfully completed the last hunt and have moved on to the next round!`);
+				}
 
 				// process end of game
 				if (game.playerlist.length === 1) {
 					const winningUser = Users.get(game.playerlist[0]);
 					const winner = winningUser ? winningUser.name : game.playerlist[0];
 
-					this.announce(`Congratulations to the winner - ${winner}!`);
+					this.announce(this.TL`Congratulations to the winner - ${winner}!`);
 					game.destroy();
 				} else if (!game.playerlist.length) {
-					this.announce('Everyone has been eliminated!  Better luck next time!');
+					this.announce(this.TL`Everyone has been eliminated!  Better luck next time!`);
 					game.destroy();
 				}
 			},
@@ -759,19 +791,19 @@ const MODES: { [k: string]: GameMode | string } = {
 
 	pr: 'pointrally',
 	pointrally: {
-		name: 'Point Rally',
+		name: TLkey`Point Rally`,
 		id: 'pointrally',
 
 		pointDistribution: [50, 40, 32, 25, 20, 15, 10],
 
 		mod: {
-			name: 'Point Rally',
+			name: TLkey`Point Rally`,
 			id: 'pointrally',
 			isGameMode: true,
 
 			onLoad() {
 				const game = this.room.scavgame!;
-				this.announce(`Round ${++game.round}`);
+				this.announce(this.TL`Round ${++game.round}`);
 			},
 
 			async onAfterEnd() {
@@ -783,7 +815,7 @@ const MODES: { [k: string]: GameMode | string } = {
 				}
 				// post leaderboard
 				const room = this.room;
-				const html = await game.leaderboard.htmlLadder() as string;
+				const html = await game.leaderboard.htmlLadder(this.TL) as string;
 				room.add(`|raw|${html}`).update();
 			},
 		},
@@ -794,13 +826,13 @@ const MODES: { [k: string]: GameMode | string } = {
 	js: 'jumpstart',
 	jump: 'jumpstart',
 	jumpstart: {
-		name: 'Jump Start',
+		name: TLkey`Jump Start`,
 		id: 'jumpstart',
 
 		jumpstart: [60, 40, 30, 20, 10],
 		round: 0,
 		mod: {
-			name: 'Jump Start',
+			name: TLkey`Jump Start`,
 			id: 'jumpstart',
 			isGameMode: true,
 
@@ -823,14 +855,18 @@ const MODES: { [k: string]: GameMode | string } = {
 						const targetUser = Users.get(target);
 
 						if (targetUser) {
-							if (staffHost) staffHost.sendTo(this.room, `${targetUser.name} has received their first hint early.`);
+							if (staffHost) {
+								const forStaff = { TL: this.room.userTL(staffHost) };
+								staffHost.sendTo(this.room, forStaff.TL`${targetUser.name} has received their first hint early.`);
+							}
+							const TL = this.room.userTL(targetUser);
 							targetUser.sendTo(
 								this.room,
-								`|raw|<strong>The first hint to the next hunt is:</strong> <div style="overflow:auto; max-height: 50vh"> ${this.formatOutput(this.questions[0].hint)}</div>`
+								`|raw|<strong>${TL`The first hint to the next hunt is:`}</strong> <div style="overflow:auto; max-height: 50vh"> ${this.formatOutput(this.questions[0].hint)}</div>`
 							);
 							targetUser.sendTo(
 								this.room,
-								`|notify|Early Hint|The first hint to the next hunt is: <div style="overflow:auto; max-height: 50vh">  ${this.formatOutput(this.questions[0].hint)}</div>`
+								`|notify|${TL`Early Hint`}|${TL`The first hint to the next hunt is:`} <div style="overflow:auto; max-height: 50vh">  ${this.formatOutput(this.questions[0].hint)}</div>`
 							);
 						}
 					}, (maxTime - time) * 1000 + 5000);
@@ -841,14 +877,15 @@ const MODES: { [k: string]: GameMode | string } = {
 					this.answerLock = false;
 					const message = this.getCreationMessage(true);
 					this.room.add(message).update();
-					this.announce('You may start guessing!');
+					this.announce(this.TL`You may start guessing!`);
 					this.startTime = Date.now();
 				}, 1000 * (maxTime + 5));
 			},
 
 			onJoin(user) {
 				if (this.answerLock) {
-					user.sendTo(this.room, `The hunt is not open for guesses yet!`);
+					const TL = this.room.userTL(user);
+					user.sendTo(this.room, TL`The hunt is not open for guesses yet!`);
 					return true;
 				}
 			},
@@ -859,12 +896,24 @@ const MODES: { [k: string]: GameMode | string } = {
 				}
 			},
 
-			onCreateCallback() {
+			onCreateCallback(TL: Translator) {
 				if (this.answerLock) {
-					return `|raw|<div class="broadcast-blue"><strong>${['official', 'unrated'].includes(this.gameType) ? 'An' : 'A'} ${this.gameType} ` +
-						`Scavenger Hunt by <em>${Utils.escapeHTML(Chat.toListString(this.hosts.map(h => h.name)))}</em> ` +
-						`has been started${(this.hosts.some(h => h.id === this.staffHostId) ? '' : ` by <em>${Utils.escapeHTML(this.staffHostName)}</em>`)}.` +
-						`<br />The first hint is currently being handed out to early finishers.`;
+					const type = gameTypeName(TL, this.gameType);
+					const hosts = `<em>${Utils.escapeHTML(TL.andList(this.hosts.map(h => h.name)))}</em>`;
+					const staffHost = this.hosts.some(h => h.id === this.staffHostId) ?
+						'' : `<em>${Utils.escapeHTML(this.staffHostName)}</em>`;
+					let announcement;
+					if (['official', 'unrated'].includes(this.gameType)) {
+						announcement = staffHost ?
+							TL`An ${type} Scavenger Hunt by ${hosts} has been started by ${staffHost}.` :
+							TL`An ${type} Scavenger Hunt by ${hosts} has been started.`;
+					} else {
+						announcement = staffHost ?
+							TL`A ${type} Scavenger Hunt by ${hosts} has been started by ${staffHost}.` :
+							TL`A ${type} Scavenger Hunt by ${hosts} has been started.`;
+					}
+					return `|raw|<div class="broadcast-blue"><strong>${announcement}` +
+						`<br />${TL`The first hint is currently being handed out to early finishers.`}`;
 				}
 			},
 
@@ -891,7 +940,7 @@ const MODES: { [k: string]: GameMode | string } = {
 	tscav: 'teamscavs',
 	teamscavengers: 'teamscavs',
 	teamscavs: {
-		name: 'Team Scavs',
+		name: TLkey`Team Scavs`,
 		id: 'teamscavs',
 		/* {
 			[team
@@ -905,6 +954,7 @@ const MODES: { [k: string]: GameMode | string } = {
 		  } */
 		teams: {},
 
+		/** `message` should be in the room's language, like other hunt announcements */
 		teamAnnounce(player: ScavengerHuntPlayer | User, message: string) {
 			const team = this.getPlayerTeam(player);
 
@@ -933,18 +983,17 @@ const MODES: { [k: string]: GameMode | string } = {
 			const team = this.getPlayerTeam(answerer);
 
 			team.question++;
-			const question = hunt.getQuestion(team.question);
 			for (const userid of team.players) {
 				const user = Users.getExact(userid);
 				if (!user) continue;
 
-				user.sendTo(this.room, question);
+				user.sendTo(this.room, hunt.getQuestion(team.question, false, this.room.userTL(user)));
 			}
 			team.answers = [];
 		},
 
 		mod: {
-			name: 'Team Scavs',
+			name: TLkey`Team Scavs`,
 			id: 'teamscavs',
 			isGameMode: true,
 
@@ -973,7 +1022,7 @@ const MODES: { [k: string]: GameMode | string } = {
 				if (player.currentQuestion !== team.question - 1) player.currentQuestion = team.question - 1;
 				if (team.completed) {
 					player.completed = true;
-					player.sendRoom('Your team has already completed the hunt!');
+					player.sendRoom(player.TL`Your team has already completed the hunt!`);
 					return true;
 				}
 			},
@@ -995,7 +1044,8 @@ const MODES: { [k: string]: GameMode | string } = {
 				const game = this.room.scavgame!;
 				const team = game.getPlayerTeam(user);
 				if (!team) {
-					user.sendTo(this.room, 'You are not allowed to join this scavenger hunt as you are not on any of the teams.');
+					const TL = this.room.userTL(user);
+					user.sendTo(this.room, TL`You are not allowed to join this scavenger hunt as you are not on any of the teams.`);
 					return true;
 				}
 			},
@@ -1005,7 +1055,7 @@ const MODES: { [k: string]: GameMode | string } = {
 				const game = this.room.scavgame!;
 
 				if (Object.keys(game.teams).length === 0) {
-					this.announce('Teams have not been set up yet.  Please reset the hunt.');
+					this.announce(this.TL`Teams have not been set up yet.  Please reset the hunt.`);
 				}
 			},
 
@@ -1015,9 +1065,12 @@ const MODES: { [k: string]: GameMode | string } = {
 				const game = this.room.scavgame!;
 
 				if (player.currentQuestion + 1 < this.questions.length) {
+					const name = Utils.escapeHTML(player.name);
+					const answer = Utils.escapeHTML(value);
+					const questionNum = player.currentQuestion + 1;
 					game.teamAnnounce(
 						player,
-						Utils.html`<strong>${player.name}</strong> has gotten the correct answer (${value}) for question #${player.currentQuestion + 1}.`
+						this.TL`<strong>${name}</strong> has gotten the correct answer (${answer}) for question #${questionNum}.`
 					);
 					game.advanceTeam(player);
 
@@ -1038,7 +1091,9 @@ const MODES: { [k: string]: GameMode | string } = {
 				if (player.completed) return;
 
 				if (team.answers.includes(value)) return;
-				game.teamAnnounce(player, Utils.html`${player.name} has guessed "${value}".`);
+				const name = Utils.escapeHTML(player.name);
+				const guess = Utils.escapeHTML(value);
+				game.teamAnnounce(player, this.TL`${name} has guessed "${guess}".`);
 				team.answers.push(value);
 			},
 
@@ -1057,9 +1112,11 @@ const MODES: { [k: string]: GameMode | string } = {
 				team.completed = true;
 				team.question++;
 
+				const name = Utils.escapeHTML(player.name);
+				const questionNum = player.currentQuestion;
 				game.teamAnnounce(
 					player,
-					Utils.html`<strong>${player.name}</strong> has gotten the correct answer for question #${player.currentQuestion}.  Your team has completed the hunt!`
+					this.TL`<strong>${name}</strong> has gotten the correct answer for question #${questionNum}.  Your team has completed the hunt!`
 				);
 			},
 
@@ -1105,6 +1162,11 @@ export class ScavengerGameTemplate {
 
 	announce(msg: string) {
 		this.room.add(`|raw|<div class="broadcast-blue"><strong>${msg}</strong></div>`).update();
+	}
+
+	/** Translator for what the whole room sees: the room's language. */
+	get TL() {
+		return Chat.getTranslator(this.room.settings.language || null);
 	}
 }
 

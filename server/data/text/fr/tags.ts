@@ -18,10 +18,10 @@ export const TagsText: { [id: string]: TagText } = {
 		name: "Pokémon fabuleux",
 	},
 	sublegendary: {
-		name: null, // NEEDS TRANSLATION
+		name: "Semi-légendaire",
 	},
 	restrictedlegendary: {
-		name: null, // NEEDS TRANSLATION
+		name: "Légendaire restreint",
 	},
 	ultrabeast: {
 		name: "Ultra-Chimère",
@@ -30,7 +30,7 @@ export const TagsText: { [id: string]: TagText } = {
 		name: "Paradoxe",
 	},
 	pokestar: {
-		name: null, // NEEDS TRANSLATION
+		name: "Pokéwood",
 	},
 	zmove: {
 		name: "Capacité Z",
@@ -40,114 +40,114 @@ export const TagsText: { [id: string]: TagText } = {
 	},
 	contact: {
 		name: "Contact",
-		hint: null, // NEEDS TRANSLATION
+		hint: "active Épine de Fer, Pico-Défense, etc.",
 	},
 	sound: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Sonore",
+		hint: "sans effet sur les Pokémon avec Anti-Bruit",
 	},
 	powder: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Poudre",
+		hint: "sans effet sur le type Plante, Envelocape, Lunettes Filtre",
 	},
 	fist: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Poing",
+		hint: "renforcée par Poing de Fer",
 	},
 	pulse: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Aura",
+		hint: "renforcée par Méga Blaster",
 	},
 	bite: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Morsure",
+		hint: "renforcée par Prognathe",
 	},
 	bullet: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Projectile",
+		hint: "sans effet sur les Pokémon avec Pare-Balles",
 	},
 	dance: {
-		name: null, // NEEDS TRANSLATION
+		name: "Danse",
 	},
 	slicing: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Tranchante",
+		hint: "renforcée par Incisif",
 	},
 	wind: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Vent",
+		hint: "active Turbine Éolienne et Aéroporté",
 	},
 	defrost: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Dégel",
+		hint: "dégèle le lanceur s’il est gelé",
 	},
 	recoil: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Recul",
+		hint: "renforcée par Téméraire",
 	},
 	twoturnmove: {
-		name: null, // NEEDS TRANSLATION
+		name: "Capacité en deux tours",
 	},
 	recharge: {
-		name: null, // NEEDS TRANSLATION
+		name: "Tour de recharge",
 	},
 	suppressedbygravity: {
-		name: null, // NEEDS TRANSLATION
+		name: "Bloquée par Gravité",
 	},
 	boostedbysheerforce: {
-		name: null, // NEEDS TRANSLATION
+		name: "Renforcée par Sans Limite",
 	},
 	bypassprotect: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Passe outre Abri",
+		hint: "et Détection, Bouclier Royal, Pico-Défense",
 	},
 	nonreflectable: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Passe outre Miroir Magik",
+		hint: "et Reflet Magik",
 	},
 	nonmirror: {
-		name: null, // NEEDS TRANSLATION
+		name: "Non copiable par Mimique",
 	},
 	nonsnatchable: {
-		name: null, // NEEDS TRANSLATION
+		name: "Non volable par Saisie",
 	},
 	bypasssubstitute: {
-		name: null, // NEEDS TRANSLATION
-		hint: null, // NEEDS TRANSLATION
+		name: "Passe outre Clonage",
+		hint: "mais ne le détruit pas",
 	},
 	gmaxmove: {
-		name: null, // NEEDS TRANSLATION
+		name: "Capacité Gigamax",
 	},
 	past: {
-		name: null, // NEEDS TRANSLATION
+		name: "Passé",
 	},
 	truepast: {
-		name: null, // NEEDS TRANSLATION
+		name: "Passé absolu",
 	},
 	pastunobtainable: {
-		name: null, // NEEDS TRANSLATION
+		name: "Passé inobtenable",
 	},
 	future: {
-		name: null, // NEEDS TRANSLATION
+		name: "Futur",
 	},
 	lgpe: {
 		name: "LGPE",
 	},
 	unobtainable: {
-		name: null, // NEEDS TRANSLATION
+		name: "Inobtenable",
 	},
 	cap: {
 		name: "CAP",
 	},
 	custom: {
-		name: null, // NEEDS TRANSLATION
+		name: "Personnalisé",
 	},
 	nonexistent: {
-		name: null, // NEEDS TRANSLATION
+		name: "Inexistant",
 	},
 
 	introducedgen: {
-		name: null, // NEEDS TRANSLATION
+		name: "Gén d’introduction",
 	},
 	height: {
 		name: "Taille",
@@ -156,22 +156,22 @@ export const TagsText: { [id: string]: TagText } = {
 		name: "Poids",
 	},
 	hp: {
-		name: null, // NEEDS TRANSLATION
+		name: "PV",
 	},
 	atk: {
-		name: null, // NEEDS TRANSLATION
+		name: "Atq",
 	},
 	def: {
-		name: null, // NEEDS TRANSLATION
+		name: "Déf",
 	},
 	spa: {
-		name: null, // NEEDS TRANSLATION
+		name: "Atq Spé",
 	},
 	spd: {
-		name: null, // NEEDS TRANSLATION
+		name: "Déf Spé",
 	},
 	spe: {
-		name: null, // NEEDS TRANSLATION
+		name: "Vit",
 	},
 	bst: {
 		name: "BST",
@@ -180,12 +180,12 @@ export const TagsText: { [id: string]: TagText } = {
 		name: "Puissance",
 	},
 	priority: {
-		name: null, // NEEDS TRANSLATION
+		name: "Priorité",
 	},
 	accuracy: {
 		name: "Précision",
 	},
 	maxpp: {
-		name: null, // NEEDS TRANSLATION
+		name: "PP max",
 	},
 };

@@ -345,6 +345,9 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 		const tierTable = {};
 		const overrideTier = {};
 		const metagameBans = {};
+		const metagameOthers = {};
+		/** Cobblemon : tiers en double, affichés dans les formats Doubles OU. */
+		const overrideDoublesTier = {};
 		const nonstandardMoves = [];
 		for (const id of pokemon) {
 			const species = Dex.mod(gen).species.get(id);
@@ -512,15 +515,33 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 						metagameBans[meta][species.id] = 1;
 					}
 				}
+				if (isCobblemon && speciesTier !== 'Illegal') overrideDoublesTier[species.id] = species.doublesTier;
 				if (isCobblemon || isNDCobblemon) {
-					// Pokémon interdits dans chaque format Cobblemon (et ses variantes "Egg Moves").
-					for (const meta of isCobblemon ? ['ou', 'monotype', 'lc'] : ['nationaldex']) {
+					// Pour chaque format Cobblemon (et sa variante "Egg Moves") : les Pokémon interdits
+					// (metagameBans, liste "Illegal") et ceux autorisés mais hors du tier du format
+					// (metagameOthers, liste "Autres").
+					const metas = isCobblemon ? ['ou', 'ubers', 'monotype', 'lc', 'doublesou', 'vgc'] : ['nationaldex'];
+					for (const meta of metas) {
 						const format = Dex.formats.get(`gen9cobblemon${meta}`);
 						let banned = Dex.formats.getRuleTable(format).isBannedSpecies(species);
 						if (meta === 'lc' && (!species.nfe || species.prevo)) banned = true;
 						if (banned) {
 							if (!metagameBans[meta]) metagameBans[meta] = {};
 							metagameBans[meta][species.id] = 1;
+							continue;
+						}
+						const inFormatTier = {
+							ou: species.tier === 'OU',
+							monotype: species.tier === 'OU',
+							ubers: species.tier === 'Uber' || species.tier === 'AG',
+							lc: true, // tous les Pokémon autorisés en LC sont de tier LC
+							doublesou: species.doublesTier === 'DOU' || species.doublesTier === 'DBL',
+							vgc: !species.nfe,
+							nationaldex: species.natDexTier === 'OU',
+						}[meta];
+						if (!inFormatTier) {
+							if (!metagameOthers[meta]) metagameOthers[meta] = {};
+							metagameOthers[meta][species.id] = 1;
 						}
 					}
 				}
@@ -594,6 +615,8 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 			BattleTeambuilderTable[key].tiers = tiers;
 			BattleTeambuilderTable[key].items = items;
 			BattleTeambuilderTable[key].metagameBans = metagameBans;
+			BattleTeambuilderTable[key].metagameOthers = metagameOthers;
+			if (isCobblemon) BattleTeambuilderTable[key].overrideDoublesTier = overrideDoublesTier;
 			BattleTeambuilderTable[key].overrideTier = overrideTier;
 			BattleTeambuilderTable[key].formatSlices = formatSlices;
 		} else if (isNDChampions) {

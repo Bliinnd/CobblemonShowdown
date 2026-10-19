@@ -64,43 +64,48 @@ class PageRoom extends PSRoom {
 }
 
 function PageLadderHelp() {
+	const winLossNote = TL`Note that win/loss should not be used to estimate skill, since who you play against is much more important than how many times you win or lose. Our other stats like Elo and GXE are much better for estimating skill.`;
 	return <div class="ladder pad">
 		<p>
 			<button class="button" data-href="/ladder" data-target="replace">
 				<i class="fa fa-chevron-left" aria-hidden></i> {TL`[All formats]`}
 			</button>
 		</p>
-		<h3>How the ladder works</h3>
+		<h3>{TL`How the ladder works`}</h3>
 		<p>
-			Our ladder displays three ratings: Elo, GXE, and Glicko-1.
+			{TL`Our ladder displays three ratings: Elo, GXE, and Glicko-1.`}
 		</p>
 		<p>
-			<strong>Elo</strong> is the main ladder rating. It's a pretty
-			normal ladder rating: goes up when you win and down when you
-			lose.
+			{TL.parts(
+				TL`{ELO} is the main ladder rating. It's a pretty normal ladder rating: goes up when you win and down when you lose.`,
+				{ ELO: <strong>Elo</strong> }
+			)}
 		</p>
 		<p>
-			<strong>GXE</strong> (Glicko X-Act Estimate) is an estimate of
-			your win chance against an average ladder player.
+			{TL.parts(
+				TL`{GXE} (Glicko X-Act Estimate) is an estimate of your win chance against an average ladder player.`,
+				{ GXE: <strong>GXE</strong> }
+			)}
 		</p>
 		<p>
-			<strong>Glicko-1</strong> is {}
-			<a href="https://en.wikipedia.org/wiki/Glicko_rating_system">another rating system</a>.
-			It has rating and deviation values.
+			{TL.parts(TL`{GLICKO} is {LINK}. It has rating and deviation values.`, {
+				GLICKO: <strong>Glicko-1</strong>,
+				LINK: <a href="https://en.wikipedia.org/wiki/Glicko_rating_system">{TL`another rating system`}</a>,
+			})}
 		</p>
 		<p>
-			<strong>COIL</strong> (Converging Order Invariant Ladder) is
-			used for suspect tests. The more games you play, the closer
-			it will get to your GXE &times; 4000. How fast it reaches
-			GXE &times; 4000 depends on {}
-			<a href="https://www.smogon.com/forums/threads/reintroducing-coil.3747719/" target="_blank">a custom B value</a> {}
-			which is different for each suspect test.
+			{TL.parts(
+				TL`{COIL} (Converging Order Invariant Ladder) is used for suspect tests. The more games you play, the closer it will get to your GXE × 4000. How fast it reaches GXE × 4000 depends on {LINK} which is different for each suspect test.`,
+				{
+					COIL: <strong>COIL</strong>,
+					LINK: <a
+						href="https://www.smogon.com/forums/threads/reintroducing-coil.3747719/" target="_blank"
+					>{TL`a custom B value`}</a>,
+				}
+			)}
 		</p>
 		<p>
-			Note that win/loss should not be used to estimate skill, since
-			who you play against is much more important than how many times
-			you win or lose. Our other stats like Elo and GXE are much better
-			for estimating skill.
+			{winLossNote}
 		</p>
 	</div>;
 }

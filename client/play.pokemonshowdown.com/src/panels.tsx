@@ -989,7 +989,7 @@ export class PSView extends preact.Component {
 				if (typeof interruptClose === 'string') return interruptClose;
 			}
 			if (PS.prefs.refreshprompt) {
-				return "Are you sure you want to leave?";
+				return TL`Are you sure you want to leave?`;
 			}
 			return null;
 		};
@@ -1514,7 +1514,7 @@ Supported file types:
 			dummyInput.select();
 			document.execCommand("copy");
 			elem.removeChild(dummyInput);
-			elem.innerText = 'Copied!';
+			elem.innerText = TL`Copied!`;
 			return true;
 		case 'send':
 		case 'cmd':
@@ -1731,7 +1731,7 @@ export class ReconnectTimer extends preact.Component {
 		const nextRetryTime = PS.connection?.nextRetryTime;
 		if (!nextRetryTime) return null;
 		const secs = Math.ceil((nextRetryTime - Date.now()) / 1000);
-		return <small>{secs > 0 ? `(Autoreconnect in ${secs}s)` : `(Reconnecting...)`}</small>;
+		return <small>{secs > 0 ? TL`(Autoreconnect in ${secs}s)` : TL`(Reconnecting...)`}</small>;
 	}
 }
 

@@ -1,4 +1,5 @@
 import { FS, Utils } from '../../lib';
+import { TLkey } from '../../sim/dex-text';
 
 export const ROOMFAQ_FILE = 'config/chat-plugins/faqs.json';
 const MAX_ROOMFAQ_LENGTH = 8192;
@@ -62,26 +63,29 @@ export const commands: Chat.ChatCommands = {
 		const useHTML = this.cmd.includes('html');
 		this.checkCan('ban', null, room);
 		if (useHTML && !user.can('addhtml', null, room, this.fullCmd)) {
-			throw new Chat.ErrorMessage(`You are not allowed to use raw HTML in roomfaqs.`);
+			throw new Chat.ErrorMessage(this.TL`You are not allowed to use raw HTML in roomfaqs.`);
 		}
-		if (!room.persist) throw new Chat.ErrorMessage("This command is unavailable in temporary rooms.");
+		if (!room.persist) throw new Chat.ErrorMessage(this.TL`This command is unavailable in temporary rooms.`);
 		if (!target) return this.parse('/help roomfaq');
 
 		target = target.trim();
 		const input = this.filter(target);
-		if (target !== input) throw new Chat.ErrorMessage("You are not allowed to use filtered words in roomfaq entries.");
+		if (target !== input) {
+			throw new Chat.ErrorMessage(this.TL`You are not allowed to use filtered words in roomfaq entries.`);
+		}
 		let [topic, ...rest] = input.split(',');
 
 		topic = toID(topic);
 		if (!(topic && rest.length)) return this.parse('/help roomfaq');
 		let text = rest.join(',').trim();
-		if (topic.length > 25) throw new Chat.ErrorMessage("FAQ topics should not exceed 25 characters.");
+		if (topic.length > 25) throw new Chat.ErrorMessage(this.TL`FAQ topics should not exceed 25 characters.`);
 
 		const lengthWithoutFormatting = Chat.stripFormatting(text).length;
-		if (lengthWithoutFormatting > (useHTML ? MAX_HTML_ROOMFAQ_LENGTH : MAX_ROOMFAQ_LENGTH)) {
-			throw new Chat.ErrorMessage(`FAQ entries must not exceed ${(useHTML ? MAX_HTML_ROOMFAQ_LENGTH : MAX_ROOMFAQ_LENGTH)} characters.`);
+		const maxLength = useHTML ? MAX_HTML_ROOMFAQ_LENGTH : MAX_ROOMFAQ_LENGTH;
+		if (lengthWithoutFormatting > maxLength) {
+			throw new Chat.ErrorMessage(this.TL`FAQ entries must not exceed ${maxLength} characters.`);
 		} else if (lengthWithoutFormatting < 1) {
-			throw new Chat.ErrorMessage(`FAQ entries must include at least one character.`);
+			throw new Chat.ErrorMessage(this.TL`FAQ entries must include at least one character.`);
 		}
 
 		if (!useHTML) {
@@ -98,7 +102,10 @@ export const commands: Chat.ChatCommands = {
 		};
 		saveRoomFaqs();
 		this.sendReplyBox(visualizeFaq(roomFaqs[room.roomid][topic]));
-		this.privateModAction(`${user.name} ${exists ? 'edited' : 'added'} an FAQ for '${topic}'`);
+		const name = user.name;
+		this.privateModAction(exists ?
+			room.TL`${name} edited an FAQ for '${topic}'` :
+			room.TL`${name} added an FAQ for '${topic}'`);
 		this.modlog('RFAQ', null, `${exists ? 'edited' : 'added'} '${topic}'`);
 	},
 	removefaq(target, room, user) {
@@ -108,7 +115,7 @@ export const commands: Chat.ChatCommands = {
 		const topic = toID(target);
 		if (!topic) return this.parse('/help roomfaq');
 
-		if (!roomFaqs[room.roomid]?.[topic]) throw new Chat.ErrorMessage("Invalid topic.");
+		if (!roomFaqs[room.roomid]?.[topic]) throw new Chat.ErrorMessage(this.TL`Invalid topic.`);
 		if (
 			room.settings.repeats?.length &&
 			room.settings.repeats.filter(x => x.faq && x.id === topic).length
@@ -123,7 +130,8 @@ export const commands: Chat.ChatCommands = {
 		);
 		if (!Object.keys(roomFaqs[room.roomid]).length) delete roomFaqs[room.roomid];
 		saveRoomFaqs();
-		this.privateModAction(`${user.name} removed the FAQ for '${topic}'`);
+		const name = user.name;
+		this.privateModAction(room.TL`${name} removed the FAQ for '${topic}'`);
 		this.modlog('ROOMFAQ', null, `removed ${topic}`);
 		this.refreshPage(`roomfaqs-${room.roomid}`);
 	},
@@ -131,35 +139,37 @@ export const commands: Chat.ChatCommands = {
 		room = this.requireRoom();
 		this.checkChat();
 		this.checkCan('ban', null, room);
-		if (!room.persist) throw new Chat.ErrorMessage("This command is unavailable in temporary rooms.");
+		if (!room.persist) throw new Chat.ErrorMessage(this.TL`This command is unavailable in temporary rooms.`);
 		const [alias, topic] = target.split(',').map(val => toID(val));
 
 		if (!(alias && topic)) return this.parse('/help roomfaq');
-		if (alias.length > 25) throw new Chat.ErrorMessage("FAQ topics should not exceed 25 characters.");
-		if (alias === topic) throw new Chat.ErrorMessage("You cannot make the alias have the same name as the topic.");
+		if (alias.length > 25) throw new Chat.ErrorMessage(this.TL`FAQ topics should not exceed 25 characters.`);
+		if (alias === topic) throw new Chat.ErrorMessage(this.TL`You cannot make the alias have the same name as the topic.`);
 		if (roomFaqs[room.roomid][alias] && !roomFaqs[room.roomid][alias].alias) {
-			throw new Chat.ErrorMessage("You cannot overwrite an existing topic with an alias; please delete the topic first.");
+			throw new Chat.ErrorMessage(this.TL`You cannot overwrite an existing topic with an alias; please delete the topic first.`);
 		}
 
 		if (!(roomFaqs[room.roomid] && topic in roomFaqs[room.roomid])) {
-			throw new Chat.ErrorMessage(`The topic ${topic} was not found in this room's faq list.`);
+			throw new Chat.ErrorMessage(this.TL`The topic ${topic} was not found in this room's faq list.`);
 		}
-		if (getAlias(room.roomid, topic)) {
-			throw new Chat.ErrorMessage(`You cannot make an alias of an alias. Use /addalias ${alias}, ${getAlias(room.roomid, topic)} instead.`);
+		const aliasedTopic = getAlias(room.roomid, topic);
+		if (aliasedTopic) {
+			throw new Chat.ErrorMessage(this.TL`You cannot make an alias of an alias. Use /addalias ${alias}, ${aliasedTopic} instead.`);
 		}
 		roomFaqs[room.roomid][alias] = {
 			alias: true,
 			source: topic,
 		};
 		saveRoomFaqs();
-		this.privateModAction(`${user.name} added an alias for '${topic}': ${alias}`);
+		const name = user.name;
+		this.privateModAction(room.TL`${name} added an alias for '${topic}': ${alias}`);
 		this.modlog('ROOMFAQ', null, `alias for '${topic}' - ${alias}`);
 	},
 	viewfaq: 'roomfaq',
 	rfaq: 'roomfaq',
 	roomfaq(target, room, user, connection, cmd) {
 		room = this.requireRoom();
-		if (!roomFaqs[room.roomid]) throw new Chat.ErrorMessage("This room has no FAQ topics.");
+		if (!roomFaqs[room.roomid]) throw new Chat.ErrorMessage(this.TL`This room has no FAQ topics.`);
 		let topic: string = toID(this.splitOne(target)[0]);
 		if (topic === 'constructor') return false;
 		if (!topic) {
@@ -180,12 +190,12 @@ export const commands: Chat.ChatCommands = {
 					'lostpassword', 'password', 'lostpass',
 				];
 				if (!validTopics.includes(normalized)) {
-					return this.errorReply(`'${target}' is an invalid topic.`);
+					return this.errorReply(this.TL`'${target}' is an invalid topic.`);
 				}
 				if (!this.runBroadcast()) return;
 				return faqCommand.call(this, target, room, user, connection, 'faq', '!');
 			}
-			return this.errorReply("Invalid topic.");
+			return this.errorReply(this.TL`Invalid topic.`);
 		}
 
 		if (!this.runBroadcast()) return;
@@ -194,33 +204,34 @@ export const commands: Chat.ChatCommands = {
 		if (!this.broadcasting && user.can('ban', null, room, 'addfaq')) {
 			const code = Utils.escapeHTML(rfaq.source).replace(/\n/g, '<br />');
 			const command = rfaq.html ? 'addhtmlfaq' : 'addfaq';
-			this.sendReplyBox(`<details><summary>Source</summary><code style="white-space: pre-wrap; display: table; tab-size: 3">/${command} ${topic}, ${code}</code></details>`);
+			this.sendReplyBox(`<details><summary>${this.TL`Source`}</summary><code style="white-space: pre-wrap; display: table; tab-size: 3">/${command} ${topic}, ${code}</code></details>`);
 		}
 	},
 	roomfaqhelp: [
-		`/roomfaq - Shows the list of all available FAQ topics`,
-		`/roomfaq <topic> - Shows the FAQ for <topic>.`,
-		`/addfaq <topic>, <text> - Adds an entry for <topic> in this room or updates it. Requires: @ # ~`,
-		`/addhtmlfaq <topic>, <text> - Adds or updates an entry for <topic> with HTML support. Requires: # ~`,
-		`/addalias <alias>, <topic> - Adds <alias> as an alias for <topic>, displaying it when users use /roomfaq <alias>. Requires: @ # ~`,
-		`/removefaq <topic> - Removes the entry for <topic> in this room. If used on an alias, removes the alias. Requires: @ # ~`,
+		TLkey`/roomfaq - Shows the list of all available FAQ topics`,
+		TLkey`/roomfaq <topic> - Shows the FAQ for <topic>.`,
+		TLkey`/addfaq <topic>, <text> - Adds an entry for <topic> in this room or updates it. Requires: @ # ~`,
+		TLkey`/addhtmlfaq <topic>, <text> - Adds or updates an entry for <topic> with HTML support. Requires: # ~`,
+		TLkey`/addalias <alias>, <topic> - Adds <alias> as an alias for <topic>, displaying it when users use /roomfaq <alias>. Requires: @ # ~`,
+		TLkey`/removefaq <topic> - Removes the entry for <topic> in this room. If used on an alias, removes the alias. Requires: @ # ~`,
 	],
 };
 
 export const pages: Chat.PageTable = {
 	roomfaqs(args, user) {
 		const room = this.requireRoom();
-		this.title = `[Room FAQs]`;
+		this.title = this.TL`[Room FAQs]`;
 		// allow it for users if they can access the room
 		if (!room.checkModjoin(user)) {
-			throw new Chat.ErrorMessage(`<h2>Access denied.</h2>`);
+			throw new Chat.ErrorMessage(`<h2>${this.TL`Access denied.`}</h2>`);
 		}
-		let buf = `<div class="pad"><button style="float:right;" class="button" name="send" value="/join view-roomfaqs-${room.roomid}"><i class="fa fa-refresh"></i> Refresh</button>`;
+		let buf = `<div class="pad"><button style="float:right;" class="button" name="send" value="/join view-roomfaqs-${room.roomid}"><i class="fa fa-refresh"></i> ${this.TL`Refresh`}</button>`;
 		if (!roomFaqs[room.roomid]) {
-			return `${buf}<h2>This room has no FAQs.</h2></div>`;
+			return `${buf}<h2>${this.TL`This room has no FAQs.`}</h2></div>`;
 		}
 
-		buf += `<h2>FAQs for ${room.title}:</h2>`;
+		const roomTitle = room.title;
+		buf += `<h2>${this.TL`FAQs for ${roomTitle}:`}</h2>`;
 		const keys = Object.keys(roomFaqs[room.roomid]);
 		const sortedKeys = Utils.sortBy(keys.filter(val => !getAlias(room.roomid, val)));
 		for (const key of sortedKeys) {
@@ -231,14 +242,14 @@ export const pages: Chat.PageTable = {
 			buf += visualizeFaq(topic);
 			const aliases = keys.filter(val => getAlias(room.roomid, val) === key);
 			if (aliases.length) {
-				buf += `<hr /><strong>Aliases:</strong> ${aliases.join(', ')}`;
+				buf += `<hr /><strong>${this.TL`Aliases:`}</strong> ${aliases.join(', ')}`;
 			}
 			if (user.can('ban', null, room, 'addfaq')) {
 				const src = Utils.escapeHTML(topic.source).replace(/\n/g, `<br />`);
 				const command = topic.html ? 'addhtmlfaq' : 'addfaq';
-				buf += `<hr /><details><summary>Raw text</summary>`;
+				buf += `<hr /><details><summary>${this.TL`Raw text`}</summary>`;
 				buf += `<code style="white-space: pre-wrap; display: table; tab-size: 3;">/${command} ${key}, ${src}</code></details>`;
-				buf += `<hr /><button class="button" name="send" value="/msgroom ${room.roomid},/removefaq ${key}">Delete FAQ</button>`;
+				buf += `<hr /><button class="button" name="send" value="/msgroom ${room.roomid},/removefaq ${key}">${this.TL`Delete FAQ`}</button>`;
 			}
 			buf += `</div>`;
 		}
