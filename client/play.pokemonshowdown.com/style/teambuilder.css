@@ -895,6 +895,95 @@ you can't delete it by pressing Backspace */
 	height: 4px;
 }
 
+/* CobblemonShowdown: on a phone, each set takes four rows instead of four
+   narrow columns, so French names (Grosses Bottes, Lance-Flammes) fit */
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form > div:first-child {
+	padding-left: 92px;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-nickname {
+	width: 90px;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form > div:first-child .option {
+	font-size: 8pt;
+	padding-left: 2px;
+	padding-right: 2px;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form table {
+	display: grid;
+	grid-template-columns: 84px 1fr 1fr;
+	grid-template-areas:
+		"pokemon details details"
+		"pokemon ability item"
+		"moves moves moves"
+		"stats stats stats";
+	row-gap: 3px;
+	height: auto;
+	box-sizing: border-box;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form tbody,
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form tr {
+	display: contents;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form td {
+	display: block;
+	min-width: 0;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-pokemon {
+	grid-area: pokemon;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-details {
+	grid-area: details;
+	height: auto;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-ability {
+	grid-area: ability;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-item {
+	grid-area: item;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-moves {
+	grid-area: moves;
+	padding-left: 3px;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-moves .border-collapse {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 3px;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-moves .label {
+	grid-column: 1 / -1;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-moves .moverow {
+	margin-top: 0;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-stats,
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-stats button {
+	grid-area: stats;
+	width: auto;
+	height: auto;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-stats {
+	padding: 0 3px;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-stats button {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	width: 100%;
+	padding: 3px 2px 2px;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-stats em {
+	display: block;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-stats .statgraph {
+	width: 53px;
+	transform: none;
+	height: 5px;
+}
+.tiny-layout .teameditor:not(.teameditor-zoom-out-forms) .set-form .set-stats .statgraph span {
+	transform: scaleX(0.7);
+	transform-origin: 0 0;
+}
+
 .team-focus-editor {
 	position: absolute;
 	top: 0;
