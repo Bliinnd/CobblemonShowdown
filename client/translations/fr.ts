@@ -416,42 +416,6 @@ export const translations: TranslationCatalog = {
 	"Illegal": "Illégal",
 	"[Open the Teambuilder]": "[Ouvrir le Teambuilder]",
 	"Damage calculator": "Calculateur de dégâts",
-	"The damage calculator could not be loaded. Try again in a moment.": "Le calculateur de dégâts n'a pas pu être chargé. Réessayez dans un instant.",
-	"Load from a team...": "Reprendre d'une équipe...",
-	"Pokémon 1": "Pokémon 1",
-	"Pokémon 2": "Pokémon 2",
-	"HP": "PV",
-	"(none)": "(aucun)",
-	"Status": "Statut",
-	"Healthy": "Aucun",
-	"Burned": "Brûlé",
-	"Paralyzed": "Paralysé",
-	"Poisoned": "Empoisonné",
-	"Badly poisoned": "Gravement empoisonné",
-	"Asleep": "Endormi",
-	"Frozen": "Gelé",
-	"Boost": "Boost",
-	"Stat": "Stat",
-	"Reflect / Light Screen": "Protection / Mur Lumière",
-	"Stealth Rock": "Piège de Roc",
-	"Helping Hand": "Coup d'Main",
-	"{attackerName} attacks {defenderName}": "{attackerName} attaque {defenderName}",
-	"Choose two Pokémon to see the damage.": "Choisissez deux Pokémon pour voir les dégâts.",
-	"no damage": "aucun dégât",
-	"Singles": "Simple",
-	"Doubles": "Double",
-	"Weather": "Météo",
-	"Sun": "Soleil",
-	"Rain": "Pluie",
-	"Sandstorm": "Tempête de sable",
-	"Snow": "Neige",
-	"Terrain": "Champ",
-	"Electric Terrain": "Champ Électrifié",
-	"Grassy Terrain": "Champ Herbu",
-	"Psychic Terrain": "Champ Psychique",
-	"Misty Terrain": "Champ Brumeux",
-	"Swap": "Inverser",
-	"Calculations by the Smogon damage calculator.": "Calculs faits par le calculateur de dégâts de Smogon.",
 
 	// #endregion Generic UI
 
@@ -726,7 +690,6 @@ export const translations: TranslationCatalog = {
 	"Your username can be chosen and changed at any time. Keep in mind:": "Vous pouvez choisir et changer de pseudo à tout moment. Gardez à l’esprit les règles suivantes :",
 	"Removed from your friends.": "Retiré de vos amis.",
 	"Couldn't load the avatar list.": "Impossible de charger la liste des avatars.",
-	"Show all {all.length} avatars": "Afficher les {all.length} avatars",
 	"No avatar matches your search.": "Aucun avatar ne correspond à votre recherche.",
 	"Log in to an account to keep your avatar on all your devices.": "Connectez-vous à un compte pour garder votre avatar sur tous vos appareils.",
 	"Game heroes": "Héros des jeux",
@@ -992,6 +955,7 @@ export const translations: TranslationCatalog = {
 	"Recent replays": "Replays récents",
 	"Player name": "Pseudo du joueur",
 	"Log in to an account to see your own replays.": "Connectez-vous à un compte pour voir vos propres replays.",
+	"Calculator": "Calculateur",
 
 	// #endregion Battle
 
@@ -1387,6 +1351,7 @@ export const translations: TranslationCatalog = {
 	"[Share]": "Partager",
 	"Share link": "Lien de partage",
 	"Creating the link...": "Création du lien...",
+	"[Upload to PokePaste]": "PokéPaste",
 
 	// #endregion Teambuilder
 

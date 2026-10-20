@@ -415,7 +415,7 @@ class BattleDiv extends preact.Component<{ room: BattleRoom }> {
 	}
 }
 
-class TimerButton extends preact.Component<{ room: BattleRoom, top: number }> {
+class TimerButton extends preact.Component<{ room: BattleRoom, top: number, inline?: boolean }> {
 	timerInterval: ReturnType<typeof setInterval> | null = null;
 	override componentWillUnmount() {
 		if (this.timerInterval) {
@@ -467,13 +467,30 @@ class TimerButton extends preact.Component<{ room: BattleRoom, top: number }> {
 		}
 
 		return <button
-			style={{ position: "absolute", right: '10px', top: `${this.props.top}px` }}
+			style={this.props.inline ? undefined : { position: "absolute", right: '10px', top: `${this.props.top}px` }}
 			data-href="battletimer" class={`button${timerTicking}`} role="timer"
 		>
 			<i class="fa fa-hourglass-start" aria-hidden></i> {time}
 		</button>;
 	}
 };
+
+/**
+ * CobblemonShowdown : sur téléphone, le bouton du calculateur Showdex à côté du chrono.
+ * Showdex place le sien près d'un bouton « Options de combat » que cette mise en page n'a pas.
+ */
+function BattleCornerButtons(props: { room: BattleRoom, top: number }) {
+	const room = props.room;
+	const timer = !!(room.battle && !room.battle.ended && room.request && room.battle.mySide.id === PS.user.userid);
+	const calcdex = !!(room.battle as unknown as { calcdexAsOverlay?: boolean } | null)?.calcdexAsOverlay;
+	if (!timer && !calcdex) return null;
+	return <div style={`position:absolute;right:10px;top:${props.top}px;display:flex;gap:6px`}>
+		{calcdex && <button class="button" data-cmd="/calcdex overlay toggle">
+			<i class="fa fa-calculator" aria-hidden></i> {TL`Calculator`}
+		</button>}
+		{timer && <TimerButton room={room} top={0} inline />}
+	</div>;
+}
 
 class BattlePanel extends PSRoomPanel<BattleRoom> {
 	static readonly id = 'battle';
@@ -1541,8 +1558,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 						{this.renderConnectError()}
 					</div>
 				</ChatLog>
-				{(room.battle && !room.battle.ended && room.request && room.battle.mySide.id === PS.user.userid) &&
-					<TimerButton room={room} top={7} />}
+				<BattleCornerButtons room={room} top={7} />
 				<div class="battle-controls-container"></div>
 			</PSPanelWrapper>;
 		}
@@ -1574,8 +1590,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 				</ChatLog>
 				<ChatTextEntry room={room} onMessage={this.send} onKey={this.onKey} left={0} tinyLayout={room.width < 400} />
 				<ChatUserList room={room} top={battleHeight} minimized />
-				{(room.battle && !room.battle.ended && room.request && room.battle.mySide.id === PS.user.userid) &&
-					<TimerButton room={room} top={battleHeight + 7} />}
+				<BattleCornerButtons room={room} top={battleHeight + 7} />
 				<div class="battle-controls-container"></div>
 			</PSPanelWrapper>;
 		}
@@ -1599,8 +1614,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 							role="complementary" aria-label={TL`Battle controls`}
 							style={`top:${battleHeight + 10}px;width:${battleWidth}px;`}
 						>
-							{(room.battle && !room.battle.ended && room.request &&
-								room.battle.mySide.id === PS.user.userid) && <TimerButton room={room} top={0} />}
+							<BattleCornerButtons room={room} top={0} />
 							{this.renderControls(false, overlayVersion)}
 							{this.renderConnectError()}
 						</div>

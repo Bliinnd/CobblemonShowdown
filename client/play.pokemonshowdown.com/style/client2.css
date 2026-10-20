@@ -2677,30 +2677,3 @@ pre.textbox.textbox-empty[placeholder]:before {
 	flex: none;
 }
 
-/* CobblemonShowdown : calculateur de dégâts (panel-calc.tsx) */
-.calc-panel h2 { margin-top: 0; }
-.calc-sides { display: flex; flex-wrap: wrap; gap: 12px; }
-.calc-side { flex: 1 1 260px; min-width: 0; }
-.calc-side h3 { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 8px 0; }
-.calc-load { max-width: 55%; font-size: 9pt; }
-.calc-row { display: block; margin: 0 0 6px; }
-.calc-row > .textbox, .calc-row > select { display: block; width: 100%; box-sizing: border-box; }
-.calc-inline { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; }
-.calc-inline label { display: block; }
-.calc-inline label > .textbox, .calc-inline label > select { display: block; }
-.calc-num { width: 4.2em; }
-.calc-types { color: #666; font-size: 9pt; padding-bottom: 4px; }
-.calc-invalid { border-color: #c33 !important; background: #fff2f2 !important; }
-.calc-stats { border-collapse: collapse; margin: 4px 0 8px; }
-.calc-stats th, .calc-stats td { padding: 1px 3px; text-align: center; font-size: 9pt; }
-.calc-stats th:first-child { text-align: left; }
-.calc-stats .calc-num { width: 3.6em; }
-.calc-results { margin: 0 0 8px; padding: 6px 10px; border: 1px solid #aab; border-radius: 6px; background: rgba(255, 255, 255, .6); }
-.calc-results h3 { margin: 0 0 4px; font-size: 10pt; }
-.calc-results ul { margin: 0; padding-left: 18px; }
-.calc-results li { margin: 2px 0; }
-.calc-hint { color: #666; }
-.calc-field { margin: 8px 0; }
-.dark .calc-results { background: rgba(0, 0, 0, .3); border-color: #556; }
-.dark .calc-types, .dark .calc-hint { color: #aaa; }
-.dark .calc-invalid { background: #4a2020 !important; }

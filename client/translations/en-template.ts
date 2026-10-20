@@ -416,42 +416,6 @@ export const translations: TranslationCatalog = {
 	"Illegal": null,
 	"[Open the Teambuilder]": null,
 	"Damage calculator": null,
-	"The damage calculator could not be loaded. Try again in a moment.": null,
-	"Load from a team...": null,
-	"Pokémon 1": null,
-	"Pokémon 2": null,
-	"HP": null,
-	"(none)": null,
-	"Status": null,
-	"Healthy": null,
-	"Burned": null,
-	"Paralyzed": null,
-	"Poisoned": null,
-	"Badly poisoned": null,
-	"Asleep": null,
-	"Frozen": null,
-	"Boost": null,
-	"Stat": null,
-	"Reflect / Light Screen": null,
-	"Stealth Rock": null,
-	"Helping Hand": null,
-	"{attackerName} attacks {defenderName}": null,
-	"Choose two Pokémon to see the damage.": null,
-	"no damage": null,
-	"Singles": null,
-	"Doubles": null,
-	"Weather": null,
-	"Sun": null,
-	"Rain": null,
-	"Sandstorm": null,
-	"Snow": null,
-	"Terrain": null,
-	"Electric Terrain": null,
-	"Grassy Terrain": null,
-	"Psychic Terrain": null,
-	"Misty Terrain": null,
-	"Swap": null,
-	"Calculations by the Smogon damage calculator.": null,
 
 	// #endregion Generic UI
 
@@ -726,7 +690,6 @@ export const translations: TranslationCatalog = {
 	"Your username can be chosen and changed at any time. Keep in mind:": null,
 	"Removed from your friends.": null,
 	"Couldn't load the avatar list.": null,
-	"Show all {all.length} avatars": null,
 	"No avatar matches your search.": null,
 	"Log in to an account to keep your avatar on all your devices.": null,
 	"Game heroes": null,
@@ -992,6 +955,7 @@ export const translations: TranslationCatalog = {
 	"Recent replays": null,
 	"Player name": null,
 	"Log in to an account to see your own replays.": null,
+	"Calculator": null,
 
 	// #endregion Battle
 
@@ -1387,6 +1351,7 @@ export const translations: TranslationCatalog = {
 	"[Share]": null,
 	"Share link": null,
 	"Creating the link...": null,
+	"[Upload to PokePaste]": null,
 
 	// #endregion Teambuilder
 

@@ -1,0 +1,76 @@
+diff --git a/.env b/.env
+index 6bdf48b..9e253c9 100644
+--- a/.env
++++ b/.env
+@@ -40,7 +40,7 @@ STANDALONE_RESOURCE_PREFIX='showdex'
+ # (as of v1.2.0, these are hardcoded cause saved honks would show "None" for the presets due to this regenerating)
+ UUID_CHROME_NAMESPACE='c94f5f46-d6f0-476b-be0a-8e863bae378b' # from showdex-v1.2.0-b18CC3DE3280.chrome
+ UUID_FIREFOX_NAMESPACE='d4ecad83-b73d-44a7-bacc-545fc5e57939' # from showdex-v1.2.0-b18CC3DF53E3.firefox
+-UUID_STANDALONE_NAMESPACE=
++UUID_STANDALONE_NAMESPACE='5e0c2b1a-7f3d-4c8e-9a61-c0bb1e3d2f47' # CobblemonShowdown : fixe, pour garder les calculs sauvegardés d'une version à l'autre
+ 
+ # to auto-generate a UUID namespace on each Webpack build, set it to one of the following:
+ # - (nothing)
+@@ -152,9 +152,9 @@ PKMN_PRESETS_RANDOMS_STATS_PATH='/randbats/data/stats'
+ ## showdown
+ ##
+ 
+-SHOWDOWN_CLIENT_BASE_URL='https://play.pokemonshowdown.com'
++SHOWDOWN_CLIENT_BASE_URL=''
+ SHOWDOWN_CLIENT_ACTION_PATH='/~~showdown/action.php'
+-SHOWDOWN_USERS_URL='https://pokemonshowdown.com/users'
++SHOWDOWN_USERS_URL='/users'
+ 
+ ##
+ ## smogon
+diff --git a/src/consts/hydro/settings.ts b/src/consts/hydro/settings.ts
+index a4f22e5..0c09f51 100644
+--- a/src/consts/hydro/settings.ts
++++ b/src/consts/hydro/settings.ts
+@@ -19,7 +19,7 @@ import { reverseObjectKv } from '@showdex/utils/core';
+  * @since 1.2.0
+  */
+ export const DefaultShowdexSettings: ShowdexSettings = {
+-  locale: 'en', // falling back to LanguageDetector -- update (2024/07/31): doesn't work properly, so this is fine for now
++  locale: 'fr', // CobblemonShowdown : interface en français par défaut // falling back to LanguageDetector -- update (2024/07/31): doesn't work properly, so this is fine for now
+   colorScheme: null,
+   forcedColorScheme: 'showdown',
+   colorTheme: 'sic',
+@@ -27,7 +27,7 @@ export const DefaultShowdexSettings: ShowdexSettings = {
+   developerMode: __DEV__,
+ 
+   hellodex: {
+-    openOnStart: true,
++    openOnStart: false, // CobblemonShowdown : ouvert par le bouton « Calculateur de dégâts » du menu
+     focusRoomsRoom: false,
+     showBattleRecord: true,
+     showDonateButton: true,
+diff --git a/src/pages/Bootdex/BootdexAdapter.ts b/src/pages/Bootdex/BootdexAdapter.ts
+index 6dfa43f..c416fc8 100644
+--- a/src/pages/Bootdex/BootdexAdapter.ts
++++ b/src/pages/Bootdex/BootdexAdapter.ts
+@@ -48,7 +48,7 @@ export abstract class BootdexAdapter {
+     // restores) is unrelated to i18n, so a locale that couldn't load shouldn't nuke the user's settings too
+     if (!this.i18next) {
+       try {
+-        this.i18next = await loadI18nextLocales(settings?.locale);
++        this.i18next = await loadI18nextLocales(settings?.locale || 'fr'); // CobblemonShowdown : français par défaut
+       } catch (error) {
+         l.error('Couldn\'t loadI18nextLocales() cuz of', error);
+       }
+diff --git a/src/pages/Hellodex/HellodexPreactBootstrapper.ts b/src/pages/Hellodex/HellodexPreactBootstrapper.ts
+index 7d1a9e5..98b5ce1 100644
+--- a/src/pages/Hellodex/HellodexPreactBootstrapper.ts
++++ b/src/pages/Hellodex/HellodexPreactBootstrapper.ts
+@@ -90,6 +90,11 @@ export class HellodexPreactBootstrapper extends BootdexPreactBootstrappable {
+     window.PS.addRoomType(HellodexPreactPanel);
+     // l.debug('PS.roomTypes', window.PS.roomTypes);
+ 
++    // CobblemonShowdown : respecte le réglage « ouvrir au démarrage » (ignoré par le client Preact)
++    if (HellodexPreactBootstrapper.Adapter.rootState?.showdex?.settings?.hellodex?.openOnStart === false) {
++      return void this.endTimer('(hellodex not opened on start)');
++    }
++
+     l.debug('Attempting to open the Hellodex w/ roomId', this.roomId);
+     this.open();
+     this.endTimer('(hellodex enabled)');

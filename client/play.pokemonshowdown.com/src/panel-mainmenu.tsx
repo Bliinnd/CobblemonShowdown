@@ -851,7 +851,7 @@ class MainMenuPanel extends PSRoomPanel<MainMenuRoom> {
 
 					<div class="menugroup">
 						<p><a class="mainmenu2 mainmenu button" href="teambuilder">{TL`[Teambuilder]`}</a></p>
-						<p><a class="mainmenu5 mainmenu button" href="calculateur">{TL`Damage calculator`}</a></p>
+						<p><a class="mainmenu5 mainmenu button" href="hellodex">{TL`Damage calculator`}</a></p>
 						{/* CobblemonShowdown : classement prêt mais caché (réglage CLASSEMENT_VISIBLE) */}
 						{Config.showLadder && <p><a class={"mainmenu3 mainmenu" + onlineButton} href="ladder">{TL`Ladder`}</a></p>}
 						<p><a class={"mainmenu4 mainmenu" + onlineButton} href="view-tournaments-all">{TL`Tournaments`}</a></p>
