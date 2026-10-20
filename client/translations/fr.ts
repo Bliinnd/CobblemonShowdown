@@ -1352,6 +1352,7 @@ export const translations: TranslationCatalog = {
 	"[Share]": "Partager",
 	"Share link": "Lien de partage",
 	"Creating the link...": "Création du lien...",
+	"[Upload to PokePaste]": "PokéPaste",
 
 	// #endregion Teambuilder
 

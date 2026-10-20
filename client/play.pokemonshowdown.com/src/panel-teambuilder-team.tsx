@@ -310,6 +310,17 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 		});
 	};
 
+	/** CobblemonShowdown : envoi de l'équipe sur pokepast.es, comme le bouton du Showdown officiel */
+	fillPokepaste = (ev: Event) => {
+		const form = ev.currentTarget as HTMLFormElement;
+		const team = this.props.room.team;
+		const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
+		field('title').value = team.name;
+		field('paste').value = Teams.export(Teams.unpack(team.packedTeam));
+		field('author').value = PS.user.named ? PS.user.name : '';
+		field('notes').value = team.format.length > 4 ? `Format : ${BattleLog.formatName(team.format)} (CobblemonShowdown)` : '';
+	};
+
 	changePrivacyPref = (ev: Event) => {
 		PS.prefs.uploadprivacy = !(ev.currentTarget as HTMLInputElement).checked;
 		PS.prefs.save();
@@ -430,6 +441,16 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 						<button data-cmd="/validate" class="button"><i class="fa fa-check"></i> {TL`[Validate]`}</button> {}
 					</>}
 					<button class="button" onClick={this.shareTeam}><i class="fa fa-share-alt"></i> {TL`[Share]`}</button> {}
+					<form
+						method="post" action="https://pokepast.es/create" target="_blank" style="display:inline"
+						onSubmit={this.fillPokepaste}
+					>
+						<input type="hidden" name="title" />
+						<input type="hidden" name="paste" />
+						<input type="hidden" name="author" />
+						<input type="hidden" name="notes" />
+						<button type="submit" class="button"><i class="fa fa-upload"></i> {TL`[Upload to PokePaste]`}</button>
+					</form> {}
 					<a class="button" href="hellodex"><i class="fa fa-calculator"></i> {TL`Damage calculator`}</a>
 				</p>}
 				{this.share?.packedTeam === team.packedTeam && <div class="infobox" style="padding: 5px 8px">
