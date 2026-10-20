@@ -33,7 +33,7 @@ export const translations: TranslationCatalog = {
 	// ==================================================================
 
 	"Pokémon": "Pokémon",
-	"Move": "Capacité",
+	"Move": "Capacité", // NOT USED
 	"Moves": "Capacités",
 	"Item": "Objet",
 	"Items": "Objets",

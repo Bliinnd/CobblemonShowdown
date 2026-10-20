@@ -430,7 +430,7 @@ class TeamPanel extends PSRoomPanel<TeamRoom> {
 						<button data-cmd="/validate" class="button"><i class="fa fa-check"></i> {TL`[Validate]`}</button> {}
 					</>}
 					<button class="button" onClick={this.shareTeam}><i class="fa fa-share-alt"></i> {TL`[Share]`}</button> {}
-					<a class="button" href="calculateur"><i class="fa fa-calculator"></i> {TL`Damage calculator`}</a>
+					<a class="button" href="hellodex"><i class="fa fa-calculator"></i> {TL`Damage calculator`}</a>
 				</p>}
 				{this.share?.packedTeam === team.packedTeam && <div class="infobox" style="padding: 5px 8px">
 					{this.share.url ? <>

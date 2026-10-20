@@ -33,7 +33,7 @@ export const translations: TranslationCatalog = {
 	// ==================================================================
 
 	"Pokémon": null,
-	"Move": null,
+	"Move": null, // NOT USED
 	"Moves": null,
 	"Item": null,
 	"Items": null,
