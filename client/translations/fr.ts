@@ -690,7 +690,6 @@ export const translations: TranslationCatalog = {
 	"Your username can be chosen and changed at any time. Keep in mind:": "Vous pouvez choisir et changer de pseudo à tout moment. Gardez à l’esprit les règles suivantes :",
 	"Removed from your friends.": "Retiré de vos amis.",
 	"Couldn't load the avatar list.": "Impossible de charger la liste des avatars.",
-	"Show all {all.length} avatars": "Afficher les {all.length} avatars",
 	"No avatar matches your search.": "Aucun avatar ne correspond à votre recherche.",
 	"Log in to an account to keep your avatar on all your devices.": "Connectez-vous à un compte pour garder votre avatar sur tous vos appareils.",
 	"Game heroes": "Héros des jeux",

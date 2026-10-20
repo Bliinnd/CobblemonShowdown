@@ -690,7 +690,6 @@ export const translations: TranslationCatalog = {
 	"Your username can be chosen and changed at any time. Keep in mind:": null,
 	"Removed from your friends.": null,
 	"Couldn't load the avatar list.": null,
-	"Show all {all.length} avatars": null,
 	"No avatar matches your search.": null,
 	"Log in to an account to keep your avatar on all your devices.": null,
 	"Game heroes": null,

@@ -1114,7 +1114,7 @@ class AvatarsPanel extends PSRoomPanel {
 	static readonly location = 'modal-popup';
 	static allAvatars: string[] | null = null;
 
-	declare state: { search?: string, showAll?: boolean, loadError?: boolean };
+	declare state: { search?: string, loadError?: boolean };
 
 	override componentDidMount() {
 		super.componentDidMount();
@@ -1125,10 +1125,7 @@ class AvatarsPanel extends PSRoomPanel {
 		}).catch(() => this.setState({ loadError: true }));
 	}
 	handleSearch = (ev: Event) => {
-		this.setState({ search: (ev.currentTarget as HTMLInputElement).value, showAll: true });
-	};
-	showAll = () => {
-		this.setState({ showAll: true });
+		this.setState({ search: (ev.currentTarget as HTMLInputElement).value });
 	};
 	renderAvatar(avatar: string) {
 		return <button
@@ -1145,9 +1142,6 @@ class AvatarsPanel extends PSRoomPanel {
 		if (this.state.loadError) return <p class="error">{TL`Couldn't load the avatar list.`}</p>;
 		const all = AvatarsPanel.allAvatars;
 		if (!all) return <p>{TL`Loading...`}</p>;
-		if (!this.state.showAll) {
-			return <p><button class="button" onClick={this.showAll}>{TL`Show all ${all.length} avatars`}</button></p>;
-		}
 		const search = toID(this.state.search || '');
 		const avatars = search ? all.filter(avatar => toID(avatar).includes(search)) : all;
 		if (!avatars.length) return <p>{TL`No avatar matches your search.`}</p>;
@@ -1169,7 +1163,7 @@ class AvatarsPanel extends PSRoomPanel {
 				{HERO_AVATARS.map(avatar => this.renderAvatar(avatar))}
 			</div>
 			<div style="clear:left"></div>
-			<h3>{TL`All avatars`}</h3>
+			<h3>{TL`All avatars`}{AvatarsPanel.allAvatars ? ` (${AvatarsPanel.allAvatars.length})` : ''}</h3>
 			<p>
 				<input
 					type="search" class="textbox" placeholder={TL`Search an avatar (e.g. guzma)`}
