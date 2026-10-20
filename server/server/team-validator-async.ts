@@ -9,6 +9,7 @@
 
 import { TeamValidator } from '../sim/team-validator';
 import * as ConfigLoader from './config-loader';
+import { translateProblems } from './team-validator-fr';
 
 export const PM = new QueryProcessManager<{
 	formatid: string, options?: { removeNicknames?: boolean }, team: string,
@@ -35,6 +36,8 @@ export const PM = new QueryProcessManager<{
 	}
 
 	if (problems?.length) {
+		// CobblemonShowdown: the reasons are shown in French
+		if (Config.defaultlanguage === 'french') problems = translateProblems(problems);
 		return '0' + problems.join('\n');
 	}
 	const packedTeam = Teams.pack(parsedTeam);
@@ -56,7 +59,9 @@ export class TeamValidatorAsync {
 		let formatid = this.format.id;
 		if (this.format.customRules) formatid += '@@@' + this.format.customRules.join(',');
 		if (team.length > (25 * 1024 - 6)) { // don't even let it go to the child process
-			return Promise.resolve('0Your team is over 25KB. Please use a smaller team.');
+			return Promise.resolve(Config.defaultlanguage === 'french' ?
+				'0Votre équipe dépasse 25 Ko. Utilisez une équipe plus petite.' :
+				'0Your team is over 25KB. Please use a smaller team.');
 		}
 		return PM.query({ formatid, options, team });
 	}
