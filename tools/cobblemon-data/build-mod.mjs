@@ -3,7 +3,8 @@
  * Génère le mod Showdown `cobblemon` (server/data/mods/cobblemon/) à partir
  * des données extraites par extract.mjs.
  *
- * - learnsets.ts : les attaques que chaque Pokémon apprend dans Cobblemon
+ * - learnsets.ts : les attaques que chaque Pokémon apprend dans Cobblemon (niveau, CT, tuteur, œuf),
+ *   alignées sur https://cobblemon.tools/pokedex/ grâce à cobblemon-tools-diff.txt
  * - formats-data.ts : disponibilité et tiers de chaque Pokémon
  * - moves.ts : réactive les anciennes attaques présentes dans Cobblemon
  * - cobblemon.json : liste des Pokémon disponibles, lue par les règles des formats
@@ -30,7 +31,7 @@ const cobblemon = JSON.parse(fs.readFileSync(path.join(HERE, `cobblemon-${TAG}.j
 const OU_EXTRA_BANS = [
 	'Archaludon', 'Dracovish', 'Kingambit', 'Gliscor', 'Palafin', 'Sneasler', 'Annihilape', 'Espathra',
 ];
-/** Pas pleinement évolués, mais autorisés en OU. */
+/** Pas pleinement évolués, mais classés OU (les autres Pokémon qui peuvent évoluer vont dans « Autres »). */
 const OU_NFE_ALLOWED = ['Porygon2', 'Chansey'];
 const BANNED_LABELS = ['legendary', 'mythical', 'ultra_beast', 'paradox'];
 const BANNED_TAGS = ['Restricted Legendary', 'Sub-Legendary', 'Mythical', 'Ultra Beast', 'Paradox'];
@@ -43,14 +44,19 @@ const BANNED_TAGS = ['Restricted Legendary', 'Sub-Legendary', 'Mythical', 'Ultra
 const entries = new Map();
 const unmatchedForms = [];
 
+/**
+ * Sources retenues : niveau, CT, œuf et tuteur, les quatre onglets de cobblemon.tools.
+ * "legacy" et "special" (anciennes attaques, événements) ne sont pas apprenables en jeu.
+ */
 function sourcesFor(cobbleSources) {
 	const out = [];
 	for (const source of cobbleSources) {
 		let ps;
-		if (source.startsWith('L')) ps = `9${source}`;
+		if (/^L\d+$/.test(source)) ps = `9${source}`;
 		else if (source === 'tm') ps = '9M';
 		else if (source === 'egg') ps = '9E';
-		else ps = '9T'; // tutor, legacy, special, form_change
+		else if (source === 'tutor') ps = '9T';
+		else continue;
 		if (!out.includes(ps)) out.push(ps);
 	}
 	// Showdown lit les sources dans l'ordre : on met les plus simples en premier.
@@ -64,16 +70,57 @@ function learnsetFrom(moves) {
 	for (const [move, sources] of Object.entries(moves)) {
 		const id = toID(move);
 		if (!dex.moves.get(id).exists) throw new Error(`Attaque inconnue : ${move}`);
-		learnset[id] = sourcesFor(sources);
+		const psSources = sourcesFor(sources);
+		if (psSources.length) learnset[id] = psSources;
 	}
 	return learnset;
+}
+
+/**
+ * Écarts entre les données du mod et cobblemon.tools (relevés sur le site), appliqués aux espèces
+ * de base et à leurs formes pour que leurs attaques correspondent exactement au site.
+ * Une ligne : `<espèce> +tm=a,b -tutor=c -L=32:d` (catégories L, tm, egg, tutor).
+ */
+const toolsDiff = new Map();
+for (const line of fs.readFileSync(path.join(HERE, 'cobblemon-tools-diff.txt'), 'utf8').split('\n')) {
+	if (!line.trim() || line.startsWith('#')) continue;
+	const [slug, ...changes] = line.trim().split(/\s+/);
+	toolsDiff.set(slug, changes.map(change => {
+		const [, sign, cat, list] = /^([+-])(L|tm|egg|tutor)=(.+)$/.exec(change) || [];
+		if (!sign) throw new Error(`Ligne invalide dans cobblemon-tools-diff.txt : ${line}`);
+		return { sign, cat, moves: list.split(',') };
+	}));
+}
+const usedDiffs = new Set();
+function applyToolsDiff(speciesId, moves) {
+	const changes = toolsDiff.get(speciesId);
+	if (!changes) return moves;
+	usedDiffs.add(speciesId);
+	const out = {};
+	for (const [move, sources] of Object.entries(moves)) out[toID(move)] = [...sources];
+	for (const { sign, cat, moves: list } of changes) {
+		for (const item of list) {
+			let move = item, source = cat;
+			if (cat === 'L') [source, move] = [`L${item.split(':')[0]}`, item.split(':')[1]];
+			if (sign === '+') {
+				out[move] ||= [];
+				if (!out[move].includes(source)) out[move].push(source);
+			} else {
+				if (!out[move]?.includes(source)) throw new Error(`${speciesId} n'apprend pas ${move} par ${source}`);
+				out[move] = out[move].filter(s => s !== source);
+				if (!out[move].length) delete out[move];
+			}
+		}
+	}
+	return out;
 }
 
 for (const sp of cobblemon.species) {
 	const base = dex.species.get(sp.name);
 	if (!base.exists) throw new Error(`Espèce inconnue de Showdown : ${sp.name}`);
 	entries.set(base.id, {
-		name: base.name, implemented: sp.implemented, labels: sp.labels, learnset: learnsetFrom(sp.moves),
+		name: base.name, implemented: sp.implemented, labels: sp.labels,
+		learnset: learnsetFrom(applyToolsDiff(base.id, sp.moves)),
 	});
 	for (const form of sp.forms) {
 		const formSpecies = dex.species.get(`${sp.name}-${form.name}`);
@@ -85,7 +132,7 @@ for (const sp of cobblemon.species) {
 			name: formSpecies.name,
 			implemented: sp.implemented,
 			labels: [...new Set([...sp.labels, ...form.labels])],
-			learnset: form.moves ? learnsetFrom(form.moves) : null,
+			learnset: form.moves ? learnsetFrom(applyToolsDiff(formSpecies.id, form.moves)) : null,
 		});
 	}
 }
@@ -110,7 +157,8 @@ const DOUBLES_TIERS = ['DUber', 'DOU', 'DBL', 'DUU', '(DUU)'];
 function doublesTierFor(species) {
 	if (species.nfe) return species.prevo ? 'NFE' : 'LC';
 	if (DOUBLES_TIERS.includes(species.doublesTier)) return species.doublesTier;
-	if (species.tags.includes('Restricted Legendary') || species.tags.includes('Mythical')) return 'DUber';
+	const tags = dex.species.get(species.baseSpecies).tags;
+	if (tags.includes('Restricted Legendary') || tags.includes('Mythical')) return 'DUber';
 	const gen8Tier = gen8Dex.species.get(species.id).doublesTier;
 	return DOUBLES_TIERS.includes(gen8Tier) ? gen8Tier : '(DUU)';
 }
@@ -246,4 +294,6 @@ console.log(`Pokémon disponibles : ${available.size}`);
 console.log(`National Dex uniquement (méga-évolutions, Pokémon Champions) : ${natDexOnly.length}`);
 console.log(`Nouvelles méga-gemmes ajoutées à la National Dex : ${futureItems.size}`);
 console.log(`Anciennes attaques réactivées : ${pastMoves.length}`);
+const unusedDiffs = [...toolsDiff.keys()].filter(id => !usedDiffs.has(id));
+if (unusedDiffs.length) throw new Error(`Espèces de cobblemon-tools-diff.txt introuvables : ${unusedDiffs.join(', ')}`);
 console.log(`Formes Cobblemon sans équivalent Showdown (ignorées) : ${unmatchedForms.length}`);

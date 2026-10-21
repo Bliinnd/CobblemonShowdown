@@ -1250,9 +1250,7 @@ export const translations: TranslationCatalog = {
 	// TRANSLATORS: They're both designed to take up very little width, so keep that in mind
 	"H.P.": "P.C.",
 	"H. Power": "P. Cachée",
-	"Defensive coverage": "Couverture défensive",
 	"Teambuilding resources for {FORMAT}": "Ressources de teambuilding pour {FORMAT}",
-	"[See all]": "Tout voir",
 	"Search species or filter by type, learnable moves, ability, tier, or egg group": "Rechercher une espèce ou filtrer par type, capacité apprise, talent, tier ou groupe Œuf",
 	"Search abilities": "Rechercher un talent",
 	"Search items": "Rechercher un objet",
@@ -1270,8 +1268,6 @@ export const translations: TranslationCatalog = {
 	"You can also set natures by typing {PLUS} and {MINUS} in the EV box.": "Vous pouvez aussi définir la nature en tapant {PLUS} et {MINUS} dans le champ des EV.",
 	"Pasted team": "Équipe collée",
 	"Zoom out forms": "Dézoomer les formulaires",
-	"Compact": "Compact",
-	"Comfortable": "Aéré",
 	"Zoom out search results": "Dézoomer les résultats de recherche",
 	"Fetching Paste...": "Récupération du paste...",
 	"Import/Export set": "Importer/Exporter le set",
@@ -1352,6 +1348,14 @@ export const translations: TranslationCatalog = {
 	"Share link": "Lien de partage",
 	"Creating the link...": "Création du lien...",
 	"[Upload to PokePaste]": "PokéPaste",
+	"Team defense": "Défense de l'équipe",
+	"{row.weak} weak, {row.resist} resist, {row.immune} immune": "{row.weak} faible(s), {row.resist} résiste(nt), {row.immune} immunisé(s)",
+	"Resistances and immunities minus weaknesses: a negative number is a type that threatens the team.": "Résistances et immunités moins faiblesses : un nombre négatif est un type qui menace l'équipe.",
+	"Team type coverage": "Couverture de types de l'équipe",
+	"Number of Pokémon with a super effective attack against this type.": "Nombre de Pokémon qui ont une attaque super efficace contre ce type.",
+	"Details per Pokémon": "Détail par Pokémon",
+	"Damage taken": "Dégâts reçus",
+	"Best attack": "Meilleure attaque",
 
 	// #endregion Teambuilder
 

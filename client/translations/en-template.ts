@@ -1250,9 +1250,7 @@ export const translations: TranslationCatalog = {
 	// TRANSLATORS: They're both designed to take up very little width, so keep that in mind
 	"H.P.": null,
 	"H. Power": null,
-	"Defensive coverage": null,
 	"Teambuilding resources for {FORMAT}": null,
-	"[See all]": null,
 	"Search species or filter by type, learnable moves, ability, tier, or egg group": null,
 	"Search abilities": null,
 	"Search items": null,
@@ -1270,8 +1268,6 @@ export const translations: TranslationCatalog = {
 	"You can also set natures by typing {PLUS} and {MINUS} in the EV box.": null,
 	"Pasted team": null,
 	"Zoom out forms": null,
-	"Compact": null,
-	"Comfortable": null,
 	"Zoom out search results": null,
 	"Fetching Paste...": null,
 	"Import/Export set": null,
@@ -1352,6 +1348,14 @@ export const translations: TranslationCatalog = {
 	"Share link": null,
 	"Creating the link...": null,
 	"[Upload to PokePaste]": null,
+	"Team defense": null,
+	"{row.weak} weak, {row.resist} resist, {row.immune} immune": null,
+	"Resistances and immunities minus weaknesses: a negative number is a type that threatens the team.": null,
+	"Team type coverage": null,
+	"Number of Pokémon with a super effective attack against this type.": null,
+	"Details per Pokémon": null,
+	"Damage taken": null,
+	"Best attack": null,
 
 	// #endregion Teambuilder
 

@@ -8,7 +8,7 @@
 
 import preact from "../js/lib/preact";
 import { type Team, Config, PS } from "./client-main";
-import { Dex, type ModdedDex, toID, type ID, PSUtils, TL } from "./battle-dex";
+import { Dex, type ModdedDex, toID, type ID, TL } from "./battle-dex";
 import { Teams } from './battle-teams';
 import { DexSearch, type SearchRow, type SearchType } from "./battle-dex-search";
 import { PSSearchResults } from "./battle-searchresults";
@@ -738,31 +738,67 @@ export class TeamEditorState extends PSModel {
 		}
 		return coverage as Record<Dex.TypeName, number>;
 	}
-	teamDefensiveCoverage() {
-		type Counter = { type: Dex.TypeName, resists: number, neutrals: number, weaknesses: number };
-		const counters: Record<Dex.TypeName, Counter> = {} as any;
-		for (const type of this.dex.types.names()) {
-			counters[type] = {
-				type,
-				resists: 0,
-				neutrals: 0,
-				weaknesses: 0,
-			};
+	/** Type réel d'une attaque lancée par ce Pokémon (Puissance Cachée, plaques, talents en -ate...). */
+	getMoveType(set: Dex.PokemonSet, move: Dex.Move): Dex.TypeName {
+		const species = this.dex.species.get(set.species);
+		const item = this.dex.items.get(set.item || '');
+		const abilityid = toID(set.ability);
+		let type = move.type;
+		if (move.id === 'hiddenpower') type = this.getHPType(set);
+		if (move.id === 'revelationdance') type = species.types[0];
+		if (move.id === 'judgment' && item.onPlate) type = item.onPlate;
+		if (move.id === 'multiattack' && item.onMemory) type = item.onMemory;
+		if (move.id === 'technoblast' && item.onDrive) type = item.onDrive;
+		if ((move.id === 'ivycudgel' || move.id === 'ragingbull') && species.forme) {
+			type = species.types[1] || species.types[0];
 		}
-		for (const set of this.sets) {
-			const coverage = this.pokemonDefensiveCoverage(set);
-			for (const [type, value] of Object.entries(coverage) as [Dex.TypeName, number][]) {
-				if (value < 1) {
-					counters[type].resists++;
-				} else if (value === 1) {
-					counters[type].neutrals++;
-				} else {
-					counters[type].weaknesses++;
-				}
-			}
-		}
-		return counters;
+		const ateType = ({
+			aerilate: 'Flying', pixilate: 'Fairy', refrigerate: 'Ice', galvanize: 'Electric',
+		} as { [k: string]: Dex.TypeName })[abilityid];
+		if (ateType && type === 'Normal') type = ateType;
+		if (abilityid === 'normalize') type = 'Normal';
+		return type;
 	}
+	/** Efficacité d'une attaque de ce Pokémon contre un Pokémon d'un seul type. */
+	getOffensiveMultiplier(set: Dex.PokemonSet, move: Dex.Move, moveType: Dex.TypeName, defType: Dex.TypeName) {
+		const abilityid = toID(set.ability);
+		if (move.id === 'freezedry' && defType === 'Water') return 2;
+		if (move.id === 'thousandarrows' && defType === 'Flying') return 1;
+		let factor: number = this.getTypeWeakness(defType, moveType);
+		if (move.id === 'flyingpress') factor *= this.getTypeWeakness(defType, 'Flying');
+		if (!factor && defType === 'Ghost' && (moveType === 'Normal' || moveType === 'Fighting') &&
+			(abilityid === 'scrappy' || abilityid === 'mindseye')) {
+			factor = 1;
+		}
+		if (factor && factor < 1 && abilityid === 'tintedlens') factor *= 2;
+		return factor;
+	}
+	/**
+	 * Meilleure efficacité des attaques offensives de ce Pokémon contre chaque type
+	 * (null s'il n'a aucune attaque qui inflige des dégâts selon les types).
+	 */
+	pokemonOffensiveCoverage(set: Dex.PokemonSet) {
+		const moves = set.moves.map(name => this.dex.moves.get(name)).filter(move =>
+			move.exists && move.category !== 'Status' && !move.damage && !move.ohko &&
+			!TeamEditorState.TYPELESS_DAMAGE_MOVES.includes(move.id)
+		);
+		if (!moves.length) return null;
+		const coverage = {} as Record<Dex.TypeName, number>;
+		const moveTypes = moves.map(move => this.getMoveType(set, move));
+		for (const defType of this.dex.types.names()) {
+			let best = 0;
+			for (let i = 0; i < moves.length; i++) {
+				best = Math.max(best, this.getOffensiveMultiplier(set, moves[i], moveTypes[i], defType));
+			}
+			coverage[defType] = best;
+		}
+		return coverage;
+	}
+	/** Attaques dont les dégâts ne dépendent pas des faiblesses (riposte, Croc Fatal...). */
+	static TYPELESS_DAMAGE_MOVES = [
+		'counter', 'mirrorcoat', 'metalburst', 'bide', 'comeuppance', 'endeavor', 'finalgambit',
+		'superfang', 'naturesmadness', 'ruination', 'guardianofalola',
+	] as ID[];
 	getDefaultAbility(set: Dex.PokemonSet) {
 		if (this.gen < 3 || this.format.isLetsGo || this.format.formeLegality === 'custom') return set.ability;
 		const species = this.dex.species.get(set.species);
@@ -950,13 +986,13 @@ export class TeamEditor extends preact.Component<{
 	editorRef?: (editor: TeamEditorState) => void,
 }> {
 	mode: TeamEditorMode = 'form';
-	spacious: boolean | null = null;
 	zoomOutForms = false;
 	zoomOutSearch = false;
 	editor!: TeamEditorState;
 	optionsMenu: HTMLDetailsElement | null = null;
+	/** Disposition automatique : confortable sur les grands écrans, compacte sinon. */
 	getSpacious() {
-		return window.PS?.prefs.teameditorspacious ?? this.spacious ?? document.documentElement.clientHeight >= 950;
+		return document.documentElement.clientHeight >= 950;
 	}
 	getZoomOutForms() {
 		return window.PS?.prefs.teameditorzoomoutforms ?? this.zoomOutForms;
@@ -967,16 +1003,6 @@ export class TeamEditor extends preact.Component<{
 	setTab = (ev: Event) => {
 		const target = ev.currentTarget as HTMLButtonElement;
 		this.mode = target.value as TeamEditorMode;
-		this.forceUpdate();
-	};
-	setLayout = (ev: Event) => {
-		const layout = (ev.currentTarget as HTMLSelectElement).value;
-		const spacious = layout === 'automatic' ? null : layout === 'comfortable';
-		if (window.PS) {
-			window.PS.prefs.set('teameditorspacious', spacious);
-		} else {
-			this.spacious = spacious;
-		}
 		this.forceUpdate();
 	};
 	setZoomOutForms = (ev: Event) => {
@@ -1039,40 +1065,122 @@ export class TeamEditor extends preact.Component<{
 	static probablyMobile() {
 		return window.innerWidth < 500;
 	}
-	renderDefensiveCoverage() {
+	/** Couleurs des types (fond, texte), pour les étiquettes de la couverture d'équipe. */
+	static TYPE_COLORS: { [type: string]: [string, string] } = {
+		Bug: ['#a8b820', '#222'], Dark: ['#705848', '#fff'], Dragon: ['#7038f8', '#fff'], Electric: ['#f8d030', '#222'],
+		Fairy: ['#f670d8', '#fff'], Fighting: ['#c03028', '#fff'], Fire: ['#f08030', '#222'], Flying: ['#a890f0', '#fff'],
+		Ghost: ['#705898', '#fff'], Grass: ['#78c850', '#222'], Ground: ['#e0c068', '#222'], Ice: ['#98d8d8', '#222'],
+		Normal: ['#a8a878', '#222'], Poison: ['#a040a0', '#fff'], Psychic: ['#f85888', '#222'], Rock: ['#b8a038', '#222'],
+		Steel: ['#b8b8d0', '#222'], Water: ['#6890f0', '#222'],
+	};
+	renderType(type: Dex.TypeName) {
+		const [background, color] = TeamEditor.TYPE_COLORS[type] || ['#888', '#fff'];
+		return <span class="coverage-type" style={{ background, color }}>{TL.type[type] || type}</span>;
+	}
+	/**
+	 * Couverture de l'équipe, en deux cartes : pour chaque type, le bilan défensif de l'équipe
+	 * (résistances moins faiblesses) et le nombre de Pokémon qui le touchent en super efficace.
+	 * Le détail Pokémon par Pokémon est replié en dessous.
+	 */
+	renderCoverage() {
 		const { editor } = this;
 		if (editor.team.isBox) return null;
-		if (!editor.sets.length) return null;
+		const sets = editor.sets.filter(set => editor.dex.species.get(set.species).exists);
+		const types = editor.dex.types.names();
 
-		const counters = Object.values(editor.teamDefensiveCoverage());
-		PSUtils.sortBy(counters, counter => [counter.resists, -counter.weaknesses]);
-		const good = [], medium = [], bad = [];
-		const renderTypeDefensive = (counter: typeof counters[number]) => (
-			<tr>
-				<th>{TL.type[counter.type] || counter.type}</th>
-				<td>{counter.resists} <small class="gray">{TL`Resist`}</small></td>
-				<td>{counter.weaknesses} <small class="gray">{TL`Weak`}</small></td>
-			</tr>
+		const defensive = sets.map(set => editor.pokemonDefensiveCoverage(set));
+		const defRows = types.map(type => {
+			const values = defensive.map(coverage => coverage[type]);
+			const weak = values.filter(v => v > 1).length;
+			const resist = values.filter(v => v < 1 && v > 0).length;
+			const immune = values.filter(v => v === 0).length;
+			return { type, values, weak, resist, immune, score: resist + immune - weak };
+		});
+		const offensive = sets.map(set => editor.pokemonOffensiveCoverage(set));
+		const offRows = types.map(type => {
+			const values = offensive.map(coverage => coverage ? coverage[type] : null);
+			return { type, values, superEffective: values.filter(v => v !== null && v > 1).length };
+		});
+
+		const formatValue = (value: number) => (
+			value === 1 ? '' : value === 0 ? '0' : value === 0.25 ? '¼' : value === 0.5 ? '½' :
+			value === 0.125 ? '⅛' : `×${value}`
 		);
-		for (const counter of counters) {
-			if (counter.resists > 0) {
-				good.push(renderTypeDefensive(counter));
-			} else if (counter.weaknesses <= 0) {
-				medium.push(renderTypeDefensive(counter));
-			} else {
-				bad.push(renderTypeDefensive(counter));
-			}
-		}
-		return <details class="details">
-			<summary>
-				<strong>{TL`Defensive coverage`}</strong>
-				<table class="details-preview table">
-					{bad}
-					<tr><td colSpan={3}><span class="details-preview ilink"><small>{TL`[See all]`}</small></span></td></tr>
-				</table>
-			</summary>
-			<table class="table">{bad}{medium}{good}</table>
-		</details>;
+		const defClass = (value: number) => (
+			value >= 4 ? 'coverage-bad2' : value > 1 ? 'coverage-bad1' :
+			value <= 0.25 ? 'coverage-good2' : value < 1 ? 'coverage-good1' : ''
+		);
+		const offClass = (value: number) => (
+			value >= 4 ? 'coverage-good2' : value > 1 ? 'coverage-good1' :
+			value === 0 ? 'coverage-bad2' : value < 1 ? 'coverage-bad1' : ''
+		);
+		const scoreClass = (score: number) => (score > 0 ? 'coverage-plus' : score < 0 ? 'coverage-minus' : '');
+		const header = (extra: preact.ComponentChildren) => <tr>
+			<th></th>
+			{sets.map(set => <th class="coverage-mon" title={set.name || set.species}><PSIcon pokemon={set} /></th>)}
+			{extra}
+		</tr>;
+
+		return <div class="coverage">
+			<div class="coverage-card">
+				<h3>{TL`Team defense`}</h3>
+				<div class="coverage-grid">
+					{defRows.map(row => <div
+						class="coverage-cell"
+						title={TL`${row.weak} weak, ${row.resist} resist, ${row.immune} immune`}
+					>
+						{this.renderType(row.type)}
+						<strong class={scoreClass(sets.length ? row.score : 0)}>
+							{row.score > 0 ? `+${row.score}` : row.score}
+						</strong>
+					</div>)}
+				</div>
+				<p class="coverage-help">
+					{TL`Resistances and immunities minus weaknesses: a negative number is a type that threatens the team.`}
+				</p>
+			</div>
+			<div class="coverage-card">
+				<h3>{TL`Team type coverage`}</h3>
+				<div class="coverage-grid">
+					{offRows.map(row => <div class="coverage-cell">
+						{this.renderType(row.type)}
+						<strong class={sets.length ? row.superEffective ? 'coverage-plus' : 'coverage-minus' : ''}>
+							{row.superEffective}
+						</strong>
+					</div>)}
+				</div>
+				<p class="coverage-help">{TL`Number of Pokémon with a super effective attack against this type.`}</p>
+			</div>
+			{sets.length ? <details class="details coverage-details">
+				<summary><strong>{TL`Details per Pokémon`}</strong></summary>
+				<div class="coverage-tables">
+					<div class="coverage-block">
+						<h4>{TL`Damage taken`}</h4>
+						<table class="coverage-table">
+							{header([<th>{TL`Weak`}</th>, <th>{TL`Resist`}</th>])}
+							{defRows.map(row => <tr>
+								<th>{this.renderType(row.type)}</th>
+								{row.values.map(value => <td class={defClass(value)}>{formatValue(value)}</td>)}
+								<td class="coverage-count">{row.weak || ''}</td>
+								<td class="coverage-count">{row.resist + row.immune || ''}</td>
+							</tr>)}
+						</table>
+					</div>
+					<div class="coverage-block">
+						<h4>{TL`Best attack`}</h4>
+						<table class="coverage-table">
+							{header(null)}
+							{offRows.map(row => <tr>
+								<th>{this.renderType(row.type)}</th>
+								{row.values.map(value => value === null ?
+									<td class="coverage-none">–</td> :
+									<td class={offClass(value)}>{formatValue(value)}</td>)}
+							</tr>)}
+						</table>
+					</div>
+				</div>
+			</details> : null}
+		</div>;
 	}
 	cancelClipboard = () => {
 		TeamEditorState.clipboard = null;
@@ -1107,8 +1215,6 @@ export class TeamEditor extends preact.Component<{
 		const className = `teameditor${useSpaciousCSS ? ' teameditor-spacious' : ''}` +
 			`${useZoomedOutForms ? ' teameditor-zoom-out-forms' : ''}` +
 			`${zoomOutSearch && mobileOptions ? ' teameditor-full-size-search' : ''}`;
-		const layout = window.PS ? window.PS.prefs.teameditorspacious : this.spacious;
-		const automaticLayout = document.documentElement.clientHeight >= 950 ? TL`Comfortable` : TL`Compact`;
 
 		return <div class={className}>
 			<ul class="tabbar unpadded-tabbar">
@@ -1118,28 +1224,21 @@ export class TeamEditor extends preact.Component<{
 				<li><button onClick={this.setTab} value="import" class={`button button-last${this.mode === 'import' ? ' cur' : ''}`}>
 					{TL`Import/Export`}
 				</button></li>
-				<li class="teameditor-options" style="float: right; margin-top: 1px; margin-right: 8px;">
+				{mobileOptions && <li class="teameditor-options" style="float: right; margin-top: 1px; margin-right: 8px;">
 					<details ref={el => { this.optionsMenu = el; }}>
 						<summary class="button button-first">{TL`[Options]`}</summary>
 						<div class="teameditor-options-menu">
-							{mobileOptions ? <label class="checkbox"><input
+							<label class="checkbox"><input
 								name="zoomoutforms" type="checkbox"
 								checked={zoomOutForms} onChange={this.setZoomOutForms}
-							/> {TL`Zoom out forms`}</label> : <label>{TL.label(TL`Layout`)}<select
-								name="layout" class="select" onChange={this.setLayout}
-								value={layout === null ? 'automatic' : layout ? 'comfortable' : 'compact'}
-							>
-								<option value="automatic">{TL`Automatic (${automaticLayout})`}</option>
-								<option value="compact">{TL`Compact`}</option>
-								<option value="comfortable">{TL`Comfortable`}</option>
-							</select></label>}
-							{mobileOptions && <label class="checkbox"><input
+							/> {TL`Zoom out forms`}</label>
+							<label class="checkbox"><input
 								name="zoomoutsearch" type="checkbox"
 								checked={zoomOutSearch} onChange={this.setZoomOutSearch}
-							/> {TL`Zoom out search results`}</label>}
+							/> {TL`Zoom out search results`}</label>
 						</div>
 					</details>
-				</li>
+				</li>}
 			</ul>
 			{TeamEditorState.renderClipboard(this.cancelClipboard)}
 			{this.mode === 'form' ? (
@@ -1151,7 +1250,7 @@ export class TeamEditor extends preact.Component<{
 				{this.props.children}
 				<div class="team-resources">
 					<br /><hr /><br />
-					{this.renderDefensiveCoverage()}
+					{this.renderCoverage()}
 					{this.props.resources}
 				</div>
 			</div>}

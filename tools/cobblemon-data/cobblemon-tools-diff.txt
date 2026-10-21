@@ -1,0 +1,202 @@
+# Écarts entre les données Cobblemon 1.8.2 (cobblemon-1.8.2.json) et https://cobblemon.tools/pokedex/,
+# relevés le 21/10/2026 sur les 851 Pokémon du site et leurs 73 formes régionales ou alternatives
+# (onglets niveau, CT, œuf et tuteur).
+# build-mod.mjs les applique pour que les attaques correspondent exactement au site.
+# Format : <espèce> +<catégorie>=attaque,... -<catégorie>=attaque,...  (catégories : L (niveau:attaque), tm, egg, tutor)
+butterfree +tm=captivate
+pikachu +tm=volttackle
+raichu +tutor=volttackle
+nidoranf +tm=captivate
+nidoranm +tm=captivate
+nidoqueen +tm=captivate
+nidorina +tm=captivate
+nidorino +tm=captivate
+nidoking +tm=captivate
+vulpix +tm=captivate
+ninetales +tm=captivate
+jigglypuff +tm=captivate
+oddish +tm=naturalgift
+wigglytuff +tm=captivate
+gloom +tm=naturalgift
+vileplume +tm=naturalgift
+paras +tm=naturalgift
+venonat +tm=megadrain
+parasect +tm=naturalgift
+venomoth +tm=megadrain
+meowth +tm=captivate
+persian +tm=captivate
+bellsprout +tm=naturalgift
+weepinbell +tm=naturalgift
+victreebel +tm=naturalgift
+ponyta +tm=captivate
+rapidash +tm=captivate
+doduo +tm=naturalgift
+dodrio +tm=naturalgift
+grimer +tm=smog
+muk +tm=smog
+gengar +tm=powershift +tutor=powershift
+onix +tm=powershift +tutor=powershift
+exeggcute +tm=naturalgift
+exeggutor +tm=naturalgift
+tangela +tm=naturalgift
+chansey +tm=naturalgift
+jynx +tm=captivate
+mrmime +tm=powershift +tutor=powershift
+eevee +tm=captivate,naturalgift
+jolteon +tm=captivate,naturalgift
+flareon +tm=captivate,naturalgift,powershift +tutor=powershift
+vaporeon +tm=captivate,naturalgift
+snorlax +tm=naturalgift
+chikorita +tm=naturalgift
+bayleef +tm=naturalgift
+meganium +tm=naturalgift
+mew +tm=captivate,naturalgift,powershift +tutor=powershift
+sentret +tm=captivate,naturalgift
+furret +tm=captivate,naturalgift
+pichu +tm=volttackle
+igglybuff +tm=captivate
+bellossom +tm=naturalgift
+sunkern +tm=naturalgift
+sunflora +tm=naturalgift
+espeon +tm=captivate,naturalgift
+umbreon +tm=captivate,naturalgift,powershift +tutor=powershift
+pineco +tm=naturalgift
+forretress +tm=naturalgift
+steelix +tm=powershift +tutor=powershift
+mantine +tm=powershift +tutor=powershift
+phanpy +tm=naturalgift
+donphan +tm=naturalgift
+stantler +tm=captivate
+smoochum +tm=captivate
+miltank +tm=captivate,naturalgift
+blissey +tm=naturalgift,powershift +tutor=powershift
+lugia +tm=naturalgift
+hooh +tm=naturalgift
+treecko +tm=naturalgift
+grovyle +tm=naturalgift
+sceptile +tm=naturalgift
+lotad +tm=naturalgift
+lombre +tm=naturalgift
+ludicolo +tm=naturalgift
+shroomish +tm=naturalgift
+gardevoir +tm=captivate
+breloom +tm=naturalgift
+nosepass +tm=powershift +tutor=powershift
+mawile +tm=captivate
+sableye +tm=captivate
+illumise +tm=captivate
+roselia +tm=naturalgift
+spinda -L=32:teeterdance +tm=teeterdance
+swablu +tm=naturalgift
+altaria +tm=naturalgift
+feebas +tm=captivate
+milotic +tm=captivate
+dusclops +tm=powershift +tutor=powershift
+tropius +tm=naturalgift
+gorebyss +tm=captivate
+luvdisc +tm=captivate
+turtwig +tm=leafage
+grotle +tm=leafage
+torterra +tm=leafage
+budew +tm=naturalgift
+roserade +tm=naturalgift
+rampardos +tm=powershift +tutor=powershift
+bastiodon +tm=powershift +tutor=powershift
+vespiquen +tm=captivate,powershift +tutor=powershift
+drifblim +tm=powershift +tutor=powershift
+glameow +tm=captivate
+purugly +tm=captivate
+happiny +tm=naturalgift
+chatot +tm=powershift +tutor=powershift
+spiritomb +tm=captivate
+munchlax +tm=naturalgift
+finneon +tm=captivate
+lumineon +tm=captivate
+tangrowth +tm=naturalgift
+leafeon +tm=captivate,leafage,naturalgift
+glaceon +tm=captivate,naturalgift
+gliscor +tm=powershift +tutor=powershift
+porygonz +tm=powershift +tutor=powershift
+probopass -L=50:bodypress +tm=powershift +tutor=powershift
+dusknoir +tm=powershift +tutor=powershift
+regigigas +tm=powershift +tutor=powershift
+froslass +tm=captivate
+snivy +tm=captivate,naturalgift
+servine +tm=captivate,naturalgift
+serperior +tm=captivate,naturalgift
+purrloin +tm=captivate
+pansage +tm=naturalgift
+liepard +tm=captivate
+simisage +tm=naturalgift
+pansear +tm=naturalgift
+simisear +tm=naturalgift
+panpour +tm=naturalgift
+simipour +tm=naturalgift
+woobat +tm=captivate
+swoobat +tm=captivate
+cottonee +tm=captivate,naturalgift
+whimsicott +tm=captivate,naturalgift
+petilil +tm=naturalgift
+lilligant +tm=naturalgift
+zorua +tm=captivate
+zoroark +tm=captivate
+minccino +tm=captivate
+cinccino +tm=captivate
+gothita +tm=captivate
+gothorita +tm=captivate
+gothitelle +tm=captivate
+vanillite +tm=naturalgift
+vanillish +tm=naturalgift
+vanilluxe +tm=naturalgift
+deerling +tm=naturalgift
+sawsbuck +tm=naturalgift
+litwick +tm=captivate
+lampent +tm=captivate
+chandelure +tm=captivate
+fletchling +tm=naturalgift
+fletchinder +tm=naturalgift
+talonflame +tm=naturalgift
+flabebe +tm=captivate
+floette +tm=captivate
+florges +tm=captivate
+furfrou +tm=captivate
+spritzee +tm=captivate
+aromatisse +tm=captivate
+clawitzer -L=55:focusblast
+sylveon +tm=captivate,naturalgift
+dedenne +tm=naturalgift
+popplio +tm=captivate
+brionne +tm=captivate
+primarina +tm=captivate
+salazzle +tm=captivate
+steenee +tm=captivate
+tsareena +tm=captivate
+comfey +tm=naturalgift
+drampa +tm=naturalgift
+mrrime -tm=chargebeam,covet,dreameater,flash,focuspunch,headbutt,infestation,magiccoat,mudslap,psychup,shockwave,signalbeam,snatch,telekinesis,torment -tutor=chargebeam,covet,focuspunch,magiccoat,mudslap,shockwave,signalbeam,snatch,telekinesis
+wyrdeer +tm=captivate -tm=bounce,dreameater,entrainment,flash,headbutt,lastresort,magicroom,retaliate,shockwave,signalbeam,suckerpunch,workup -tutor=bounce,lastresort,magicroom,shockwave,signalbeam,suckerpunch
+kleavor -tm=assurance,brutalswing,crosspoison,cut,headbutt,laserfocus,roost,safeguard,steelwing -tutor=laserfocus,roost
+ursaluna -tm=cut,headbutt,honeclaws,laserfocus,lastresort,megakick,megapunch,poweruppunch,retaliate,rockclimb,rollout,strength,superpower,torment,workup -tutor=laserfocus,lastresort,rollout,superpower
+sneasler +tm=powershift +tutor=powershift
+annihilape -tm=covet,dualchop,headbutt,honeclaws,irontail,megakick,megapunch,payback,payday,poweruppunch,retaliate,revenge,rockclimb,rocksmash,roleplay,skullbash,strength,workup -tutor=covet,dualchop,irontail,rocksmash,roleplay
+farigiraf -tm=dreameater,echoedvoice,flash,headbutt,irontail,magiccoat,recycle,retaliate,rocksmash,shockwave,signalbeam,strength,suckerpunch,telekinesis,workup -tutor=irontail,magiccoat,recycle,rocksmash,shockwave,signalbeam,suckerpunch,telekinesis
+dudunsparce -tm=bind,dreameater,incinerate,irontail,magiccoat,retaliate,rocksmash,shockwave,strength,terrainpulse -tutor=bind,irontail,magiccoat,rocksmash,shockwave,terrainpulse
+# Formes régionales et alternatives
+raichualola +tm=volttackle -tm=babydolleyes,flash,rocksmash,rollout,strength -tutor=babydolleyes,rocksmash,rollout
+vulpixalola +tm=captivate
+ninetalesalola +tm=captivate
+persianalola +tm=captivate
+meowthalola +tm=captivate
+weezinggalar -tm=flash,incinerate,infestation,rollout,shockwave,torment -tutor=rollout,shockwave
+marowakalola -tm=furycutter,incinerate,poweruppunch,rockclimb,rocksmash,strength -tutor=furycutter,rocksmash
+exeggutoralola +tm=naturalgift -tm=flash,rollout,strength -tutor=rollout
+mrmimegalar -tm=chargebeam,covet,dreameater,flash,focuspunch,headbutt,infestation,magiccoat,mudslap,psychup,shockwave,signalbeam,snatch,telekinesis,torment -tutor=chargebeam,covet,focuspunch,magiccoat,mudslap,shockwave,signalbeam,snatch,telekinesis
+typhlosionhisui -tm=burnup,cut,furycutter,headbutt,incinerate,naturepower,strength,workup -tutor=furycutter
+lilliganthisui +tm=naturalgift -tm=covet,cut,dreameater,flash,healbell,laserfocus,naturepower,safeguard -tutor=covet,healbell,laserfocus
+samurotthisui -tm=assurance,brine,covet,cut,dive,hail,revenge,workup -tutor=covet,dive
+braviaryhisui +tm=powershift -tm=assurance,cut,pluck,retaliate,skydrop,steelwing,strength,workup +tutor=powershift
+floetteeternal +tm=captivate
+sliggoohisui -tm=infestation,shockwave -tutor=shockwave
+goodrahisui -tm=infestation,shockwave -tutor=shockwave
+avalugghisui +tm=powershift -tm=afteryou,flash,frostbreath,hail,rockpolish,safeguard,strength +tutor=powershift -tutor=afteryou
+decidueyehisui -tm=covet,echoedvoice,naturepower,safeguard,skyattack,steelwing,workup,worryseed -tutor=covet,skyattack,worryseed
