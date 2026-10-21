@@ -1065,47 +1065,42 @@ export class TeamEditor extends preact.Component<{
 	static probablyMobile() {
 		return window.innerWidth < 500;
 	}
-	/** Couleurs officielles des types, pour les étiquettes du tableau de couverture. */
-	static TYPE_COLORS: { [type: string]: string } = {
-		Normal: '#9fa19f', Fire: '#e62829', Water: '#2980ef', Electric: '#d9a400', Grass: '#3fa129', Ice: '#2fb5d6',
-		Fighting: '#ff8000', Poison: '#9141cb', Ground: '#915121', Flying: '#6a9fd6', Psychic: '#ef4179', Bug: '#91a119',
-		Rock: '#a39c72', Ghost: '#704170', Dragon: '#5060e1', Dark: '#624d4e', Steel: '#60a1b8', Fairy: '#e060e0',
+	/** Couleurs des types (fond, texte), pour les étiquettes de la couverture d'équipe. */
+	static TYPE_COLORS: { [type: string]: [string, string] } = {
+		Bug: ['#a8b820', '#222'], Dark: ['#705848', '#fff'], Dragon: ['#7038f8', '#fff'], Electric: ['#f8d030', '#222'],
+		Fairy: ['#f670d8', '#fff'], Fighting: ['#c03028', '#fff'], Fire: ['#f08030', '#222'], Flying: ['#a890f0', '#fff'],
+		Ghost: ['#705898', '#fff'], Grass: ['#78c850', '#222'], Ground: ['#e0c068', '#222'], Ice: ['#98d8d8', '#222'],
+		Normal: ['#a8a878', '#222'], Poison: ['#a040a0', '#fff'], Psychic: ['#f85888', '#222'], Rock: ['#b8a038', '#222'],
+		Steel: ['#b8b8d0', '#222'], Water: ['#6890f0', '#222'],
 	};
 	renderType(type: Dex.TypeName) {
-		return <span class="coverage-type" style={{ background: TeamEditor.TYPE_COLORS[type] || '#888' }}>
-			{TL.type[type] || type}
-		</span>;
+		const [background, color] = TeamEditor.TYPE_COLORS[type] || ['#888', '#fff'];
+		return <span class="coverage-type" style={{ background, color }}>{TL.type[type] || type}</span>;
 	}
 	/**
-	 * Couverture de l'équipe : dégâts reçus par chaque membre selon le type de l'attaque (défense),
-	 * et meilleure efficacité de ses attaques contre chaque type (attaque), avec un résumé des points faibles.
+	 * Couverture de l'équipe, en deux cartes : pour chaque type, le bilan défensif de l'équipe
+	 * (résistances moins faiblesses) et le nombre de Pokémon qui le touchent en super efficace.
+	 * Le détail Pokémon par Pokémon est replié en dessous.
 	 */
 	renderCoverage() {
 		const { editor } = this;
 		if (editor.team.isBox) return null;
 		const sets = editor.sets.filter(set => editor.dex.species.get(set.species).exists);
-		if (!sets.length) return null;
 		const types = editor.dex.types.names();
 
 		const defensive = sets.map(set => editor.pokemonDefensiveCoverage(set));
 		const defRows = types.map(type => {
 			const values = defensive.map(coverage => coverage[type]);
-			return {
-				type, values, weak: values.filter(v => v > 1).length, resist: values.filter(v => v < 1).length,
-			};
+			const weak = values.filter(v => v > 1).length;
+			const resist = values.filter(v => v < 1 && v > 0).length;
+			const immune = values.filter(v => v === 0).length;
+			return { type, values, weak, resist, immune, score: resist + immune - weak };
 		});
 		const offensive = sets.map(set => editor.pokemonOffensiveCoverage(set));
-		const hasAttacks = offensive.some(Boolean);
 		const offRows = types.map(type => {
 			const values = offensive.map(coverage => coverage ? coverage[type] : null);
-			const known = values.filter((v): v is number => v !== null);
-			return { type, values, superEffective: known.filter(v => v > 1).length, best: Math.max(0, ...known) };
+			return { type, values, superEffective: values.filter(v => v !== null && v > 1).length };
 		});
-
-		// Points faibles : plusieurs membres faibles à un type et pas assez de résistances pour compenser.
-		const sharedWeaknesses = defRows.filter(row => row.weak >= 2 && row.weak > row.resist);
-		const noSuperEffective = hasAttacks ? offRows.filter(row => !row.superEffective) : [];
-		const resistedByAll = hasAttacks ? offRows.filter(row => row.best < 1) : [];
 
 		const formatValue = (value: number) => (
 			value === 1 ? '' : value === 0 ? '0' : value === 0.25 ? '¼' : value === 0.5 ? '½' :
@@ -1113,74 +1108,79 @@ export class TeamEditor extends preact.Component<{
 		);
 		const defClass = (value: number) => (
 			value >= 4 ? 'coverage-bad2' : value > 1 ? 'coverage-bad1' :
-			value === 0 || value <= 0.25 ? 'coverage-good2' : value < 1 ? 'coverage-good1' : ''
+			value <= 0.25 ? 'coverage-good2' : value < 1 ? 'coverage-good1' : ''
 		);
 		const offClass = (value: number) => (
 			value >= 4 ? 'coverage-good2' : value > 1 ? 'coverage-good1' :
 			value === 0 ? 'coverage-bad2' : value < 1 ? 'coverage-bad1' : ''
 		);
+		const scoreClass = (score: number) => (score > 0 ? 'coverage-plus' : score < 0 ? 'coverage-minus' : '');
 		const header = (extra: preact.ComponentChildren) => <tr>
 			<th></th>
 			{sets.map(set => <th class="coverage-mon" title={set.name || set.species}><PSIcon pokemon={set} /></th>)}
 			{extra}
 		</tr>;
 
-		return <details class="details coverage" open>
-			<summary>
-				<strong>{TL`Team coverage`}</strong>
-				<div class="coverage-summary">
-					<p>
-						<small>{TL.label(TL`Shared weaknesses`)}</small>{' '}
-						{sharedWeaknesses.length ? sharedWeaknesses.map(row => <span class="coverage-chip">
-							{this.renderType(row.type)} <small>{row.weak}/{sets.length}</small>
-						</span>) : <em>{TL`none`}</em>}
-					</p>
-					{hasAttacks && <p>
-						<small>{TL.label(TL`No super effective hit against`)}</small>{' '}
-						{noSuperEffective.length ? noSuperEffective.map(row => (
-							<span class="coverage-chip">{this.renderType(row.type)}</span>
-						)) : <em>{TL`none`}</em>}
-					</p>}
-					{resistedByAll.length ? <p>
-						<small>{TL.label(TL`Resists the whole team`)}</small>{' '}
-						{resistedByAll.map(row => <span class="coverage-chip">{this.renderType(row.type)}</span>)}
-					</p> : null}
+		return <div class="coverage">
+			<div class="coverage-card">
+				<h3>{TL`Team defense`}</h3>
+				<div class="coverage-grid">
+					{defRows.map(row => <div
+						class="coverage-cell"
+						title={TL`${row.weak} weak, ${row.resist} resist, ${row.immune} immune`}
+					>
+						{this.renderType(row.type)}
+						<strong class={scoreClass(sets.length ? row.score : 0)}>
+							{row.score > 0 ? `+${row.score}` : row.score}
+						</strong>
+					</div>)}
 				</div>
-			</summary>
-			<div class="coverage-tables">
-				<div class="coverage-block">
-					<h4>{TL`Defense`}</h4>
-					<p class="coverage-help"><small>
-						{TL`Damage taken by each Pokémon from each attack type (abilities included).`}
-					</small></p>
-					<table class="coverage-table">
-						{header([<th>{TL`Weak`}</th>, <th>{TL`Resist`}</th>])}
-						{defRows.map(row => <tr class={sharedWeaknesses.includes(row) ? 'coverage-alert' : ''}>
-							<th>{this.renderType(row.type)}</th>
-							{row.values.map(value => <td class={defClass(value)}>{formatValue(value)}</td>)}
-							<td class="coverage-count">{row.weak || ''}</td>
-							<td class="coverage-count">{row.resist || ''}</td>
-						</tr>)}
-					</table>
-				</div>
-				<div class="coverage-block">
-					<h4>{TL`Offense`}</h4>
-					<p class="coverage-help"><small>
-						{TL`Best effectiveness of each Pokémon's attacks against each type (status moves and fixed damage ignored).`}
-					</small></p>
-					<table class="coverage-table">
-						{header(<th>{TL`Super eff.`}</th>)}
-						{offRows.map(row => <tr class={noSuperEffective.includes(row) ? 'coverage-alert' : ''}>
-							<th>{this.renderType(row.type)}</th>
-							{row.values.map(value => value === null ?
-								<td class="coverage-none">–</td> :
-								<td class={offClass(value)}>{formatValue(value)}</td>)}
-							<td class="coverage-count">{row.superEffective || ''}</td>
-						</tr>)}
-					</table>
-				</div>
+				<p class="coverage-help">
+					{TL`Resistances and immunities minus weaknesses: a negative number is a type that threatens the team.`}
+				</p>
 			</div>
-		</details>;
+			<div class="coverage-card">
+				<h3>{TL`Team type coverage`}</h3>
+				<div class="coverage-grid">
+					{offRows.map(row => <div class="coverage-cell">
+						{this.renderType(row.type)}
+						<strong class={sets.length ? row.superEffective ? 'coverage-plus' : 'coverage-minus' : ''}>
+							{row.superEffective}
+						</strong>
+					</div>)}
+				</div>
+				<p class="coverage-help">{TL`Number of Pokémon with a super effective attack against this type.`}</p>
+			</div>
+			{sets.length ? <details class="details coverage-details">
+				<summary><strong>{TL`Details per Pokémon`}</strong></summary>
+				<div class="coverage-tables">
+					<div class="coverage-block">
+						<h4>{TL`Damage taken`}</h4>
+						<table class="coverage-table">
+							{header([<th>{TL`Weak`}</th>, <th>{TL`Resist`}</th>])}
+							{defRows.map(row => <tr>
+								<th>{this.renderType(row.type)}</th>
+								{row.values.map(value => <td class={defClass(value)}>{formatValue(value)}</td>)}
+								<td class="coverage-count">{row.weak || ''}</td>
+								<td class="coverage-count">{row.resist + row.immune || ''}</td>
+							</tr>)}
+						</table>
+					</div>
+					<div class="coverage-block">
+						<h4>{TL`Best attack`}</h4>
+						<table class="coverage-table">
+							{header(null)}
+							{offRows.map(row => <tr>
+								<th>{this.renderType(row.type)}</th>
+								{row.values.map(value => value === null ?
+									<td class="coverage-none">–</td> :
+									<td class={offClass(value)}>{formatValue(value)}</td>)}
+							</tr>)}
+						</table>
+					</div>
+				</div>
+			</details> : null}
+		</div>;
 	}
 	cancelClipboard = () => {
 		TeamEditorState.clipboard = null;

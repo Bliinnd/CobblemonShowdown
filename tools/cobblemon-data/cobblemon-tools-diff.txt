@@ -1,5 +1,6 @@
 # Écarts entre les données Cobblemon 1.8.2 (cobblemon-1.8.2.json) et https://cobblemon.tools/pokedex/,
-# relevés le 21/10/2026 sur les 851 Pokémon du site (onglets niveau, CT, œuf et tuteur).
+# relevés le 21/10/2026 sur les 851 Pokémon du site et leurs 73 formes régionales ou alternatives
+# (onglets niveau, CT, œuf et tuteur).
 # build-mod.mjs les applique pour que les attaques correspondent exactement au site.
 # Format : <espèce> +<catégorie>=attaque,... -<catégorie>=attaque,...  (catégories : L (niveau:attaque), tm, egg, tutor)
 butterfree +tm=captivate
@@ -180,3 +181,22 @@ sneasler +tm=powershift +tutor=powershift
 annihilape -tm=covet,dualchop,headbutt,honeclaws,irontail,megakick,megapunch,payback,payday,poweruppunch,retaliate,revenge,rockclimb,rocksmash,roleplay,skullbash,strength,workup -tutor=covet,dualchop,irontail,rocksmash,roleplay
 farigiraf -tm=dreameater,echoedvoice,flash,headbutt,irontail,magiccoat,recycle,retaliate,rocksmash,shockwave,signalbeam,strength,suckerpunch,telekinesis,workup -tutor=irontail,magiccoat,recycle,rocksmash,shockwave,signalbeam,suckerpunch,telekinesis
 dudunsparce -tm=bind,dreameater,incinerate,irontail,magiccoat,retaliate,rocksmash,shockwave,strength,terrainpulse -tutor=bind,irontail,magiccoat,rocksmash,shockwave,terrainpulse
+# Formes régionales et alternatives
+raichualola +tm=volttackle -tm=babydolleyes,flash,rocksmash,rollout,strength -tutor=babydolleyes,rocksmash,rollout
+vulpixalola +tm=captivate
+ninetalesalola +tm=captivate
+persianalola +tm=captivate
+meowthalola +tm=captivate
+weezinggalar -tm=flash,incinerate,infestation,rollout,shockwave,torment -tutor=rollout,shockwave
+marowakalola -tm=furycutter,incinerate,poweruppunch,rockclimb,rocksmash,strength -tutor=furycutter,rocksmash
+exeggutoralola +tm=naturalgift -tm=flash,rollout,strength -tutor=rollout
+mrmimegalar -tm=chargebeam,covet,dreameater,flash,focuspunch,headbutt,infestation,magiccoat,mudslap,psychup,shockwave,signalbeam,snatch,telekinesis,torment -tutor=chargebeam,covet,focuspunch,magiccoat,mudslap,shockwave,signalbeam,snatch,telekinesis
+typhlosionhisui -tm=burnup,cut,furycutter,headbutt,incinerate,naturepower,strength,workup -tutor=furycutter
+lilliganthisui +tm=naturalgift -tm=covet,cut,dreameater,flash,healbell,laserfocus,naturepower,safeguard -tutor=covet,healbell,laserfocus
+samurotthisui -tm=assurance,brine,covet,cut,dive,hail,revenge,workup -tutor=covet,dive
+braviaryhisui +tm=powershift -tm=assurance,cut,pluck,retaliate,skydrop,steelwing,strength,workup +tutor=powershift
+floetteeternal +tm=captivate
+sliggoohisui -tm=infestation,shockwave -tutor=shockwave
+goodrahisui -tm=infestation,shockwave -tutor=shockwave
+avalugghisui +tm=powershift -tm=afteryou,flash,frostbreath,hail,rockpolish,safeguard,strength +tutor=powershift -tutor=afteryou
+decidueyehisui -tm=covet,echoedvoice,naturepower,safeguard,skyattack,steelwing,workup,worryseed -tutor=covet,skyattack,worryseed

@@ -78,7 +78,7 @@ function learnsetFrom(moves) {
 
 /**
  * Écarts entre les données du mod et cobblemon.tools (relevés sur le site), appliqués aux espèces
- * de base pour que leurs attaques correspondent exactement au site.
+ * de base et à leurs formes pour que leurs attaques correspondent exactement au site.
  * Une ligne : `<espèce> +tm=a,b -tutor=c -L=32:d` (catégories L, tm, egg, tutor).
  */
 const toolsDiff = new Map();
@@ -132,7 +132,7 @@ for (const sp of cobblemon.species) {
 			name: formSpecies.name,
 			implemented: sp.implemented,
 			labels: [...new Set([...sp.labels, ...form.labels])],
-			learnset: form.moves ? learnsetFrom(form.moves) : null,
+			learnset: form.moves ? learnsetFrom(applyToolsDiff(formSpecies.id, form.moves)) : null,
 		});
 	}
 }

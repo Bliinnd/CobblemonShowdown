@@ -1082,42 +1082,65 @@ you can't delete it by pressing Backspace */
 }
 
 /* Couverture de l'équipe (défense et attaque) */
-.coverage .coverage-summary {
-	margin: 6px 0 2px;
-	font-weight: normal;
+.coverage-card {
+	margin: 0 0 12px;
+	padding: 10px 12px 8px;
+	border-radius: 8px;
+	background: #fff;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, .18);
+	color: #222;
+	text-align: center;
 }
-.coverage .coverage-summary p {
-	margin: 4px 0;
-	line-height: 22px;
+.dark .coverage-card {
+	background: #2a2a2a;
+	color: #ddd;
 }
-.coverage-chip {
-	white-space: nowrap;
-	margin-right: 6px;
+.coverage-card h3 {
+	margin: 0 0 8px;
+	font-size: 13pt;
+}
+.coverage-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 6px 8px;
+}
+.coverage-cell strong {
+	display: block;
+	font-size: 11pt;
+	line-height: 20px;
+}
+.coverage-cell .coverage-plus {
+	color: #1f8a3b;
+}
+.coverage-cell .coverage-minus {
+	color: #d02828;
+}
+.dark .coverage-cell .coverage-plus {
+	color: #6c6;
+}
+.dark .coverage-cell .coverage-minus {
+	color: #f77;
 }
 .coverage-type {
-	display: inline-block;
-	min-width: 58px;
-	padding: 1px 4px;
-	border-radius: 3px;
-	color: #fff;
-	font-size: 8.5pt;
-	font-weight: bold;
-	line-height: 16px;
-	text-align: center;
-	text-shadow: 0 1px 1px rgba(0, 0, 0, .45);
+	display: block;
+	padding: 2px 4px;
+	border-radius: 5px;
+	font-size: 9.5pt;
+	line-height: 17px;
+	white-space: nowrap;
 }
-.coverage-tables {
+.coverage-help {
+	margin: 6px 0 0;
+	font-size: 8pt;
+	opacity: .75;
+}
+.coverage-details .coverage-tables {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px 28px;
 }
 .coverage-block h4 {
-	margin: 10px 0 0;
-}
-.coverage-help {
-	margin: 2px 0 6px;
-	max-width: 420px;
-	opacity: .8;
+	margin: 10px 0 6px;
 }
 .coverage-table {
 	border-collapse: collapse;
@@ -1130,6 +1153,11 @@ you can't delete it by pressing Backspace */
 .coverage-table th {
 	font-size: 8pt;
 	font-weight: normal;
+}
+.coverage-table th .coverage-type {
+	min-width: 56px;
+	font-size: 8pt;
+	line-height: 15px;
 }
 .coverage-table td {
 	min-width: 26px;
@@ -1144,23 +1172,19 @@ you can't delete it by pressing Backspace */
 	border: 0;
 	font-weight: normal;
 }
-.coverage-alert th:first-child {
-	box-shadow: inset 3px 0 0 #d33;
-	padding-left: 5px;
-}
 .coverage-table .coverage-bad2 { background: rgba(220, 40, 40, .55); }
 .coverage-table .coverage-bad1 { background: rgba(240, 90, 70, .25); }
 .coverage-table .coverage-good1 { background: rgba(60, 170, 80, .25); }
 .coverage-table .coverage-good2 { background: rgba(40, 150, 70, .5); }
 .coverage-table .coverage-none { opacity: .4; }
 @media (max-width: 500px) {
+	.coverage-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
 	.coverage-table .coverage-mon .picon {
 		zoom: .75;
 	}
 	.coverage-table td {
 		min-width: 22px;
-	}
-	.coverage-type {
-		min-width: 50px;
 	}
 }
