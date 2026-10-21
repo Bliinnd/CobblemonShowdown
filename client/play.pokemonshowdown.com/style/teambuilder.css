@@ -1080,3 +1080,87 @@ you can't delete it by pressing Backspace */
 .sample-sets h3 {
 	margin: 0 0 10px;
 }
+
+/* Couverture de l'équipe (défense et attaque) */
+.coverage .coverage-summary {
+	margin: 6px 0 2px;
+	font-weight: normal;
+}
+.coverage .coverage-summary p {
+	margin: 4px 0;
+	line-height: 22px;
+}
+.coverage-chip {
+	white-space: nowrap;
+	margin-right: 6px;
+}
+.coverage-type {
+	display: inline-block;
+	min-width: 58px;
+	padding: 1px 4px;
+	border-radius: 3px;
+	color: #fff;
+	font-size: 8.5pt;
+	font-weight: bold;
+	line-height: 16px;
+	text-align: center;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, .45);
+}
+.coverage-tables {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 28px;
+}
+.coverage-block h4 {
+	margin: 10px 0 0;
+}
+.coverage-help {
+	margin: 2px 0 6px;
+	max-width: 420px;
+	opacity: .8;
+}
+.coverage-table {
+	border-collapse: collapse;
+	font-size: 9pt;
+}
+.coverage-table th, .coverage-table td {
+	padding: 1px 2px;
+	text-align: center;
+}
+.coverage-table th {
+	font-size: 8pt;
+	font-weight: normal;
+}
+.coverage-table td {
+	min-width: 26px;
+	height: 18px;
+	border: 1px solid rgba(128, 128, 128, .2);
+	font-weight: bold;
+}
+.coverage-mon {
+	vertical-align: bottom;
+}
+.coverage-table td.coverage-count {
+	border: 0;
+	font-weight: normal;
+}
+.coverage-alert th:first-child {
+	box-shadow: inset 3px 0 0 #d33;
+	padding-left: 5px;
+}
+.coverage-table .coverage-bad2 { background: rgba(220, 40, 40, .55); }
+.coverage-table .coverage-bad1 { background: rgba(240, 90, 70, .25); }
+.coverage-table .coverage-good1 { background: rgba(60, 170, 80, .25); }
+.coverage-table .coverage-good2 { background: rgba(40, 150, 70, .5); }
+.coverage-table .coverage-none { opacity: .4; }
+@media (max-width: 500px) {
+	.coverage-table .coverage-mon .picon {
+		zoom: .75;
+	}
+	.coverage-table td {
+		min-width: 22px;
+	}
+	.coverage-type {
+		min-width: 50px;
+	}
+}

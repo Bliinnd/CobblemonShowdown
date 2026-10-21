@@ -251,7 +251,13 @@ process.stdout.write("and news... ");
 let stdout = '';
 let newsid = 0;
 let news = '[failed to retrieve news]';
-try {
+// CobblemonShowdown : les actualités sont écrites dans actualites.html, à la racine du dépôt.
+// Pour publier une nouvelle actualité, ajouter un bloc "newsentry" avec un data-newsid plus grand.
+const localNews = readOptionalFile('../actualites.html');
+if (localNews) {
+	news = localNews.trim();
+	newsid = Math.max(0, ...[...news.matchAll(/data-newsid="(\d+)"/g)].map(match => Number(match[1])));
+} else try {
 	stdout = child_process.execSync('php build-tools/news-embed.php', {
 		stdio: 'pipe',
 	});

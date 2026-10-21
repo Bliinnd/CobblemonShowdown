@@ -32,16 +32,15 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 	{
 		name: "[Gen 9] Cobblemon OU",
-		desc: `Pokémon pleinement évolués de Cobblemon (plus Porygon2 et Leveinard), sans légendaires, fabuleux, Ultra-Chimères ni Paradoxe. Pas de méga-évolution ni de capacité Z.`,
+		desc: `Pokémon de Cobblemon sans légendaires, fabuleux, Ultra-Chimères ni Paradoxe. Les Pokémon qui peuvent encore évoluer sont autorisés (catégorie « Autres » du teambuilder). Pas de méga-évolution ni de capacité Z.`,
 		mod: 'cobblemon',
 		ruleset: [
 			'Standard', 'Evasion Abilities Clause', 'Sleep Moves Clause', '!Sleep Clause Mod',
 			'Terastal Clause', 'Cobblemon No Egg Moves',
 		],
 		banlist: [
-			// "Uber" regroupe les légendaires, fabuleux, Ultra-Chimères, Paradoxe et les bannis ci-dessous ;
-			// "NFE" et "LC" regroupent les Pokémon qui peuvent encore évoluer.
-			'Uber', 'NFE', 'LC', 'AG',
+			// "Uber" regroupe les légendaires, fabuleux, Ultra-Chimères, Paradoxe et les bannis ci-dessous.
+			'Uber', 'AG',
 			'Archaludon', 'Dracovish', 'Kingambit', 'Gliscor', 'Palafin', 'Sneasler', 'Annihilape', 'Espathra',
 			'Arena Trap', 'Moody', 'Shadow Tag', 'King\'s Rock', 'Razor Fang', 'Baton Pass', 'Last Respects', 'Shed Tail',
 		],
@@ -61,10 +60,12 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 	{
 		name: "[Gen 9] Cobblemon LC",
-		desc: `Little Cup : Pokémon de premier stade capables d'évoluer, au niveau 5. Banlist : celles de la LC 8G et 9G réunies.`,
+		desc: `Little Cup : Pokémon de premier stade capables d'évoluer, au niveau 5, sans légendaires, fabuleux ni Ultra-Chimères. Banlist : celles de la LC 8G et 9G réunies.`,
 		mod: 'cobblemon',
 		ruleset: ['Little Cup', 'Standard', 'Terastal Clause', 'Cobblemon No Egg Moves'],
 		banlist: [
+			// "Uber" : légendaires, fabuleux et Ultra-Chimères qui peuvent évoluer (Vémini, Cosmog, Type:0…).
+			'Uber', 'AG',
 			'Basculin-White-Striped', 'Corsola-Galar', 'Cutiefly', 'Diglett-Base', 'Drifloon', 'Dunsparce', 'Duraludon',
 			'Flittle', 'Gastly', 'Girafarig', 'Gligar', 'Gothita', 'Magby', 'Meditite', 'Misdreavus', 'Murkrow', 'Porygon',
 			'Qwilfish-Hisui', 'Rufflet', 'Scraggy', 'Scyther', 'Shellder', 'Sneasel', 'Sneasel-Hisui', 'Snivy', 'Stantler',
@@ -92,15 +93,16 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		gameType: 'doubles',
 		ruleset: ['Standard Doubles', 'Evasion Abilities Clause', 'Terastal Clause', 'Cobblemon No Egg Moves'],
 		// "DUber" : les Pokémon interdits en Doubles OU par Smogon (tiers calculés par build-mod.mjs).
-		banlist: ['DUber', 'Shadow Tag', 'Commander'],
+		// Smogon n'interdit que Paragruel mâle : on interdit aussi la femelle.
+		banlist: ['DUber', 'Basculegion-F', 'Shadow Tag', 'Commander'],
 	},
 	{
 		name: "[Gen 9] Cobblemon VGC",
-		desc: `Combat en double au niveau 50 : chaque joueur amène 6 Pokémon et en choisit 4. Ni légendaires, ni fabuleux, ni Ultra-Chimères, ni Paradoxe (comme la Régulation H), et un seul exemplaire de chaque objet.`,
+		desc: `Combat en double au niveau 50 : chaque joueur amène 6 Pokémon et en choisit 4. Ni légendaires, ni fabuleux, ni Ultra-Chimères, ni Paradoxe (comme la Régulation H), ni Éthernatos Infinimax, et un seul exemplaire de chaque objet.`,
 		mod: 'cobblemon',
 		gameType: 'doubles',
 		ruleset: ['Flat Rules', '!! Adjust Level = 50', 'VGC Timer', 'Terastal Clause', 'Cobblemon No Egg Moves'],
-		banlist: ['Sub-Legendary', 'Ultra Beast', 'Paradox'],
+		banlist: ['Sub-Legendary', 'Ultra Beast', 'Paradox', 'Eternatus-Eternamax'],
 	},
 
 	// Les mêmes formats, avec les egg moves autorisés.

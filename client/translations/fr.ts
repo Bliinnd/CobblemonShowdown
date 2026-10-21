@@ -1250,9 +1250,7 @@ export const translations: TranslationCatalog = {
 	// TRANSLATORS: They're both designed to take up very little width, so keep that in mind
 	"H.P.": "P.C.",
 	"H. Power": "P. Cachée",
-	"Defensive coverage": "Couverture défensive",
 	"Teambuilding resources for {FORMAT}": "Ressources de teambuilding pour {FORMAT}",
-	"[See all]": "Tout voir",
 	"Search species or filter by type, learnable moves, ability, tier, or egg group": "Rechercher une espèce ou filtrer par type, capacité apprise, talent, tier ou groupe Œuf",
 	"Search abilities": "Rechercher un talent",
 	"Search items": "Rechercher un objet",
@@ -1270,8 +1268,6 @@ export const translations: TranslationCatalog = {
 	"You can also set natures by typing {PLUS} and {MINUS} in the EV box.": "Vous pouvez aussi définir la nature en tapant {PLUS} et {MINUS} dans le champ des EV.",
 	"Pasted team": "Équipe collée",
 	"Zoom out forms": "Dézoomer les formulaires",
-	"Compact": "Compact",
-	"Comfortable": "Aéré",
 	"Zoom out search results": "Dézoomer les résultats de recherche",
 	"Fetching Paste...": "Récupération du paste...",
 	"Import/Export set": "Importer/Exporter le set",
@@ -1352,6 +1348,16 @@ export const translations: TranslationCatalog = {
 	"Share link": "Lien de partage",
 	"Creating the link...": "Création du lien...",
 	"[Upload to PokePaste]": "PokéPaste",
+	"Team coverage": "Couverture de l'équipe",
+	"Shared weaknesses": "Faiblesses communes",
+	"none": "aucune",
+	"No super effective hit against": "Aucun coup super efficace contre",
+	"Resists the whole team": "Résistent à toute l'équipe",
+	"Defense": "Défense",
+	"Damage taken by each Pokémon from each attack type (abilities included).": "Dégâts reçus par chaque Pokémon selon le type de l'attaque (talents compris).",
+	"Offense": "Attaque",
+	"Best effectiveness of each Pokémon's attacks against each type (status moves and fixed damage ignored).": "Meilleure efficacité des attaques de chaque Pokémon contre chaque type (attaques de statut et à dégâts fixes ignorées).",
+	"Super eff.": "Super eff.",
 
 	// #endregion Teambuilder
 

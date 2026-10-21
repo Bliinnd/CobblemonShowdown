@@ -6953,7 +6953,7 @@ export const FormatsData: import('../../../sim/dex-species').ModdedSpeciesFormat
 	eternatuseternamax: {
 		isNonstandard: null,
 		tier: "Uber",
-		doublesTier: "(DUU)",
+		doublesTier: "DUber",
 		natDexTier: "Uber",
 	},
 	kubfu: {

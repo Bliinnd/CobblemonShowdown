@@ -1063,6 +1063,12 @@ abstract class BattleTypedSearch<T extends SearchType> {
 			const doublesTier = table.overrideDoublesTier[id] || table.overrideDoublesTier[toID(pokemon.baseSpecies)];
 			if (doublesTier) return doublesTier;
 		}
+		// En VGC, pas de tiers Smogon : les Pokémon pleinement évolués autorisés sont simplement "VGC",
+		// les Pokémon interdits n'ont pas de tier (la mention "Illégal" suffit).
+		if (this.formatType === 'cobblemon' && this.format === 'vgc') {
+			if (id in (table.metagameBans?.vgc || {})) return '';
+			if (!pokemon.nfe) return 'VGC';
+		}
 		if (id in table.overrideTier) {
 			return table.overrideTier[id];
 		}
