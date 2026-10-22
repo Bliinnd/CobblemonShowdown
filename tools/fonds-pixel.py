@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-CobblemonShowdown : dessine les fonds d'écran par défaut, des paysages en pixels
-façon Cobblemon (blocs d'herbe, arbres à Noigrumes, Poké Balls), utilisés quand
-le dossier fonds/ ne contient aucune image.
+CobblemonShowdown : dessine les fonds de combat (cobblemon/combat/), des terrains en
+pixels façon Cobblemon (blocs d'herbe, arbres à Noigrumes, cactus, sapins…).
 
-Il dessine aussi les fonds de combat (cobblemon/combat/), dans le même style.
+Usage : python3 tools/fonds-pixel.py
 
-Usage : python3 tools/fonds-pixel.py [dossier]   (par défaut client/play.pokemonshowdown.com/cobblemon/fonds)
-Les fonds d'écran sont dessinés en 320 x 180 pixels puis agrandis 6 fois (1920 x 1080).
+Les paysages en fond d'écran (prairie, crépuscule, nuit) ne sont plus utilisés par le site,
+qui a ses propres images (cobblemon/fonds/) : `python3 tools/fonds-pixel.py --paysages [dossier]`
+les dessine encore, en 320 x 180 pixels agrandis 6 fois (1920 x 1080).
 """
 import os
 import random
@@ -196,7 +196,7 @@ def draw(name, scene):
 
 def main():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(root, 'client/play.pokemonshowdown.com/cobblemon/fonds')
+    out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(root, 'fonds')
     os.makedirs(out, exist_ok=True)
     for name, scene in SCENES.items():
         path = os.path.join(out, f'{name}.png')
@@ -348,5 +348,7 @@ def main_arenas():
 
 
 if __name__ == '__main__':
-    main()
-    main_arenas()
+    if '--paysages' in sys.argv:
+        main()
+    else:
+        main_arenas()

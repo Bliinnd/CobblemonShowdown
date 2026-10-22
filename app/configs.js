@@ -53,6 +53,11 @@ function writeServerConfig(settings, keys) {
 		// Ladder : deux joueurs de la même adresse IP peuvent être opposés (même foyer, ou Plesk
 		// qui peut faire paraître tous les joueurs sur la même adresse).
 		`exports.ladderallowsameip = true;`,
+		// Rang de salon « Capitaine » (♛), juste au-dessus de Voice : les capitaines des enchères
+		// (salon Enchère, où il faut au moins ce rang pour parler). Voir chat-plugins/cobblemon-encheres.ts.
+		`exports.grouplist = require('./config-example').grouplist.map(group => ({ ...group }));`,
+		`exports.grouplist.splice(exports.grouplist.findIndex(group => group.symbol === '+'), 0, ` +
+			`{ symbol: '♛', id: 'capitaine', name: 'Capitaine', inherit: '+' });`,
 		'',
 	].join('\n'));
 }

@@ -79,10 +79,10 @@ const BACKGROUND_FILE = /^(?!\.)[^/\\]+\.(png|jpe?g|webp)$/i;
  * Liste des fonds d'écran pour le client, avec les crédits facultatifs de
  * fonds/credits.json ({"fichier.jpg": {"title": "...", "artist": "...", "link": "..."}}).
  */
-/** Fonds par défaut, dessinés par tools/fonds-pixel.py (client/play.pokemonshowdown.com/cobblemon/fonds/). */
+/** Fonds par défaut, images Cobblemon choisies par Anthony (client/play.pokemonshowdown.com/cobblemon/fonds/). */
 const DEFAULT_BACKGROUNDS = [
-	['prairie', 'Prairie'], ['crepuscule', 'Crépuscule'], ['nuit', 'Nuit'],
-].map(([file, title]) => ({ url: `/cobblemon/fonds/${file}.png`, title, artist: 'CobblemonShowdown' }));
+	['canyon', 'Canyon'], ['epave', 'Épave'], ['bambouseraie', 'Bambouseraie'], ['banquise', 'Banquise'], ['foret', 'Forêt'],
+].map(([file, title]) => ({ url: `/cobblemon/fonds/${file}.jpg`, title }));
 
 function listBackgrounds(dir) {
 	let files;
@@ -226,7 +226,7 @@ function createHandler(settings) {
 		if (pathname === '/config/config.js') {
 			configJs ||= clientConfig(settings);
 			// Relu à chaque fois : un fond ajouté dans fonds/ apparaît sans redémarrer le site.
-			// Sans image dans fonds/, les paysages en pixels du site (tools/fonds-pixel.py) sont utilisés.
+			// Sans image dans fonds/, les images Cobblemon du site (cobblemon/fonds/) sont utilisées.
 			const list = listBackgrounds(backgroundsDir);
 			const backgrounds = `Config.cobblemonBackgrounds = ${JSON.stringify(list.length ? list : DEFAULT_BACKGROUNDS)};\n`;
 			res.writeHead(200, { 'Content-Type': TYPES['.js'], 'Cache-Control': 'no-cache' });

@@ -162,6 +162,8 @@ export const PSBackground = new class extends PSStreamModel<string | null> {
 		// CobblemonShowdown : fonds d'écran Cobblemon, au hasard ou choisis ("cobblemon:<adresse>")
 		let cobblemonBg: NonNullable<typeof Config.cobblemonBackgrounds>[number] | undefined;
 		const cobblemonBgs = Config.cobblemonBackgrounds || [];
+		// un fond retiré du site (ex. les anciens paysages en pixels) redevient un fond au hasard
+		if (bgid.startsWith('cobblemon:/cobblemon/') && !cobblemonBgs.some(bg => bg.url === bgid.slice(10))) bgid = '';
 		if ((!bgid || bgid === 'waterfall') && cobblemonBgs.length) {
 			const pick = () => cobblemonBgs[Math.floor(Math.random() * cobblemonBgs.length)];
 			cobblemonBg = pick();

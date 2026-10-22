@@ -6,7 +6,7 @@ import { Net, PSLoginServer } from "./client-connection";
 import { PSBackground } from "./client-core";
 import {
 	PS, PSRoom, Config, type PSRoomFocusOptions, type RoomOptions, type PSLoginState, type RoomID,
-	type TimestampOptions, type BattleLayoutPreference,
+	type TimestampOptions,
 } from "./client-main";
 import { type BattleRoom } from "./panel-battle";
 import { ChatUserList, PSTextarea, type ChatRoom } from "./panel-chat";
@@ -15,18 +15,6 @@ import { PSHeader } from "./panel-topbar";
 import { AccountBackground } from "./panel-mainmenu";
 
 const WARNING_SECONDS = 5;
-// a function because it's evaluated before translations have loaded
-function battleLayoutLabel(layout: BattleLayoutPreference): string {
-	switch (layout) {
-	case 'side-by-side': return TL`Side-by-side, controls below`;
-	case 'side-by-side-overlay': return TL`Side-by-side, overlay controls`;
-	case 'top-and-bottom': return TL`Top-and-bottom, controls below`;
-	case 'top-and-bottom-overlay': return TL`Top-and-bottom, overlay controls`;
-	case 'scrolling': return TL`Scrolling, controls below`;
-	case 'scrolling-overlay': return TL`Scrolling, overlay controls`;
-	}
-}
-
 /**
  * User popup
  */
@@ -1878,11 +1866,6 @@ class BattleOptionsPanel extends PSRoomPanel {
 		}
 		}
 	};
-	handleBattleLayout = (ev: Event) => {
-		const value = (ev.currentTarget as HTMLSelectElement).value as typeof PS.prefs.battlelayout;
-		PS.prefs.set('battlelayout', value || null);
-		PS.update();
-	};
 	getBattleRoom() {
 		const battleRoom = this.props.room.getParent() as BattleRoom | null;
 		return battleRoom?.battle ? battleRoom : null;
@@ -1898,11 +1881,6 @@ class BattleOptionsPanel extends PSRoomPanel {
 		const battleRoom = this.getBattleRoom();
 		const isPlaying = !!battleRoom?.isPlaying();
 		const canOfferTie = battleRoom && ((battleRoom.battle.turn >= 100 && isPlaying) || PS.user.group === '~');
-		let automaticLayout: BattleLayoutPreference | null = null;
-		if (battleRoom) {
-			const { layout, overlayControls } = PS.chooseBattleLayout(battleRoom.width, battleRoom.height);
-			automaticLayout = `${layout}${overlayControls ? '-overlay' : ''}` as BattleLayoutPreference;
-		}
 		return <PSPanelWrapper room={room} width={380}><div class="pad">
 			{battleRoom && <>
 				<p><strong>{TL`In this battle`}</strong></p>
@@ -1948,34 +1926,6 @@ class BattleOptionsPanel extends PSRoomPanel {
 				</p>
 			</>}
 			<p><strong>{TL`All battles`}</strong></p>
-			<p>
-				<label class="optlabel">{TL.label(TL`Layout`)}<select
-					name="battlelayout" class="select" onChange={this.handleBattleLayout}
-					value={PS.prefs.battlelayout || ''}
-				>
-					<option value="">
-						{automaticLayout ? TL`Automatic (${battleLayoutLabel(automaticLayout)})` : TL`Automatic`}
-					</option>
-					<option value="side-by-side">
-						{battleLayoutLabel('side-by-side')} {TL`(DESKTOP)`}
-					</option>
-					<option value="side-by-side-overlay">
-						{battleLayoutLabel('side-by-side-overlay')}
-					</option>
-					<option value="top-and-bottom">
-						{battleLayoutLabel('top-and-bottom')} {TL`(MOBILE VERTICAL)`}
-					</option>
-					<option value="top-and-bottom-overlay">
-						{battleLayoutLabel('top-and-bottom-overlay')}
-					</option>
-					<option value="scrolling">
-						{battleLayoutLabel('scrolling')}
-					</option>
-					<option value="scrolling-overlay">
-						{battleLayoutLabel('scrolling-overlay')} {TL`(MOBILE HORIZONTAL)`}
-					</option>
-				</select></label>
-			</p>
 			<p>
 				<label class="checkbox">
 					<input
