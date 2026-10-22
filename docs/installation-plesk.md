@@ -53,8 +53,10 @@ Puis, dans **Custom environment variables**, ajoutez :
 | `DB_PASSWORD` | son mot de passe |
 | `ADMINS` | `Bliinnd` : le ou les pseudos administrateurs, séparés par des virgules (Bliinnd si la variable est absente) |
 
-Le classement (ladder) fonctionne mais reste caché. Pour l'afficher sur le site,
-ajoutez `CLASSEMENT_VISIBLE` avec la valeur `1`, puis redémarrez l'application.
+Le classement (ladder) est affiché sur le site. Pour le cacher, ajoutez
+`CLASSEMENT_VISIBLE` avec la valeur `0`, puis redémarrez l'application. Un
+administrateur peut remettre l'elo d'un joueur à 1000 avec le bouton « Remettre à
+1000 » du classement d'un format, ou avec `/resetelo pseudo, format`.
 
 Si les ports 8000 ou 9000 sont déjà utilisés sur le serveur, ajoutez aussi
 `SIM_PORT` et `LOGIN_PORT` avec deux ports libres.

@@ -87,9 +87,9 @@ export const crqHandlers: { [k: string]: Chat.CRQHandler } = {
 		const [format, prefix] = target.split(',').map(x => x.trim());
 		const ladder = Ladders(toID(format));
 		// the local ladder's getTop also takes the viewer's language (the remote ladder has no top list)
-		const getTop: (prefix?: string, language?: ID | null) => ReturnType<typeof ladder.getTop> =
+		const getTop: (prefix?: string, language?: ID | null, canReset?: boolean) => ReturnType<typeof ladder.getTop> =
 			ladder.getTop.bind(ladder);
-		return getTop(prefix, user.language);
+		return getTop(prefix, user.language, user.can('disableladder'));
 	},
 	roominfo(target, user, trustable) {
 		if (!trustable) return false;

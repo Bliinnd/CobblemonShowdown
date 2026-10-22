@@ -31,7 +31,7 @@ export class PSHeader extends preact.Component {
 
 		const favicon = document.querySelector<HTMLLinkElement>('#dynamic-favicon');
 		if (!favicon) return;
-		favicon.href = notifying ? `${Dex.resourcePrefix}favicon-notify.ico` : '/cobblemonshowdown-logo.svg';
+		favicon.href = notifying ? `${Dex.resourcePrefix}favicon-notify.ico` : '/cobblemonshowdown-logo.png';
 		this.faviconNotifying = notifying;
 	};
 	static toggleMute = (e: Event) => {
@@ -247,7 +247,7 @@ export class PSHeader extends preact.Component {
 			<div class="scrollable-part">
 				<img
 					class="logo"
-					src={`https://${Config.routes.client}/cobblemonshowdown-logo.svg`}
+					src={`https://${Config.routes.client}/cobblemonshowdown-logo.png`}
 					alt="CobblemonShowdown"
 					width="50" height="50"
 				/>
@@ -306,7 +306,7 @@ export class PSHeader extends preact.Component {
 					<li>
 						<img
 							class="logo"
-							src={`https://${Config.routes.client}/cobblemonshowdown-logo.svg`}
+							src={`https://${Config.routes.client}/cobblemonshowdown-logo.png`}
 							alt="CobblemonShowdown"
 							width="48" height="48"
 						/>
