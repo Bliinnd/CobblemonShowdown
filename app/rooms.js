@@ -19,7 +19,8 @@ const MAIN_ROOM_DESC = 'Le salon de discussion de CobblemonShowdown';
  * une adresse lisible (/enchere).
  */
 const OFFICIAL_ROOMS = [
-	{ title: 'Enchère', desc: 'Les enchères de CobblemonShowdown', aliases: ['enchere', 'encheres'] },
+	// Seuls les Capitaines (♛) et le staff y parlent ; tout le monde peut suivre les enchères.
+	{ title: 'Enchère', desc: 'Les enchères de CobblemonShowdown', aliases: ['enchere', 'encheres'], modchat: '♛' },
 ];
 
 function toID(text) {
@@ -82,12 +83,16 @@ function ensureChatRooms(settings) {
 
 	for (const official of OFFICIAL_ROOMS) {
 		const ids = [official.title, ...official.aliases].map(toID);
-		const exists = rooms.some(entry => ids.includes(toID(entry.title)) ||
+		const existing = rooms.find(entry => ids.includes(toID(entry.title)) ||
 			(Array.isArray(entry.aliases) && entry.aliases.map(toID).some(alias => ids.includes(alias))));
-		if (exists) continue;
+		if (existing) {
+			// Salon créé avant ce réglage : on l'applique une fois (un /modchat off ensuite est respecté).
+			if (official.modchat && !('modchat' in existing)) existing.modchat = official.modchat;
+			continue;
+		}
 		rooms.push({
 			title: official.title, auth: {}, creationTime: Date.now(), desc: official.desc,
-			section: 'official', language: 'french', aliases: official.aliases,
+			section: 'official', language: 'french', aliases: official.aliases, modchat: official.modchat || null,
 		});
 		console.log(`Salons : « ${official.title} » est créé.`);
 	}

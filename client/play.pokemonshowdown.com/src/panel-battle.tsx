@@ -255,7 +255,7 @@ export class BattleRoom extends ChatRoom {
 	handleLineAfterBattleUpdate(args: Args) {
 		switch (args[0]) {
 		case 'initdone':
-			if (!PS.prefs.spectatefromstart) this.battle.seekTurn(Infinity);
+			if (!PS.prefs.spectatefromstart || this.isOwnBattle()) this.battle.seekTurn(Infinity);
 			break;
 		case 'request': case 'win': case 'tie': {
 			const request = args[0] === 'request' && args[1] ? JSON.parse(args[1]) : null;
@@ -317,6 +317,14 @@ export class BattleRoom extends ChatRoom {
 	}
 	isPlaying() {
 		return this.battle && !this.battle.ended && this.request && this.connectMode !== 'deleted';
+	}
+	/**
+	 * CobblemonShowdown : « Commencer au tour 0 » ne vaut que pour les combats regardés en
+	 * spectateur ; un joueur qui revient dans son propre combat reprend au tour en cours.
+	 */
+	isOwnBattle() {
+		return !!this.battle?.stepQueue.some(line => line.startsWith('|player|') &&
+			toID(line.split('|')[3]) === PS.user.userid);
 	}
 	updateChoiceNotification() {
 		const oName = this.battle?.farSide.name;
@@ -663,7 +671,7 @@ class BattlePanel extends PSRoomPanel<BattleRoom> {
 		room.receiveBatch([]);
 		super.componentDidMount();
 		this.forceUpdate();
-		if (!PS.prefs.spectatefromstart) battle.seekTurn(Infinity);
+		if (!PS.prefs.spectatefromstart || room.isOwnBattle()) battle.seekTurn(Infinity);
 		if (PS.prefs.autohardcore) {
 			battle.setHardcoreMode(true);
 		}

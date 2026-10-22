@@ -135,10 +135,11 @@ class PSPrefs extends PSStreamModel<string | null> {
 	ignorespects: boolean | null = null;
 	ignoreopp: boolean | null = null;
 	autotimer: boolean | null = null;
-	autohardcore: boolean | null = null;
-	spectatefromstart: boolean | null = null;
+	// CobblemonShowdown : mode hardcore, tour 0 en spectateur et combats à droite sont activés par défaut.
+	autohardcore: boolean | null = true;
+	spectatefromstart: boolean | null = true;
 	battlelayout: BattleLayoutPreference | null = null;
-	rightpanelbattles: boolean | null = null;
+	rightpanelbattles: boolean | null = true;
 	disallowspectators: boolean | null = null;
 	starredformats: { [formatid: string]: true | undefined } | null = null;
 	openformats: { [section: string]: boolean | undefined } | null = null;
@@ -273,6 +274,9 @@ class PSPrefs extends PSStreamModel<string | null> {
 			showjoins[Config.server.id] = serverShowjoins;
 			newPrefs['showjoins'] = showjoins;
 		}
+
+		// CobblemonShowdown : la disposition des combats est toujours automatique.
+		delete newPrefs['battlelayout'];
 
 		// incorrect storage of serversettings
 		delete newPrefs['blockPMs'];
