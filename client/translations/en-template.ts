@@ -459,12 +459,12 @@ export const translations: TranslationCatalog = {
 	"Room not found": null,
 
 	// TRANSLATORS: battle options
-	"Side-by-side, controls below": null,
-	"Side-by-side, overlay controls": null,
-	"Top-and-bottom, controls below": null,
-	"Top-and-bottom, overlay controls": null,
-	"Scrolling, controls below": null,
-	"Scrolling, overlay controls": null,
+	"Side-by-side, controls below": null, // NOT USED
+	"Side-by-side, overlay controls": null, // NOT USED
+	"Top-and-bottom, controls below": null, // NOT USED
+	"Top-and-bottom, overlay controls": null, // NOT USED
+	"Scrolling, controls below": null, // NOT USED
+	"Scrolling, overlay controls": null, // NOT USED
 	"Hardcore mode ON: Information not available in-game is now hidden.": null,
 	"Hardcore mode OFF: Information not available in-game is now shown.": null,
 	"Spectators ignored.": null,
@@ -477,10 +477,10 @@ export const translations: TranslationCatalog = {
 	"All battles": null,
 	"Layout": null,
 	"Automatic ({SETTING})": null,
-	"Automatic": null,
-	"(DESKTOP)": null,
-	"(MOBILE VERTICAL)": null,
-	"(MOBILE HORIZONTAL)": null,
+	"Automatic": null, // NOT USED
+	"(DESKTOP)": null, // NOT USED
+	"(MOBILE VERTICAL)": null, // NOT USED
+	"(MOBILE HORIZONTAL)": null, // NOT USED
 	"You can still invite spectators by giving them the URL or using the /invite command": null,
 	"Invite only (hide from Battles list)": null,
 	"Ignore Pokémon nicknames": null,
