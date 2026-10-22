@@ -237,7 +237,7 @@ ${head}</head>
 <body>
 <header class="top">
 <a class="brand" href="/">
-<img src="/cobblemonshowdown-logo.svg" alt="" width="44" height="44"><span>CobblemonShowdown</span>
+<img src="/cobblemonshowdown-logo.png" alt="" width="44" height="44"><span>CobblemonShowdown</span>
 </a>
 <a class="play" href="/">Jouer</a>
 </header>

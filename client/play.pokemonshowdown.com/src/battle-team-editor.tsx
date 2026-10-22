@@ -588,7 +588,8 @@ export class TeamEditorState extends PSModel {
 			minAtk = false;
 			return { minAtk, minSpe };
 		}
-		if (!set.moves.length) minAtk = false;
+		// Pas encore d'attaque (emplacements vides) : on garde 31 IV en Attaque.
+		if (!set.moves.some(Boolean)) minAtk = false;
 		for (const moveName of set.moves) {
 			if (!moveName) continue;
 			const move = this.dex.moves.get(moveName);
@@ -3385,11 +3386,9 @@ class StatForm extends preact.Component<{
 
 			const stat = editor.getStat(statID, set, ivs[statID]);
 			let ev: number | string = set.evs ? (set.evs[statID] || 0) : defaultEV;
-			const maxStat = statID === 'hp' ?
-				Math.floor(176 * editor.format.defaultLevel / 25) + 10 :
-				Math.floor(247 * editor.format.defaultLevel / 50) + 5;
-			const width = Math.min(stat * 75 / maxStat, 75);
-			const hue = Math.min(Math.floor(stat * 180 / maxStat), 360);
+			const ratio = StatForm.statBarRatio(editor, set, stat, statID);
+			const width = Math.min(ratio * 75, 75);
+			const hue = Math.min(Math.floor(ratio * 180), 360);
 			const statName = editor.gen === 1 && statID === 'spa' ? TL.statShort.spc : TL.statShort[statID];
 			if (evs && !ev && !set.evs && statID === 'hp') ev = TL`EVs`;
 			return <span class="statrow">
@@ -3674,13 +3673,22 @@ class StatForm extends preact.Component<{
 	};
 	plus: Dex.StatNameExceptHP | null = null;
 	minus: Dex.StatNameExceptHP | null = null;
+	/**
+	 * Longueur relative de la barre d'une stat. Les PV ont un bonus fixe (niveau + 5) qu'on retire
+	 * pour que les barres de toutes les stats soient comparables : à statistique de base égale,
+	 * même barre.
+	 */
+	static statBarRatio(editor: TeamEditorState, set: Dex.PokemonSet, stat: number, statID: StatName) {
+		const level = set.level || editor.format.defaultLevel;
+		const maxStat = Math.floor(247 * level / 50) + 5;
+		const value = statID === 'hp' ? stat - level - 5 : stat;
+		return Math.max(value, 0) / maxStat;
+	}
 	renderStatbar(stat: number, statID: StatName) {
-		const { editor } = this.props;
-		const maxStat = statID === 'hp' ?
-			Math.floor(176 * editor.format.defaultLevel / 25) + 10 :
-			Math.floor(247 * editor.format.defaultLevel / 50) + 5;
-		const width = Math.min(stat * 180 / maxStat, 180);
-		const hue = Math.min(Math.floor(stat * 180 / maxStat), 360);
+		const { editor, set } = this.props;
+		const ratio = StatForm.statBarRatio(editor, set, stat, statID);
+		const width = Math.min(ratio * 180, 180);
+		const hue = Math.min(Math.floor(ratio * 180), 360);
 		return <span
 			style={`width:${Math.floor(width)}px;background:hsl(${hue},85%,45%);border-color:hsl(${hue},85%,35%)`}
 		></span>;

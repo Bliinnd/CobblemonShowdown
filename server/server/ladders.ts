@@ -395,7 +395,9 @@ class Ladder extends LadderStore {
 		}
 
 		// users must have different IPs
-		if (new Set(users.map(user => user.latestIp)).size !== users.length) return false;
+		// CobblemonShowdown : réglage `ladderallowsameip` pour les joueurs d'un même foyer (et derrière
+		// Plesk, où tous les joueurs peuvent sembler venir de la même adresse).
+		if (!Config.ladderallowsameip && new Set(users.map(user => user.latestIp)).size !== users.length) return false;
 
 		// users must not have been matched immediately previously
 		for (const user of users) {

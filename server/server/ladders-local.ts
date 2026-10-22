@@ -127,7 +127,7 @@ export class LadderStore {
 	 * ladder toplist, to be displayed directly in the ladder tab of the
 	 * client, in the given `language` (the viewer's).
 	 */
-	async getTop(prefix?: string, language: ID | null = null): Promise<[string, string]> {
+	async getTop(prefix?: string, language: ID | null = null, canReset = false): Promise<[string, string]> {
 		const TL = Chat.getTranslator(language);
 		const formatid = this.formatid;
 		const name = Dex.formats.get(formatid).name;
@@ -136,11 +136,16 @@ export class LadderStore {
 		buf += `<table>`;
 		buf += `<tr><th>` + [
 			'', TL`Username`, `<abbr title="${TL`Elo rating`}">Elo</abbr>`, TL`W`, TL`L`, TL`T`,
+			// CobblemonShowdown : les admins peuvent remettre l'elo d'un joueur à zéro (chat-plugins/cobblemon-ladder.ts).
+			...(canReset ? [''] : []),
 		].join(`</th><th>`) + `</th></tr>`;
 		for (const [i, row] of ladder.entries()) {
 			if (prefix && !row[0].startsWith(prefix)) continue;
 			buf += `<tr><td>` + [
-				i + 1, row[2], `<strong>${Math.round(row[1])}</strong>`, row[3], row[4], row[5],
+				i + 1, Utils.escapeHTML(row[2]), `<strong>${Math.round(row[1])}</strong>`, row[3], row[4], row[5],
+				...(canReset ? [
+					`<button class="button" name="send" value="/resetelo ${Utils.escapeHTML(row[2])}, ${formatid}">Remettre à 1000</button>`,
+				] : []),
 			].join(`</td><td>`) + `</td></tr>`;
 		}
 		return [formatid, buf];

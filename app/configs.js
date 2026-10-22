@@ -50,6 +50,9 @@ function writeServerConfig(settings, keys) {
 		`exports.usesqlitefriends = 'unlocked';`,
 		// Site en français : langue des salons sans langue choisie (salons de combat...).
 		`exports.defaultlanguage = 'french';`,
+		// Ladder : deux joueurs de la même adresse IP peuvent être opposés (même foyer, ou Plesk
+		// qui peut faire paraître tous les joueurs sur la même adresse).
+		`exports.ladderallowsameip = true;`,
 		'',
 	].join('\n'));
 }
@@ -114,7 +117,7 @@ function clientConfig(settings) {
 			teams: settings.siteHost,
 		})};`,
 		`Config.customcolors = {};`,
-		// Classement caché tant que CLASSEMENT_VISIBLE n'est pas à 1.
+		// Classement affiché, sauf si CLASSEMENT_VISIBLE vaut 0.
 		`Config.showLadder = ${js(settings.showLadder)};`,
 		'',
 	].join('\n');

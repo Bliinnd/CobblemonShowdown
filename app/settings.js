@@ -52,9 +52,9 @@ function loadSettings() {
 		adminNames,
 		/**
 		 * Classement (ladder) visible sur le site : bouton de l'accueil et classements des pages joueurs.
-		 * Le classement fonctionne et se remplit même caché.
+		 * Affiché par défaut ; CLASSEMENT_VISIBLE=0 le cache (il continue de se remplir).
 		 */
-		showLadder: env.CLASSEMENT_VISIBLE === '1',
+		showLadder: env.CLASSEMENT_VISIBLE !== '0',
 		/** Développement uniquement : sert le site en HTTPS avec un certificat auto-signé. */
 		devHttps: env.DEV_HTTPS === '1',
 	};

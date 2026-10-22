@@ -1,7 +1,8 @@
 'use strict';
 /**
  * Salons du chat : s'assure que le salon officiel « Discussion » existe et que
- * tout le monde le rejoint automatiquement, comme le Lobby de Pokémon Showdown.
+ * tout le monde le rejoint automatiquement, comme le Lobby de Pokémon Showdown,
+ * et crée les autres salons officiels (« Enchère ») s'ils n'existent pas encore.
  *
  * Le serveur de combat garde la liste des salons dans server/config/chatrooms.json
  * et la réécrit lui-même : ce fichier n'est modifié ici qu'avant son démarrage.
@@ -11,6 +12,15 @@ const path = require('path');
 
 const MAIN_ROOM = 'Discussion';
 const MAIN_ROOM_DESC = 'Le salon de discussion de CobblemonShowdown';
+/**
+ * Autres salons officiels, créés au démarrage s'ils n'existent pas (un administrateur peut
+ * ensuite les modifier ; un salon supprimé revient tant qu'il est dans cette liste).
+ * Les identifiants de salon perdent les accents (« Enchère » → enchre) : les alias gardent
+ * une adresse lisible (/enchere).
+ */
+const OFFICIAL_ROOMS = [
+	{ title: 'Enchère', desc: 'Les enchères de CobblemonShowdown', aliases: ['enchere', 'encheres'] },
+];
 
 function toID(text) {
 	return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
@@ -69,6 +79,18 @@ function ensureChatRooms(settings) {
 	// Aucune commande du chat ne permet de régler ce point : c'est lui qui fait
 	// rejoindre le salon à chaque visiteur.
 	room.autojoin = true;
+
+	for (const official of OFFICIAL_ROOMS) {
+		const ids = [official.title, ...official.aliases].map(toID);
+		const exists = rooms.some(entry => ids.includes(toID(entry.title)) ||
+			(Array.isArray(entry.aliases) && entry.aliases.map(toID).some(alias => ids.includes(alias))));
+		if (exists) continue;
+		rooms.push({
+			title: official.title, auth: {}, creationTime: Date.now(), desc: official.desc,
+			section: 'official', language: 'french', aliases: official.aliases,
+		});
+		console.log(`Salons : « ${official.title} » est créé.`);
+	}
 
 	const content = formatRooms(rooms);
 	if (content === original) return;
