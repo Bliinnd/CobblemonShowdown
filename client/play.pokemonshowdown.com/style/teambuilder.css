@@ -415,7 +415,8 @@
 		transform-origin: top left;
 	}
 	.teameditor-full-size-search .team-focus-editor .set-searchresults {
-		bottom: auto;
+		flex: none;
+		min-height: 0;
 		height: var(--teameditor-mobile-search-height);
 	}
 
@@ -992,6 +993,14 @@ you can't delete it by pressing Backspace */
 	bottom: 0;
 	overflow: auto;
 	-webkit-overflow-scrolling: touch;
+	/* CobblemonShowdown : le haut (onglets, Pokémon, recherche) prend la hauteur dont il a besoin
+	   et les résultats occupent le reste, au lieu de commencer à 230px fixes (sur téléphone, la
+	   fiche du Pokémon est plus haute et recouvrait la recherche et les résultats) */
+	display: flex;
+	flex-direction: column;
+}
+.team-focus-editor > div:first-child {
+	flex: none;
 }
 .team-focus-editor .set-form {
 	z-index: 1;
@@ -1009,6 +1018,21 @@ you can't delete it by pressing Backspace */
 	-webkit-overflow-scrolling: touch;
 	white-space: nowrap;
 	min-height: 59px;
+}
+/* CobblemonShowdown : sur téléphone, les onglets des Pokémon se partagent toute la largeur */
+.tiny-layout .team-focus-editor .tabbar {
+	display: flex;
+}
+.tiny-layout .team-focus-editor .tabbar li {
+	flex: 1 1 0;
+	min-width: 42px;
+}
+.tiny-layout .team-focus-editor .tabbar li.home-li {
+	flex: none;
+	min-width: 0;
+}
+.tiny-layout .team-focus-editor .tabbar .button.picontab {
+	width: 100%;
 }
 .tabbar .button.picontab {
 	width: 80px;
@@ -1058,12 +1082,11 @@ you can't delete it by pressing Backspace */
 	right: 4px;
 }
 .set-searchresults {
-	position: absolute;
-	top: 230px;
-	top: calc(230px + var(--teameditor-mobile-height-offset, 0));
-	left: 0;
-	right: 0;
-	bottom: 0;
+	/* CobblemonShowdown : sous la recherche, sur le reste de la hauteur (voir .team-focus-editor) ;
+	   si la place manque (clavier ouvert), c'est tout l'éditeur qui défile */
+	position: relative;
+	flex: 1 1 0;
+	min-height: 240px;
 	overflow: auto;
 	-webkit-overflow-scrolling: touch;
 }
